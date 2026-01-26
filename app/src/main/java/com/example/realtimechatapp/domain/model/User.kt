@@ -1,4 +1,10 @@
 package com.example.realtimechatapp.domain.model
 
-class User {
-}
+data class User(
+    val id: String,
+    val username: String,
+    val fullName: String,
+    val email: String,
+    val avatar: String?,
+    val createdAt: String
+)

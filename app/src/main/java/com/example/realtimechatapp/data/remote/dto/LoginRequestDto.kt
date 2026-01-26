@@ -1,4 +1,6 @@
 package com.example.realtimechatapp.data.remote.dto
 
-class LoginRequestDto {
-}
+data class LoginRequestDto(
+    val username: String,
+    val password: String
+)
