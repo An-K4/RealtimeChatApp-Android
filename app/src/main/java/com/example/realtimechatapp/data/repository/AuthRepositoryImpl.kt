@@ -2,6 +2,7 @@ package com.example.realtimechatapp.data.repository
 
 import com.example.realtimechatapp.data.remote.AuthApi
 import com.example.realtimechatapp.data.remote.dto.LoginRequestDto
+import com.example.realtimechatapp.data.remote.dto.SignupRequestDto
 import com.example.realtimechatapp.domain.model.User
 import com.example.realtimechatapp.domain.repository.AuthRepository
 import javax.inject.Inject
@@ -16,6 +17,31 @@ class AuthRepositoryImpl @Inject constructor(private val api: AuthApi): AuthRepo
             val user = response.user.toUser()
             Result.success(user)
         } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun signup(
+        username: String,
+        password: String,
+        fullName: String,
+        email: String
+    ): Result<String> {
+        return try {
+            val response = api.signup(SignupRequestDto(username, password, fullName, email))
+            Result.success(response.message)
+        } catch (e: Exception){
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun logout(token: String): Result<String> {
+        return try {
+            val response = api.logout(token)
+            Result.success(response.message)
+        } catch (e: Exception){
             e.printStackTrace()
             Result.failure(e)
         }

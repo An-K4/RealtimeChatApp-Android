@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">RealtimeChatApp</string>
+    <string name="app_name">Clover Chatty</string>
+    <string name="app_logo">App Logo</string>
 </resources>

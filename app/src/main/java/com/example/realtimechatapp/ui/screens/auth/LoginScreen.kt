@@ -11,22 +11,39 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.realtimechatapp.R
+import com.example.realtimechatapp.ui.theme.Chewy
+import com.example.realtimechatapp.ui.theme.RealtimeBlue
+import com.example.realtimechatapp.ui.theme.RealtimeGreen
 
 @Composable
 fun LoginScreen(
@@ -59,7 +76,22 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(text = "KMA Chatty", style = MaterialTheme.typography.headlineMedium)
+            Image(
+                painter = painterResource(R.drawable.logo),
+                contentDescription = stringResource(R.string.app_logo),
+                modifier = Modifier
+                    .size(200.dp)
+                    .padding(bottom = 16.dp)
+            )
+
+            Text(
+                text = stringResource(R.string.app_name),
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Black,
+                fontFamily = Chewy,
+                fontStyle = FontStyle.Italic,
+                color = RealtimeGreen
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -68,10 +100,14 @@ fun LoginScreen(
                 onValueChange = { viewModel.onUsernameChange(it) },
                 label = { Text("Tên đăng nhập") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = RealtimeGreen,
+                    cursorColor = Color.Gray
+                )
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = viewModel.password.value,
@@ -79,23 +115,75 @@ fun LoginScreen(
                 label = { Text("Mật khẩu") },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = RealtimeGreen,
+                    cursorColor = Color.Gray
+                )
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = { viewModel.login() },
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                enabled = !state.isLoading
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !state.isLoading,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = RealtimeGreen,
+                    contentColor = Color.White
+                ),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 8.dp,
+                    pressedElevation = 4.dp
+                )
             ) {
                 if (state.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = MaterialTheme.colorScheme.onPrimary
                     )
-                } else Text("Đăng nhập")
+                } else Text(
+                    "Đăng nhập",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            ClickableSignupText(onSignupClicked = {
+                Toast.makeText(context, "Đăng ký đã nhấn", Toast.LENGTH_SHORT).show()
+            })
         }
     }
+}
+
+@Composable
+fun ClickableSignupText(
+    onSignupClicked: () -> Unit
+) {
+    val annotatedText = buildAnnotatedString {
+        append("Bạn chưa có tài khoản? ")
+
+        pushStringAnnotation(tag = "signup", annotation = "signup")
+        withStyle(
+            style = SpanStyle(
+                color = RealtimeGreen, // Chọn màu nổi bật
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            )
+        ) {
+            append("Đăng ký")
+        }
+    }
+
+    ClickableText(
+        text = annotatedText,
+        onClick = { offset ->
+            annotatedText.getStringAnnotations("signup", start = offset, end = offset)
+                .firstOrNull()?.let {
+                    onSignupClicked()
+                }
+        }
+    )
 }

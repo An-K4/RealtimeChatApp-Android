@@ -22,9 +22,3 @@ data class UserDto(
         )
     }
 }
-
-data class LoginResponseDto(
-    val message: String,
-    val token: String,
-    val user: UserDto
-)

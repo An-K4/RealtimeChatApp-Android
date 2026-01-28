@@ -3,13 +3,13 @@ package com.example.realtimechatapp.ui.screens.auth
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.realtimechatapp.domain.repository.AuthRepository
+import com.example.realtimechatapp.domain.usecase.LoginUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class LoginViewModel @Inject constructor(private val authRepository: AuthRepository): ViewModel() {
+class LoginViewModel @Inject constructor(private val loginUseCase: LoginUseCase): ViewModel() {
 
     private val _username = mutableStateOf("")
     val username = _username
@@ -29,15 +29,10 @@ class LoginViewModel @Inject constructor(private val authRepository: AuthReposit
     val loginState = _loginState
 
     fun login(){
-        if(username.value.isBlank() || password.value.isBlank()){
-            _loginState.value = LoginState(error = "Vui lòng nhập đầy đủ thông tin")
-            return
-        }
-
         viewModelScope.launch {
             _loginState.value = LoginState(isLoading = true)
 
-            val result = authRepository.login(username.value, password.value)
+            val result = loginUseCase(username.value, password.value)
 
             result.onSuccess { user ->
                 _loginState.value = LoginState(user = user)
