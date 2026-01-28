@@ -5,11 +5,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.realtimechatapp.domain.usecase.LoginUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class LoginViewModel @Inject constructor(private val loginUseCase: LoginUseCase): ViewModel() {
+class AuthViewModel @Inject constructor(private val loginUseCase: LoginUseCase): ViewModel() {
+
+    sealed class UiEvent {
+        object LoginSuccess: UiEvent()
+        data class ShowToast(val message: String): UiEvent()
+    }
 
     private val _username = mutableStateOf("")
     val username = _username
@@ -25,19 +34,23 @@ class LoginViewModel @Inject constructor(private val loginUseCase: LoginUseCase)
         _password.value = newValue
     }
 
-    private val _loginState = mutableStateOf(LoginState())
-    val loginState = _loginState
+    private var _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
+
+    private val _uiEvent = Channel<UiEvent>()
+    val uiEvent = _uiEvent.receiveAsFlow()
 
     fun login(){
         viewModelScope.launch {
-            _loginState.value = LoginState(isLoading = true)
-
+            _isLoading.value = true
             val result = loginUseCase(username.value, password.value)
+            _isLoading.value = false
 
             result.onSuccess { user ->
-                _loginState.value = LoginState(user = user)
+                _uiEvent.send(UiEvent.ShowToast("Đăng nhập thành công!"))
+                _uiEvent.send(UiEvent.LoginSuccess)
             }.onFailure { exception ->
-                _loginState.value = LoginState(error = exception.message ?: "Lỗi không xác định")
+                _uiEvent.send(UiEvent.ShowToast("Lỗi: " + (exception.message ?: "không xác định")))
             }
         }
     }

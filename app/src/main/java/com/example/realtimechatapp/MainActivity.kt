@@ -13,6 +13,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavHost
+import androidx.navigation.compose.rememberNavController
+import com.example.realtimechatapp.ui.navigation.AppNavigation
 import com.example.realtimechatapp.ui.screens.auth.LoginScreen
 import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,12 +27,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RealtimeChatAppTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    LoginScreen()
-                }
+                AppNavigation()
             }
         }
     }

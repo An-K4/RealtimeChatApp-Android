@@ -13,16 +13,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,9 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -40,28 +38,33 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.CreationExtras
+import androidx.navigation.NavController
 import com.example.realtimechatapp.R
+import com.example.realtimechatapp.ui.navigation.Screen
 import com.example.realtimechatapp.ui.theme.Chewy
-import com.example.realtimechatapp.ui.theme.RealtimeBlue
 import com.example.realtimechatapp.ui.theme.RealtimeGreen
 
 @Composable
 fun LoginScreen(
-    viewModel: LoginViewModel = hiltViewModel()
+    navController: NavController,
+    loginViewModel: AuthViewModel = hiltViewModel()
 ) {
-    val state = viewModel.loginState.value
+    val loadingState by loginViewModel.isLoading.collectAsState()
     val context = LocalContext.current
 
-    LaunchedEffect(state) {
-        if (state.error != null) {
-            Toast.makeText(context, state.error, Toast.LENGTH_SHORT).show()
-        }
-        if (state.user != null) {
-            Toast.makeText(
-                context,
-                "Đăng nhập thành công, xin chào ${state.user.fullName}",
-                Toast.LENGTH_SHORT
-            ).show()
+    LaunchedEffect(Unit) {
+        loginViewModel.uiEvent.collect { event ->
+            when(event){
+                is AuthViewModel.UiEvent.LoginSuccess -> {
+                    navController.navigate(Screen.Home.route){
+                        popUpTo(Screen.Login.route){ inclusive = true }
+                    }
+                }
+                is AuthViewModel.UiEvent.ShowToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
@@ -96,8 +99,8 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             OutlinedTextField(
-                value = viewModel.username.value,
-                onValueChange = { viewModel.onUsernameChange(it) },
+                value = loginViewModel.username.value,
+                onValueChange = { loginViewModel.onUsernameChange(it) },
                 label = { Text("Tên đăng nhập") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -110,8 +113,8 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = viewModel.password.value,
-                onValueChange = { viewModel.onPasswordChange(it) },
+                value = loginViewModel.password.value,
+                onValueChange = { loginViewModel.onPasswordChange(it) },
                 label = { Text("Mật khẩu") },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
@@ -125,9 +128,9 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { viewModel.login() },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !state.isLoading,
+                onClick = { loginViewModel.login() },
+                modifier = Modifier.fillMaxWidth().padding(10.dp),
+                enabled = !loadingState,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = RealtimeGreen,
                     contentColor = Color.White
@@ -137,15 +140,15 @@ fun LoginScreen(
                     pressedElevation = 4.dp
                 )
             ) {
-                if (state.isLoading) {
+                if (loadingState) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else Text(
-                    "Đăng nhập",
+                    text = "Đăng nhập",
+                    fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
                 )
             }
 
