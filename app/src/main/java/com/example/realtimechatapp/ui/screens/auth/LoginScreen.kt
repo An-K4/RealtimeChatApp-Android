@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,18 +28,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.navigation.NavController
 import com.example.realtimechatapp.R
+import com.example.realtimechatapp.ui.components.CustomClickableText
 import com.example.realtimechatapp.ui.navigation.Screen
 import com.example.realtimechatapp.ui.theme.Chewy
 import com.example.realtimechatapp.ui.theme.RealtimeGreen
@@ -48,15 +45,18 @@ import com.example.realtimechatapp.ui.theme.RealtimeGreen
 @Composable
 fun LoginScreen(
     navController: NavController,
-    loginViewModel: AuthViewModel = hiltViewModel()
+    authViewModel: AuthViewModel = hiltViewModel()
 ) {
-    val loadingState by loginViewModel.isLoading.collectAsState()
+    val loadingState by authViewModel.isLoading.collectAsState()
+    val username by authViewModel.username.collectAsState()
+    val password by authViewModel.password.collectAsState()
+
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        loginViewModel.uiEvent.collect { event ->
+        authViewModel.uiEvent.collect { event ->
             when(event){
-                is AuthViewModel.UiEvent.LoginSuccess -> {
+                is AuthViewModel.UiEvent.Success -> {
                     navController.navigate(Screen.Home.route){
                         popUpTo(Screen.Login.route){ inclusive = true }
                     }
@@ -99,8 +99,8 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             OutlinedTextField(
-                value = loginViewModel.username.value,
-                onValueChange = { loginViewModel.onUsernameChange(it) },
+                value = username,
+                onValueChange = { authViewModel.onUsernameChange(it) },
                 label = { Text("Tên đăng nhập") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -113,8 +113,8 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = loginViewModel.password.value,
-                onValueChange = { loginViewModel.onPasswordChange(it) },
+                value = password,
+                onValueChange = { authViewModel.onPasswordChange(it) },
                 label = { Text("Mật khẩu") },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
@@ -128,7 +128,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { loginViewModel.login() },
+                onClick = { authViewModel.login() },
                 modifier = Modifier.fillMaxWidth().padding(10.dp),
                 enabled = !loadingState,
                 colors = ButtonDefaults.buttonColors(
@@ -154,39 +154,113 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            ClickableSignupText(onSignupClicked = {
-                Toast.makeText(context, "Đăng ký đã nhấn", Toast.LENGTH_SHORT).show()
-            })
+            CustomClickableText(
+                "Bạn chưa có tài khoản? ",
+                "Đăng ký",
+                "signup",
+                "",
+                "",
+                onTextClicked = {
+                    navController.navigate(Screen.Signup.route){
+                        popUpTo(Screen.Login.route){ inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
 
+@Preview(showBackground = true)
 @Composable
-fun ClickableSignupText(
-    onSignupClicked: () -> Unit
-) {
-    val annotatedText = buildAnnotatedString {
-        append("Bạn chưa có tài khoản? ")
-
-        pushStringAnnotation(tag = "signup", annotation = "signup")
-        withStyle(
-            style = SpanStyle(
-                color = RealtimeGreen, // Chọn màu nổi bật
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
+fun LoginUI(){
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            append("Đăng ký")
+            Image(
+                painter = painterResource(R.drawable.logo),
+                contentDescription = stringResource(R.string.app_logo),
+                modifier = Modifier
+                    .size(200.dp)
+                    .padding(bottom = 16.dp)
+            )
+
+            Text(
+                text = stringResource(R.string.app_name),
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Black,
+                fontFamily = Chewy,
+                fontStyle = FontStyle.Italic,
+                color = RealtimeGreen
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            OutlinedTextField(
+                value = "",
+                onValueChange = { },
+                label = { Text("Tên đăng nhập") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = RealtimeGreen,
+                    cursorColor = Color.Gray
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = "",
+                onValueChange = { },
+                label = { Text("Mật khẩu") },
+                modifier = Modifier.fillMaxWidth(),
+                visualTransformation = PasswordVisualTransformation(),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = RealtimeGreen,
+                    cursorColor = Color.Gray
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = { },
+                modifier = Modifier.fillMaxWidth().padding(10.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = RealtimeGreen,
+                    contentColor = Color.White
+                ),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 8.dp,
+                    pressedElevation = 4.dp
+                )
+            ) {
+                Text(
+                    text = "Đăng nhập",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            CustomClickableText(
+                "Bạn chưa có tài khoản? ",
+                "Đăng ký",
+                "signup",
+                "",
+                "",
+                onTextClicked = {}
+            )
         }
     }
-
-    ClickableText(
-        text = annotatedText,
-        onClick = { offset ->
-            annotatedText.getStringAnnotations("signup", start = offset, end = offset)
-                .firstOrNull()?.let {
-                    onSignupClicked()
-                }
-        }
-    )
 }
