@@ -4,5 +4,6 @@ data class SignupRequestDto(
     val username: String,
     val password: String,
     val fullName: String,
-    val email: String
+    val email: String,
+    val avatar: String?
 )

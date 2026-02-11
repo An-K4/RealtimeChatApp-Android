@@ -1,6 +1,10 @@
 package com.example.realtimechatapp.di
 
+import com.example.realtimechatapp.data.adapter.UserAdapter
 import com.example.realtimechatapp.data.remote.AuthApi
+import com.example.realtimechatapp.domain.model.User
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -40,5 +44,22 @@ object NetworkModule {
             .create(
                 AuthApi::class.java
             )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGson(): Gson{
+        return GsonBuilder()
+            .registerTypeAdapter(User::class.java, UserAdapter())
+            .create()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(gson: Gson, client: OkHttpClient): Retrofit{
+        return Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
     }
 }
