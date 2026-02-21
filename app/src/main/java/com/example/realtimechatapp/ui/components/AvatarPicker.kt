@@ -83,7 +83,7 @@ fun AvatarPickerUI() {
             Image(
                 painter = painterResource(R.drawable.ic_change_avatar),
                 contentDescription = "Change Avatar",
-                modifier = Modifier.size(50.dp)
+                modifier = Modifier.size(44.dp)
                     .clip(CircleShape)
                     .border(1.dp, Color.Gray, CircleShape)
             )

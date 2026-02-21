@@ -28,9 +28,9 @@ class AuthViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ): ViewModel() {
 
-    sealed class UiEvent {
-        object Success: UiEvent()
-        data class ShowToast(val message: String): UiEvent()
+    sealed class AuthEvent {
+        object Success: AuthEvent()
+        object Failure: AuthEvent()
     }
 
     private val _username = MutableStateFlow("")
@@ -50,6 +50,12 @@ class AuthViewModel @Inject constructor(
 
     private val _avatar = MutableStateFlow(null as Uri?)
     val avatar : StateFlow<Uri?> = _avatar.asStateFlow()
+
+    private val _showSuccessDialog = MutableStateFlow(false)
+    val showSuccessDialog = _showSuccessDialog.asStateFlow()
+
+    private val _showErrorDialog = MutableStateFlow(false)
+    val showErrorDialog = _showErrorDialog.asStateFlow()
 
     fun onUsernameChange(newValue: String){
         _username.value = newValue
@@ -75,11 +81,22 @@ class AuthViewModel @Inject constructor(
         _avatar.value = newValue
     }
 
+    fun onShowSuccessDialogChange(newValue: Boolean){
+        _showSuccessDialog.value = newValue
+    }
+
+    fun onShowErrorDialogChange(newValue: Boolean){
+        _showErrorDialog.value = newValue
+    }
+
     private var _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
-    private val _uiEvent = Channel<UiEvent>()
-    val uiEvent = _uiEvent.receiveAsFlow()
+    private val _messageDialog = MutableStateFlow("")
+    val messageDialog = _messageDialog.asStateFlow()
+
+    private val _authEvent = Channel<AuthEvent>()
+    val authEvent = _authEvent.receiveAsFlow()
 
     fun login(){
         viewModelScope.launch {
@@ -88,10 +105,11 @@ class AuthViewModel @Inject constructor(
             _isLoading.value = false
 
             result.onSuccess { user ->
-                _uiEvent.send(UiEvent.ShowToast("Đăng nhập thành công!"))
-                _uiEvent.send(UiEvent.Success)
+                _authEvent.send(AuthEvent.Success)
             }.onFailure { exception ->
-                _uiEvent.send(UiEvent.ShowToast("Lỗi: " + (exception.message ?: "không xác định")))
+                _authEvent.send(AuthEvent.Failure)
+                _messageDialog.value = exception.getErrorMessage()
+                _showErrorDialog.value = true
             }
         }
     }
@@ -101,7 +119,9 @@ class AuthViewModel @Inject constructor(
             var compressAvatar: File? = null
 
             if (password.value != passwordRetype.value){
-                _uiEvent.send(UiEvent.ShowToast("Mật khẩu xác nhận không khớp"))
+                _authEvent.send(AuthEvent.Failure)
+                _messageDialog.value = "Mật khẩu xác nhận không khớp"
+                _showErrorDialog.value = true
             } else {
                 _isLoading.value = true
 
@@ -123,10 +143,13 @@ class AuthViewModel @Inject constructor(
                 )
 
                 result.onSuccess{ message ->
-                    _uiEvent.send(UiEvent.ShowToast(message))
-                    _uiEvent.send(UiEvent.Success)
+                    _authEvent.send(AuthEvent.Success)
+                    _messageDialog.value = "Đăng ký thành công, chuyển hướng về trang đăng nhập."
+                    _showSuccessDialog.value = true
                 }.onFailure { exception ->
-                    _uiEvent.send(UiEvent.ShowToast(exception.getErrorMessage()))
+                    _authEvent.send(AuthEvent.Failure)
+                    _messageDialog.value = exception.getErrorMessage()
+                    _showErrorDialog.value = true
                 }
 
                 _isLoading.value = false

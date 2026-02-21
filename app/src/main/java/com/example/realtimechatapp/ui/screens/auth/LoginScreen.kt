@@ -1,6 +1,5 @@
 package com.example.realtimechatapp.ui.screens.auth
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,6 +37,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.ui.components.CustomClickableText
+import com.example.realtimechatapp.ui.components.NotificationDialog
 import com.example.realtimechatapp.ui.navigation.Screen
 import com.example.realtimechatapp.ui.theme.Chewy
 import com.example.realtimechatapp.ui.theme.RealtimeGreen
@@ -50,20 +50,18 @@ fun LoginScreen(
     val loadingState by authViewModel.isLoading.collectAsState()
     val username by authViewModel.username.collectAsState()
     val password by authViewModel.password.collectAsState()
-
-    val context = LocalContext.current
+    val showErrorDialog by authViewModel.showErrorDialog.collectAsState()
+    val messageDialog = authViewModel.messageDialog.collectAsState()
 
     LaunchedEffect(Unit) {
-        authViewModel.uiEvent.collect { event ->
+        authViewModel.authEvent.collect { event ->
             when(event){
-                is AuthViewModel.UiEvent.Success -> {
+                is AuthViewModel.AuthEvent.Success -> {
                     navController.navigate(Screen.Home.route){
                         popUpTo(Screen.Login.route){ inclusive = true }
                     }
                 }
-                is AuthViewModel.UiEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                }
+                is AuthViewModel.AuthEvent.Failure -> {}
             }
         }
     }
@@ -165,6 +163,14 @@ fun LoginScreen(
                         popUpTo(Screen.Login.route){ inclusive = true }
                     }
                 }
+            )
+
+            NotificationDialog(
+                showDialog = showErrorDialog,
+                title = "Lỗi Đăng Nhập",
+                message = messageDialog.value,
+                isSuccess = false,
+                onDismiss = { authViewModel.onShowErrorDialogChange(false) }
             )
         }
     }

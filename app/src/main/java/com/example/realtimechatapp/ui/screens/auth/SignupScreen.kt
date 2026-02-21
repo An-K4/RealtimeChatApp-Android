@@ -1,6 +1,5 @@
 package com.example.realtimechatapp.ui.screens.auth
 
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -33,9 +32,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.realtimechatapp.ui.components.AvatarPicker
 import com.example.realtimechatapp.ui.components.CustomClickableText
+import com.example.realtimechatapp.ui.components.NotificationDialog
 import com.example.realtimechatapp.ui.navigation.Screen
 import com.example.realtimechatapp.ui.theme.RealtimeGreen
-import timber.log.Timber
 
 @Composable
 fun SignupScreen(
@@ -49,6 +48,9 @@ fun SignupScreen(
     val fullName by authViewModel.fullName.collectAsState()
     val email by authViewModel.email.collectAsState()
     val avatar by authViewModel.avatar.collectAsState()
+    val showSuccessDialog by authViewModel.showSuccessDialog.collectAsState()
+    val showErrorDialog by authViewModel.showErrorDialog.collectAsState()
+    val messageDialog = authViewModel.messageDialog.collectAsState()
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -59,19 +61,11 @@ fun SignupScreen(
         }
     )
 
-    val context = LocalContext.current
-
     LaunchedEffect(Unit) {
-        authViewModel.uiEvent.collect { event ->
+        authViewModel.authEvent.collect { event ->
             when(event){
-                is AuthViewModel.UiEvent.Success -> {
-                    navController.navigate(Screen.Login.route){
-                        popUpTo(Screen.Signup.route){ inclusive = true }
-                    }
-                }
-                is AuthViewModel.UiEvent.ShowToast -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                }
+                is AuthViewModel.AuthEvent.Success -> {}
+                is AuthViewModel.AuthEvent.Failure -> {}
             }
         }
     }
@@ -202,6 +196,27 @@ fun SignupScreen(
                         popUpTo(Screen.Signup.route){ inclusive = true }
                     }
                 }
+            )
+
+            NotificationDialog(
+                showDialog = showSuccessDialog,
+                title = "Thành Công",
+                message = messageDialog.value,
+                isSuccess = true,
+                onDismiss = {
+                    authViewModel.onShowSuccessDialogChange(false)
+                    navController.navigate(Screen.Login.route){
+                        popUpTo(Screen.Signup.route){ inclusive = true }
+                    }
+                }
+            )
+
+            NotificationDialog(
+                showDialog = showErrorDialog,
+                title = "Lỗi Đăng Nhập",
+                message = messageDialog.value,
+                isSuccess = false,
+                onDismiss = { authViewModel.onShowErrorDialogChange(false) }
             )
         }
     }
