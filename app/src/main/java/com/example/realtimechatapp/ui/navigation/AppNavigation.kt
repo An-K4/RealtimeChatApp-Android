@@ -6,7 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.realtimechatapp.ui.screens.auth.LoginScreen
 import com.example.realtimechatapp.ui.screens.auth.SignupScreen
-import com.example.realtimechatapp.ui.screens.chats.ChatScreen
+import com.example.realtimechatapp.ui.screens.direct.ChatScreen
 
 @Composable
 fun AppNavigation(){
@@ -21,7 +21,7 @@ fun AppNavigation(){
             SignupScreen(navController)
         }
 
-        composable(Screen.Home.route){
+        composable(Screen.Direct.route){
             ChatScreen(navController)
         }
     }

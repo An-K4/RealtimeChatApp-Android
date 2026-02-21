@@ -30,7 +30,7 @@ class AuthViewModel @Inject constructor(
 
     sealed class AuthEvent {
         object Success: AuthEvent()
-        object Failure: AuthEvent()
+        data class Failure(val message: String): AuthEvent()
     }
 
     private val _username = MutableStateFlow("")
@@ -50,12 +50,6 @@ class AuthViewModel @Inject constructor(
 
     private val _avatar = MutableStateFlow(null as Uri?)
     val avatar : StateFlow<Uri?> = _avatar.asStateFlow()
-
-    private val _showSuccessDialog = MutableStateFlow(false)
-    val showSuccessDialog = _showSuccessDialog.asStateFlow()
-
-    private val _showErrorDialog = MutableStateFlow(false)
-    val showErrorDialog = _showErrorDialog.asStateFlow()
 
     fun onUsernameChange(newValue: String){
         _username.value = newValue
@@ -81,19 +75,8 @@ class AuthViewModel @Inject constructor(
         _avatar.value = newValue
     }
 
-    fun onShowSuccessDialogChange(newValue: Boolean){
-        _showSuccessDialog.value = newValue
-    }
-
-    fun onShowErrorDialogChange(newValue: Boolean){
-        _showErrorDialog.value = newValue
-    }
-
     private var _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
-
-    private val _messageDialog = MutableStateFlow("")
-    val messageDialog = _messageDialog.asStateFlow()
 
     private val _authEvent = Channel<AuthEvent>()
     val authEvent = _authEvent.receiveAsFlow()
@@ -107,9 +90,7 @@ class AuthViewModel @Inject constructor(
             result.onSuccess { user ->
                 _authEvent.send(AuthEvent.Success)
             }.onFailure { exception ->
-                _authEvent.send(AuthEvent.Failure)
-                _messageDialog.value = exception.getErrorMessage()
-                _showErrorDialog.value = true
+                _authEvent.send(AuthEvent.Failure(exception.getErrorMessage()))
             }
         }
     }
@@ -119,9 +100,7 @@ class AuthViewModel @Inject constructor(
             var compressAvatar: File? = null
 
             if (password.value != passwordRetype.value){
-                _authEvent.send(AuthEvent.Failure)
-                _messageDialog.value = "Mật khẩu xác nhận không khớp"
-                _showErrorDialog.value = true
+                _authEvent.send(AuthEvent.Failure("Mật khẩu xác nhận không khớp"))
             } else {
                 _isLoading.value = true
 
@@ -144,12 +123,8 @@ class AuthViewModel @Inject constructor(
 
                 result.onSuccess{ message ->
                     _authEvent.send(AuthEvent.Success)
-                    _messageDialog.value = "Đăng ký thành công, chuyển hướng về trang đăng nhập."
-                    _showSuccessDialog.value = true
                 }.onFailure { exception ->
-                    _authEvent.send(AuthEvent.Failure)
-                    _messageDialog.value = exception.getErrorMessage()
-                    _showErrorDialog.value = true
+                    _authEvent.send(AuthEvent.Failure(exception.getErrorMessage()))
                 }
 
                 _isLoading.value = false

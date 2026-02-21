@@ -21,10 +21,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -50,18 +52,19 @@ fun LoginScreen(
     val loadingState by authViewModel.isLoading.collectAsState()
     val username by authViewModel.username.collectAsState()
     val password by authViewModel.password.collectAsState()
-    val showErrorDialog by authViewModel.showErrorDialog.collectAsState()
-    val messageDialog = authViewModel.messageDialog.collectAsState()
+    var dialogState by remember{ mutableStateOf<AuthViewModel.AuthEvent?>(null) }
 
     LaunchedEffect(Unit) {
         authViewModel.authEvent.collect { event ->
             when(event){
                 is AuthViewModel.AuthEvent.Success -> {
-                    navController.navigate(Screen.Home.route){
+                    navController.navigate(Screen.Direct.route){
                         popUpTo(Screen.Login.route){ inclusive = true }
                     }
                 }
-                is AuthViewModel.AuthEvent.Failure -> {}
+                is AuthViewModel.AuthEvent.Failure-> {
+                    dialogState = event
+                }
             }
         }
     }
@@ -165,13 +168,15 @@ fun LoginScreen(
                 }
             )
 
-            NotificationDialog(
-                showDialog = showErrorDialog,
-                title = "Lỗi Đăng Nhập",
-                message = messageDialog.value,
-                isSuccess = false,
-                onDismiss = { authViewModel.onShowErrorDialogChange(false) }
-            )
+            if(dialogState is AuthViewModel.AuthEvent.Failure){
+                val msg = (dialogState as AuthViewModel.AuthEvent.Failure).message
+                NotificationDialog(
+                    title = "Lỗi Đăng Nhập",
+                    message = msg,
+                    isSuccess = false,
+                    onDismiss = { dialogState = null }
+                )
+            }
         }
     }
 }

@@ -22,10 +22,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -48,9 +50,7 @@ fun SignupScreen(
     val fullName by authViewModel.fullName.collectAsState()
     val email by authViewModel.email.collectAsState()
     val avatar by authViewModel.avatar.collectAsState()
-    val showSuccessDialog by authViewModel.showSuccessDialog.collectAsState()
-    val showErrorDialog by authViewModel.showErrorDialog.collectAsState()
-    val messageDialog = authViewModel.messageDialog.collectAsState()
+    var dialogState by remember { mutableStateOf<AuthViewModel.AuthEvent?>(null) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -64,8 +64,12 @@ fun SignupScreen(
     LaunchedEffect(Unit) {
         authViewModel.authEvent.collect { event ->
             when(event){
-                is AuthViewModel.AuthEvent.Success -> {}
-                is AuthViewModel.AuthEvent.Failure -> {}
+                is AuthViewModel.AuthEvent.Success -> {
+                    dialogState = event
+                }
+                is AuthViewModel.AuthEvent.Failure -> {
+                    dialogState = event
+                }
             }
         }
     }
@@ -198,26 +202,29 @@ fun SignupScreen(
                 }
             )
 
-            NotificationDialog(
-                showDialog = showSuccessDialog,
-                title = "Thành Công",
-                message = messageDialog.value,
-                isSuccess = true,
-                onDismiss = {
-                    authViewModel.onShowSuccessDialogChange(false)
-                    navController.navigate(Screen.Login.route){
-                        popUpTo(Screen.Signup.route){ inclusive = true }
+            if(dialogState is AuthViewModel.AuthEvent.Success){
+                NotificationDialog(
+                    title = "Thành Công",
+                    message = "Đăng ký thành công, chuyển hướng về trang đăng nhập.",
+                    isSuccess = true,
+                    onDismiss = {
+                        dialogState = null
+                        navController.navigate(Screen.Login.route){
+                            popUpTo(Screen.Signup.route){ inclusive = true }
+                        }
                     }
-                }
-            )
+                )
+            }
 
-            NotificationDialog(
-                showDialog = showErrorDialog,
-                title = "Lỗi Đăng Nhập",
-                message = messageDialog.value,
-                isSuccess = false,
-                onDismiss = { authViewModel.onShowErrorDialogChange(false) }
-            )
+            if(dialogState is AuthViewModel.AuthEvent.Failure){
+                val msg = (dialogState as AuthViewModel.AuthEvent.Failure).message
+                NotificationDialog(
+                    title = "Lỗi Đăng Nhập",
+                    message = msg,
+                    isSuccess = false,
+                    onDismiss = { dialogState = null }
+                )
+            }
         }
     }
 }

@@ -31,61 +31,60 @@ import com.example.realtimechatapp.ui.theme.Red
 
 @Composable
 fun NotificationDialog(
-    showDialog: Boolean,
     title: String,
     message: String,
     isSuccess: Boolean, // true = green, false = red
     onDismiss: () -> Unit
-){
-    if (showDialog){
-        Dialog( onDismissRequest = { onDismiss() } ) {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                elevation = CardDefaults.cardElevation(8.dp)
+) {
+    Dialog(onDismissRequest = { onDismiss() }) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            elevation = CardDefaults.cardElevation(8.dp)
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(16.dp)
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(16.dp)
+                Icon(
+                    imageVector = if (isSuccess) Icons.Default.CheckCircle else Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = if (isSuccess) Green else Red,
+                    modifier = Modifier.size(64.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = title,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = message,
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = { onDismiss() },
+                    colors = ButtonDefaults.buttonColors(
+                        if (isSuccess) Green else Red
+                    ),
+                    shape = RoundedCornerShape(50),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(
-                        imageVector = if(isSuccess) Icons.Default.CheckCircle else Icons.Default.Warning,
-                        contentDescription = null,
-                        tint = if(isSuccess) Green else Red,
-                        modifier = Modifier.size(64.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = title,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = message,
-                        fontSize = 14.sp,
-                        color = Color.Gray,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Button(
-                        onClick = { onDismiss() },
-                        colors = ButtonDefaults.buttonColors(
-                            if (isSuccess) Green else Red
-                        ),
-                        shape = RoundedCornerShape(50),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("OK", color = Color.White)
-                    }
+                    Text("OK", color = Color.White)
                 }
             }
         }
@@ -94,12 +93,14 @@ fun NotificationDialog(
 
 @Preview(showBackground = true)
 @Composable
-fun NotificationDialog(){
-    Dialog( onDismissRequest = { } ) {
+fun NotificationDialog() {
+    Dialog(onDismissRequest = { }) {
         Card(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             elevation = CardDefaults.cardElevation(8.dp)
         ) {
             Column(
