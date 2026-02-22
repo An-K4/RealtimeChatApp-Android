@@ -2,17 +2,20 @@ package com.example.realtimechatapp.data.repository
 
 import com.example.realtimechatapp.common.NetworkUtils
 import com.example.realtimechatapp.common.getErrorMessage
+import com.example.realtimechatapp.data.local.TokenManager
 import com.example.realtimechatapp.data.remote.AuthApi
 import com.example.realtimechatapp.data.remote.dto.LoginRequestDto
 import com.example.realtimechatapp.data.remote.dto.SignupRequestDto
 import com.example.realtimechatapp.domain.model.User
 import com.example.realtimechatapp.domain.repository.AuthRepository
-import okhttp3.MultipartBody
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
 
-class AuthRepositoryImpl @Inject constructor(private val api: AuthApi) : AuthRepository {
+class AuthRepositoryImpl @Inject constructor(
+    private val api: AuthApi,
+    private val tokenManager: TokenManager
+) : AuthRepository {
     override suspend fun login(
         username: String,
         password: String
@@ -20,6 +23,7 @@ class AuthRepositoryImpl @Inject constructor(private val api: AuthApi) : AuthRep
         return try {
             val response = api.login(LoginRequestDto(username, password))
             val user = response.user.toUser()
+            tokenManager.saveToken(response.token)
             Result.success(user)
         } catch (e: Exception) {
             e.printStackTrace()
