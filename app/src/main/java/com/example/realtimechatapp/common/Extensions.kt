@@ -2,7 +2,11 @@ package com.example.realtimechatapp.common
 
 import org.json.JSONObject
 import retrofit2.HttpException
+import timber.log.Timber
 import java.io.IOException
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 fun Throwable.getErrorMessage(): String{
     return when(this){
@@ -22,5 +26,24 @@ fun Throwable.getErrorMessage(): String{
             }
         }
         else -> this.message?:"Đã có lỗi xảy ra"
+    }
+}
+
+fun String?.toHourMinute(): String {
+    if (this.isNullOrBlank()) return ""
+
+    return try {
+        // parse string ISO 8601 (E.g: "2024-05-21T10:15:30.000Z") to Instant
+        val instant = Instant.parse(this)
+
+        // convert Instant to device timezone
+        val zonedDateTime = instant.atZone(ZoneId.systemDefault())
+
+        // format to "HH:mm"
+        zonedDateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+    } catch (e: Exception) {
+        // log
+        Timber.e(e, "Failed to parse timestamp: %s", this)
+        "" // return null
     }
 }

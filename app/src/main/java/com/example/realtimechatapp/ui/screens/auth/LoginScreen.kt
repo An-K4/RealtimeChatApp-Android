@@ -58,7 +58,7 @@ fun LoginScreen(
         authViewModel.authEvent.collect { event ->
             when(event){
                 is AuthViewModel.AuthEvent.Success -> {
-                    navController.navigate(Screen.Direct.route){
+                    navController.navigate(Screen.Messages.route){
                         popUpTo(Screen.Login.route){ inclusive = true }
                     }
                 }

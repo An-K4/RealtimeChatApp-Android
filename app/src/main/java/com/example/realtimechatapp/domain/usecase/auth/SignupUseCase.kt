@@ -1,4 +1,4 @@
-package com.example.realtimechatapp.domain.usecase
+package com.example.realtimechatapp.domain.usecase.auth
 
 import com.example.realtimechatapp.domain.repository.AuthRepository
 import timber.log.Timber
@@ -18,11 +18,11 @@ class SignupUseCase @Inject constructor(private val authRepository: AuthReposito
         }
 
         val avatarUrl: String? = avatar?.let {
-            Timber.d("Đang tải lên")
+            Timber.Forest.d("Đang tải lên")
             authRepository.uploadAvatar(avatar).getOrNull()
         }
 
-        Timber.d("Tải hoàn tất, url là %s", avatarUrl)
+        Timber.Forest.d("Tải hoàn tất, url là %s", avatarUrl)
         return authRepository.signup(username, password, fullName, email, avatarUrl)
     }
 }

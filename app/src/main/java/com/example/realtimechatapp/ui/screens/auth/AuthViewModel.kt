@@ -7,8 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.realtimechatapp.common.FileUtils
 import com.example.realtimechatapp.common.ImageUtils
 import com.example.realtimechatapp.common.getErrorMessage
-import com.example.realtimechatapp.domain.usecase.LoginUseCase
-import com.example.realtimechatapp.domain.usecase.SignupUseCase
+import com.example.realtimechatapp.domain.usecase.auth.LoginUseCase
+import com.example.realtimechatapp.domain.usecase.auth.SignupUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel

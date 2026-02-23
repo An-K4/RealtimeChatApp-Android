@@ -1,4 +1,4 @@
-package com.example.realtimechatapp.domain.usecase
+package com.example.realtimechatapp.domain.usecase.auth
 
 import com.example.realtimechatapp.domain.repository.AuthRepository
 import javax.inject.Inject

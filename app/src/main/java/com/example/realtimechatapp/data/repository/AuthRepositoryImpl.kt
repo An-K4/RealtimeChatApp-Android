@@ -13,7 +13,7 @@ import java.io.File
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
-    private val api: AuthApi,
+    private val authApi: AuthApi,
     private val tokenManager: TokenManager
 ) : AuthRepository {
     override suspend fun login(
@@ -21,7 +21,7 @@ class AuthRepositoryImpl @Inject constructor(
         password: String
     ): Result<User> {
         return try {
-            val response = api.login(LoginRequestDto(username, password))
+            val response = authApi.login(LoginRequestDto(username, password))
             val user = response.user.toUser()
             tokenManager.saveToken(response.token)
             Result.success(user)
@@ -34,7 +34,7 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun uploadAvatar(file: File): Result<String?> {
         return try {
             val part = NetworkUtils.createPartFromFile("avatar", file)
-            val uploadResult = api.uploadAvatar(part)
+            val uploadResult = authApi.uploadAvatar(part)
             val url = uploadResult.url
             Timber.d("Upload thành công, url là %s", url)
             Result.success(url)
@@ -52,7 +52,7 @@ class AuthRepositoryImpl @Inject constructor(
         avatar: String?
     ): Result<String> {
         return try {
-            val response = api.signup(SignupRequestDto(username, password, fullName, email, avatar))
+            val response = authApi.signup(SignupRequestDto(username, password, fullName, email, avatar))
             Result.success(response.message)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -62,7 +62,7 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun logout(token: String): Result<String> {
         return try {
-            val response = api.logout(token)
+            val response = authApi.logout(token)
             Result.success(response.message)
         } catch (e: Exception) {
             e.printStackTrace()

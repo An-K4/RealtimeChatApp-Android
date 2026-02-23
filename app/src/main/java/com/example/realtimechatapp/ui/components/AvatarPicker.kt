@@ -41,7 +41,9 @@ fun AvatarPicker(
 
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.offset(50.dp, 50.dp)
+            modifier = Modifier
+                .offset(50.dp, 50.dp)
+                .size(50.dp)
                 .clip(CircleShape)
                 .background(Color.White)
                 .border(1.dp, Color.Gray, CircleShape)
@@ -49,10 +51,7 @@ fun AvatarPicker(
         ) {
             AsyncImage(
                 model = R.drawable.ic_change_avatar,
-                contentDescription = "Change Avatar",
-                modifier = Modifier.size(50.dp)
-                    .clip(CircleShape)
-                    .border(1.dp, Color.Gray, CircleShape)
+                contentDescription = "Change Avatar"
             )
         }
     }
@@ -75,17 +74,16 @@ fun AvatarPickerUI() {
 
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.offset(50.dp, 50.dp)
+            modifier = Modifier
+                .offset(50.dp, 50.dp)
+                .size(44.dp)
                 .clip(CircleShape)
                 .background(Color.White)
                 .border(1.dp, Color.Gray, CircleShape)
         ) {
             Image(
                 painter = painterResource(R.drawable.ic_change_avatar),
-                contentDescription = "Change Avatar",
-                modifier = Modifier.size(44.dp)
-                    .clip(CircleShape)
-                    .border(1.dp, Color.Gray, CircleShape)
+                contentDescription = "Change Avatar"
             )
         }
     }

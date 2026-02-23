@@ -2,6 +2,8 @@ package com.example.realtimechatapp.di
 
 import com.example.realtimechatapp.data.adapter.UserAdapter
 import com.example.realtimechatapp.data.remote.AuthApi
+import com.example.realtimechatapp.data.remote.AuthInterceptor
+import com.example.realtimechatapp.data.remote.MessageApi
 import com.example.realtimechatapp.domain.model.User
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -23,8 +25,9 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
         return OkHttpClient.Builder()
+            .addInterceptor(authInterceptor)
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             })
@@ -35,15 +38,24 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideAuthApi(client: OkHttpClient): AuthApi {
+    fun provideRetrofit(client: OkHttpClient): Retrofit{
         return Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create())
             .baseUrl(BASE_URL)
             .client(client)
             .build()
-            .create(
-                AuthApi::class.java
-            )
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthApi(retrofit: Retrofit): AuthApi {
+        return retrofit.create(AuthApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMessageApi(retrofit: Retrofit): MessageApi {
+        return retrofit.create(MessageApi::class.java)
     }
 
     @Provides
@@ -52,14 +64,5 @@ object NetworkModule {
         return GsonBuilder()
             .registerTypeAdapter(User::class.java, UserAdapter())
             .create()
-    }
-
-    @Provides
-    @Singleton
-    fun provideRetrofit(gson: Gson, client: OkHttpClient): Retrofit{
-        return Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create(gson))
-            .build()
     }
 }
