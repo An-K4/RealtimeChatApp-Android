@@ -10,19 +10,33 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
+import com.example.realtimechatapp.R
+import com.example.realtimechatapp.ui.theme.Chewy
 import com.example.realtimechatapp.ui.theme.RealtimeGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainTopAppBar(
-    title: String,
     onSearchClick: () -> Unit
 ) {
     TopAppBar(
-        title = { Text(text = title, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        title = {
+            Text(
+                text = stringResource(R.string.app_name),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Black,
+                fontFamily = Chewy,
+                fontStyle = FontStyle.Italic,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
         actions = {
             IconButton(onClick = { onSearchClick() }) {
                 Icon(
@@ -46,7 +60,17 @@ fun MainTopAppBar(
 @Composable
 fun PreviewTopAppBar() {
     TopAppBar(
-        title = { Text(text = "Clover Chatty", maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        title = {
+            Text(
+                text = stringResource(R.string.app_name),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Black,
+                fontFamily = Chewy,
+                fontStyle = FontStyle.Italic,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
         actions = {
             IconButton(onClick = {}) {
                 Icon(

@@ -29,19 +29,10 @@ fun AppNavigation(){
         Screen.More.route
     )
 
-    val title = when(currentRoute){
-        Screen.Messages.route -> Screen.Messages.title
-        Screen.Groups.route -> Screen.Messages.title
-        Screen.Account.route -> Screen.Messages.title
-        Screen.More.route -> Screen.Messages.title
-        else -> "Missed Something?"
-    }
-
     Scaffold(
         topBar = {
             if (showBars){
                 MainTopAppBar(
-                    title = title!!,
                     onSearchClick = {
                         navController.navigate(Screen.Search.route)
                     }

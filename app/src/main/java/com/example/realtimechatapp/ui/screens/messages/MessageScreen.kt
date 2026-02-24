@@ -13,12 +13,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.ui.components.ChatItem
+import com.example.realtimechatapp.ui.screens.BeginScreen
 
 @Composable
 fun MessageScreen(
@@ -37,36 +37,28 @@ fun MessageScreen(
         if (uiState.isLoading){
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
-            LazyColumn(
-                state = rememberLazyListState(),
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(
-                    items = uiState.users,
-                    key = { user -> user.id}
-                ){ user ->
-                    ChatItem(
-                        isGroup = false,
-                        avatar = user.avatar,
-                        name = user.fullName,
-                        unreadCount = user.unreadCount,
-                        lastMessage = user.lastMessage
-                    )
+            if (uiState.users.isEmpty()){
+                BeginScreen(false)
+            } else {
+                LazyColumn(
+                    state = rememberLazyListState(),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(
+                        items = uiState.users,
+                        key = { user -> user.id}
+                    ){ user ->
+                        ChatItem(
+                            isGroup = false,
+                            avatar = user.avatar,
+                            name = user.fullName,
+                            unreadCount = user.unreadCount,
+                            lastMessage = user.lastMessage
+                        )
+                    }
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MessageScreen(){
-    LazyColumn(
-        state = rememberLazyListState(),
-        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-
     }
 }

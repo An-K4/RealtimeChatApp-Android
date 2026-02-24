@@ -18,6 +18,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.ui.components.ChatItem
+import com.example.realtimechatapp.ui.screens.BeginScreen
 
 @Composable
 fun GroupScreen(
@@ -36,22 +37,26 @@ fun GroupScreen(
         if (uiState.isLoading){
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
-            LazyColumn(
-                state = rememberLazyListState(),
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(
-                    items = uiState.groups,
-                    key = { group -> group.id}
-                ){ group ->
-                    ChatItem(
-                        isGroup = true,
-                        avatar = group.avatar,
-                        name = group.name,
-                        unreadCount = group.unreadCount,
-                        lastMessage = group.lastMessage
-                    )
+            if (uiState.groups.isEmpty()){
+                BeginScreen(true)
+            } else {
+                LazyColumn(
+                    state = rememberLazyListState(),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(
+                        items = uiState.groups,
+                        key = { group -> group.id}
+                    ){ group ->
+                        ChatItem(
+                            isGroup = true,
+                            avatar = group.avatar,
+                            name = group.name,
+                            unreadCount = group.unreadCount,
+                            lastMessage = group.lastMessage
+                        )
+                    }
                 }
             }
         }
