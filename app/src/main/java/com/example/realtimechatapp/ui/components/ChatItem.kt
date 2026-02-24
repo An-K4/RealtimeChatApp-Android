@@ -33,7 +33,6 @@ import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.toHourMinute
 import com.example.realtimechatapp.domain.model.LastMessage
-import com.example.realtimechatapp.domain.model.UserContact
 
 @Composable
 fun ChatItem(
@@ -51,7 +50,6 @@ fun ChatItem(
         } else {
             lastMessage.content
         }
-
     }
 
     Row(
@@ -122,7 +120,11 @@ fun ChatItem(
                             containerColor = Color.Red,
                             contentColor = Color.White
                         ) {
-                            Text(unreadCount.toString())
+                            if (unreadCount < 10){
+                                Text(unreadCount.toString())
+                            } else {
+                                Text("9+")
+                            }
                         }
                     }
                 ) {
