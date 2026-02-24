@@ -1,4 +1,4 @@
-package com.example.realtimechatapp.ui.screens.messages
+package com.example.realtimechatapp.ui.screens.groups
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,7 +13,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -21,14 +20,14 @@ import androidx.navigation.NavController
 import com.example.realtimechatapp.ui.components.ChatItem
 
 @Composable
-fun MessageScreen(
+fun GroupScreen(
     navController: NavController,
-    messageViewModel: MessageViewModel = hiltViewModel()
+    groupViewModel: GroupViewModel = hiltViewModel()
 ){
-    val uiState by messageViewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by groupViewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        messageViewModel.getUsers()
+        groupViewModel.getGroup()
     }
 
     Box(
@@ -43,30 +42,18 @@ fun MessageScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(
-                    items = uiState.users,
-                    key = { user -> user.id}
-                ){ user ->
+                    items = uiState.groups,
+                    key = { group -> group.id}
+                ){ group ->
                     ChatItem(
-                        isGroup = false,
-                        avatar = user.avatar,
-                        name = user.fullName,
-                        unreadCount = user.unreadCount,
-                        lastMessage = user.lastMessage
+                        isGroup = true,
+                        avatar = group.avatar,
+                        name = group.name,
+                        unreadCount = group.unreadCount,
+                        lastMessage = group.lastMessage
                     )
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MessageScreen(){
-    LazyColumn(
-        state = rememberLazyListState(),
-        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-
     }
 }

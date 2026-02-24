@@ -1,12 +1,12 @@
 package com.example.realtimechatapp.domain.model
 
-data class UserContact(
+data class GroupContact(
     val id: String,
-    val username: String,
-    val fullName: String,
-    val email: String,
+    val name: String,
     val avatar: String?,
+    val description: String,
+    val ownerId: String,
     val unreadCount: Int,
     val lastMessage: LastMessage,
-    val lastMessageTime: String
+    val updatedAt: String
 )

@@ -25,15 +25,10 @@ data class UserContactDto(
             lastMessage = LastMessage(
                 content = this.lastMessage.content,
                 createdAt = this.lastMessage.createdAt,
+                senderName = null,
                 isMine = this.lastMessage.isMine
             ),
             lastMessageTime = this.lastMessageTime
         )
     }
 }
-
-data class LastMessageDto(
-    val content: String,
-    val createdAt: String,
-    val isMine: Boolean
-)

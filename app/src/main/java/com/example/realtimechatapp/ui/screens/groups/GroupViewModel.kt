@@ -1,9 +1,9 @@
-package com.example.realtimechatapp.ui.screens.messages
+package com.example.realtimechatapp.ui.screens.groups
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.realtimechatapp.domain.model.UserContact
-import com.example.realtimechatapp.domain.usecase.messages.GetUsersUseCase
+import com.example.realtimechatapp.domain.model.GroupContact
+import com.example.realtimechatapp.domain.usecase.groups.GetGroupsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,28 +12,28 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MessageViewModel @Inject constructor(
-    private val getUsersUseCase: GetUsersUseCase
-) : ViewModel() {
-    data class UserListUiState(
+class GroupViewModel @Inject constructor(
+    private val getGroupsUseCase: GetGroupsUseCase
+): ViewModel() {
+    data class GroupListUiState(
         val isLoading: Boolean = false,
-        val users: List<UserContact> = emptyList(),
+        val groups: List<GroupContact> = emptyList(),
         val info: String? = null
     )
 
-    private val _uiState = MutableStateFlow(UserListUiState())
+    private val _uiState = MutableStateFlow(GroupListUiState())
     val uiState = _uiState.asStateFlow()
 
-    fun getUsers() {
+    fun getGroup() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, info = null) }
 
-            getUsersUseCase().onSuccess { users ->
+            getGroupsUseCase().onSuccess { groups ->
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        users = users,
-                        info = if (users.isEmpty()) "Hãy tìm 1 người bạn và bắt đầu trò chuyện nào!" else null
+                        groups = groups,
+                        info = if (groups.isEmpty()) "Hãy tìm 1 người bạn và bắt đầu trò chuyện nào!" else null
                     )
                 }
             }.onFailure { exception ->

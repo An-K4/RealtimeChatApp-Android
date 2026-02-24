@@ -63,6 +63,7 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun logout(token: String): Result<String> {
         return try {
             val response = authApi.logout(token)
+            tokenManager.deleteToken()
             Result.success(response.message)
         } catch (e: Exception) {
             e.printStackTrace()

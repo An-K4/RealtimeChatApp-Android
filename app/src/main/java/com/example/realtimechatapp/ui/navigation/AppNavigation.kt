@@ -13,6 +13,7 @@ import com.example.realtimechatapp.ui.components.BottomNavBar
 import com.example.realtimechatapp.ui.components.MainTopAppBar
 import com.example.realtimechatapp.ui.screens.auth.LoginScreen
 import com.example.realtimechatapp.ui.screens.auth.SignupScreen
+import com.example.realtimechatapp.ui.screens.groups.GroupScreen
 import com.example.realtimechatapp.ui.screens.messages.MessageScreen
 
 @Composable
@@ -71,7 +72,7 @@ fun AppNavigation(){
             }
 
             composable(Screen.Groups.route){
-                MessageScreen(navController)
+                GroupScreen(navController)
             }
 
             composable(Screen.Account.route){

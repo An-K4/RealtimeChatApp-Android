@@ -32,14 +32,26 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.toHourMinute
+import com.example.realtimechatapp.domain.model.LastMessage
 import com.example.realtimechatapp.domain.model.UserContact
 
 @Composable
-fun ChatItem(item: UserContact) {
-    val previewLastMessage = if (item.lastMessage.isMine) {
-        "Bạn: ${item.lastMessage.content}"
+fun ChatItem(
+    isGroup: Boolean,
+    avatar: String?,
+    name: String,
+    unreadCount: Int,
+    lastMessage: LastMessage
+) {
+    val previewLastMessage = if (lastMessage.isMine) {
+        "Bạn: ${lastMessage.content}"
     } else {
-        item.lastMessage.content
+        if (isGroup){
+            "${lastMessage.senderName}: ${lastMessage.content}"
+        } else {
+            lastMessage.content
+        }
+
     }
 
     Row(
@@ -53,7 +65,7 @@ fun ChatItem(item: UserContact) {
             modifier = Modifier.size(60.dp)
         ) {
             AsyncImage(
-                model = item.avatar ?: R.drawable.logo,
+                model = avatar ?: R.drawable.logo,
                 contentDescription = "Small Preview Avatar",
                 modifier = Modifier
                     .matchParentSize()
@@ -81,7 +93,7 @@ fun ChatItem(item: UserContact) {
                 .padding(start = 5.dp)
         ) {
             Text(
-                text = item.fullName,
+                text = name,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
@@ -100,17 +112,17 @@ fun ChatItem(item: UserContact) {
             modifier = Modifier.padding(start = 5.dp)
         ) {
             Text(
-                text = item.lastMessageTime.toHourMinute(),
+                text = lastMessage.createdAt.toHourMinute(),
                 fontSize = 14.sp
             )
-            if (item.unreadCount > 0) {
+            if (unreadCount > 0) {
                 BadgedBox(
                     badge = {
                         Badge(
                             containerColor = Color.Red,
                             contentColor = Color.White
                         ) {
-                            Text(item.unreadCount.toString())
+                            Text(unreadCount.toString())
                         }
                     }
                 ) {
@@ -126,8 +138,8 @@ fun ChatItem(item: UserContact) {
 fun ChatItem() {
     Row(
         modifier = Modifier
-        .fillMaxWidth()
-        .padding(vertical = 8.dp, horizontal = 12.dp)
+            .fillMaxWidth()
+            .padding(vertical = 8.dp, horizontal = 12.dp)
     ) {
         Box(
             contentAlignment = Alignment.Center,

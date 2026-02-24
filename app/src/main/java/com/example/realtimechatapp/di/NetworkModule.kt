@@ -3,6 +3,7 @@ package com.example.realtimechatapp.di
 import com.example.realtimechatapp.data.adapter.UserAdapter
 import com.example.realtimechatapp.data.remote.AuthApi
 import com.example.realtimechatapp.data.remote.AuthInterceptor
+import com.example.realtimechatapp.data.remote.GroupApi
 import com.example.realtimechatapp.data.remote.MessageApi
 import com.example.realtimechatapp.domain.model.User
 import com.google.gson.Gson
@@ -56,6 +57,12 @@ object NetworkModule {
     @Singleton
     fun provideMessageApi(retrofit: Retrofit): MessageApi {
         return retrofit.create(MessageApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGroupApi(retrofit: Retrofit): GroupApi{
+        return retrofit.create(GroupApi::class.java)
     }
 
     @Provides
