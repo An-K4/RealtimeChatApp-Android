@@ -64,7 +64,7 @@ fun BeginScreen() {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Image(
-                painter = painterResource(R.drawable.logo),
+                painter = painterResource(R.drawable.default_avatar),
                 contentDescription = "Logo"
             )
             Spacer(modifier = Modifier.height(24.dp))

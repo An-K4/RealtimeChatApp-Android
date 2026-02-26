@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
-import com.example.realtimechatapp.common.toHourMinute
+import com.example.realtimechatapp.common.formatToTime
 import com.example.realtimechatapp.domain.model.LastMessage
 
 @Composable
@@ -63,7 +63,7 @@ fun ChatItem(
             modifier = Modifier.size(60.dp)
         ) {
             AsyncImage(
-                model = avatar ?: R.drawable.logo,
+                model = avatar ?: R.drawable.default_avatar,
                 contentDescription = "Small Preview Avatar",
                 modifier = Modifier
                     .matchParentSize()
@@ -110,7 +110,7 @@ fun ChatItem(
             modifier = Modifier.padding(start = 5.dp)
         ) {
             Text(
-                text = lastMessage.createdAt.toHourMinute(),
+                text = lastMessage.createdAt.formatToTime(true),
                 fontSize = 14.sp
             )
             if (unreadCount > 0) {
@@ -148,7 +148,7 @@ fun ChatItem() {
             modifier = Modifier.size(50.dp)
         ) {
             AsyncImage(
-                model = R.drawable.logo,
+                model = R.drawable.default_avatar,
                 contentDescription = "Small Preview Avatar",
                 modifier = Modifier
                     .matchParentSize()

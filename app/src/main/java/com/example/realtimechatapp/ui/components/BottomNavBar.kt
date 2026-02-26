@@ -21,7 +21,7 @@ fun BottomNavBar(
     val items = listOf(
         Screen.Messages,
         Screen.Groups,
-        Screen.Account,
+        Screen.Profile,
         Screen.More
     )
 
@@ -65,7 +65,7 @@ fun BottomNavBar() {
     val items = listOf(
         Screen.Messages,
         Screen.Groups,
-        Screen.Account,
+        Screen.Profile,
         Screen.More
     )
 

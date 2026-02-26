@@ -196,7 +196,7 @@ fun LoginUI(){
             verticalArrangement = Arrangement.Center
         ) {
             Image(
-                painter = painterResource(R.drawable.logo),
+                painter = painterResource(R.drawable.default_avatar),
                 contentDescription = stringResource(R.string.app_logo),
                 modifier = Modifier
                     .size(200.dp)

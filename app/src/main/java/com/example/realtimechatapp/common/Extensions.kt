@@ -29,7 +29,7 @@ fun Throwable.getErrorMessage(): String{
     }
 }
 
-fun String?.toHourMinute(): String {
+fun String?.formatToTime(toHourMinute: Boolean): String {
     if (this.isNullOrBlank()) return ""
 
     return try {
@@ -39,8 +39,13 @@ fun String?.toHourMinute(): String {
         // convert Instant to device timezone
         val zonedDateTime = instant.atZone(ZoneId.systemDefault())
 
-        // format to "HH:mm"
-        zonedDateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+        if (toHourMinute){
+            // format to "HH:mm"
+            zonedDateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+        } else {
+            // format to "dd/MM/yyyy"
+            zonedDateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+        }
     } catch (e: Exception) {
         // log
         Timber.e(e, "Failed to parse timestamp: %s", this)

@@ -15,6 +15,7 @@ import com.example.realtimechatapp.ui.screens.auth.LoginScreen
 import com.example.realtimechatapp.ui.screens.auth.SignupScreen
 import com.example.realtimechatapp.ui.screens.groups.GroupScreen
 import com.example.realtimechatapp.ui.screens.messages.MessageScreen
+import com.example.realtimechatapp.ui.screens.profile.ProfileScreen
 
 @Composable
 fun AppNavigation(){
@@ -25,7 +26,7 @@ fun AppNavigation(){
     val showBars = currentRoute in listOf(
         Screen.Messages.route,
         Screen.Groups.route,
-        Screen.Account.route,
+        Screen.Profile.route,
         Screen.More.route
     )
 
@@ -66,8 +67,8 @@ fun AppNavigation(){
                 GroupScreen(navController)
             }
 
-            composable(Screen.Account.route){
-                MessageScreen(navController)
+            composable(Screen.Profile.route){
+                ProfileScreen(navController)
             }
 
             composable(Screen.More.route){

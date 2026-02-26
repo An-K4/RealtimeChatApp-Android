@@ -1,6 +1,5 @@
 package com.example.realtimechatapp.ui.components
 
-import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,6 +8,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,7 +24,7 @@ import com.example.realtimechatapp.R
 
 @Composable
 fun AvatarPicker(
-    currentAvatar: Uri?,
+    currentAvatar: Any?,
     onAvatarPickerClick: () -> Unit
 ) {
     val avatarToDisplay = currentAvatar?:R.drawable.default_avatar
@@ -49,9 +51,10 @@ fun AvatarPicker(
                 .border(1.dp, Color.Gray, CircleShape)
                 .clickable{ onAvatarPickerClick() }
         ) {
-            AsyncImage(
-                model = R.drawable.ic_change_avatar,
-                contentDescription = "Change Avatar"
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = "Change Avatar",
+                modifier = Modifier.size(30.dp)
             )
         }
     }
@@ -81,9 +84,10 @@ fun AvatarPickerUI() {
                 .background(Color.White)
                 .border(1.dp, Color.Gray, CircleShape)
         ) {
-            Image(
-                painter = painterResource(R.drawable.ic_change_avatar),
-                contentDescription = "Change Avatar"
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = "Change Avatar",
+                modifier = Modifier.size(30.dp)
             )
         }
     }
