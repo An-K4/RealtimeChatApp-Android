@@ -11,13 +11,13 @@ data class UserDto(
     val avatar: String?,
     val createdAt: String
 ) {
-    fun toUser(): User{
+    fun toUser(): User {
         return User(
             id = id,
             username = username,
             fullName = fullName,
             email = email,
-            avatar = avatar,
+            avatar = avatar?.takeIf { it.isNotBlank() },
             createdAt = createdAt
         )
     }
