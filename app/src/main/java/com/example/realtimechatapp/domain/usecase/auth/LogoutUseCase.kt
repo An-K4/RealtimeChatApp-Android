@@ -4,7 +4,7 @@ import com.example.realtimechatapp.domain.repository.AuthRepository
 import javax.inject.Inject
 
 class LogoutUseCase @Inject constructor(private val authRepository: AuthRepository) {
-    suspend operator fun invoke(token: String) : Result<String>{
-        return authRepository.logout(token)
+    suspend operator fun invoke() : Result<String>{
+        return authRepository.logout()
     }
 }

@@ -60,14 +60,24 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun logout(token: String): Result<String> {
+    override suspend fun logout(): Result<String> {
         return try {
-            val response = authApi.logout(token)
+            val response = authApi.logout()
             tokenManager.deleteToken()
             Result.success(response.message)
         } catch (e: Exception) {
             e.printStackTrace()
             Result.failure(e)
+        }
+    }
+
+    override suspend fun getMe(): Result<User> {
+        return try {
+            val response = authApi.getMe()
+            Result.success(response.user.toUser())
+        } catch (e: Exception){
+            e.printStackTrace()
+            Result.failure(Exception(e))
         }
     }
 }
