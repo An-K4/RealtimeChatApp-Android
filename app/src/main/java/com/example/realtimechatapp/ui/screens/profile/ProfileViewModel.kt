@@ -29,6 +29,13 @@ class ProfileViewModel @Inject constructor(
         val isLoading: Boolean = false
     )
 
+    data class UpdateProfileSate(
+        val avatar: Any? = null,
+        val fullName: String = "",
+        val email: String = "",
+        val isUpdateEnable: Boolean = false
+    )
+
     sealed class ProfileEvent {
         object UpdateProfileSuccess : ProfileEvent()
         object ChangePasswordSuccess : ProfileEvent()
@@ -39,23 +46,50 @@ class ProfileViewModel @Inject constructor(
     private val _profileState = MutableStateFlow(ProfileState())
     val profileState = _profileState.asStateFlow()
 
+    private val _updateProfileState = MutableStateFlow(UpdateProfileSate())
+    val updateProfileState = _updateProfileState.asStateFlow()
+
     private val _profileEvent = Channel<ProfileEvent>()
     val profileEvent = _profileEvent.receiveAsFlow()
 
-    fun onAvatarChange(newValue: Any?) {
+    fun onUpdateAvatarChange(newValue: Any?) {
         if (newValue is String || newValue is Uri || newValue == null) {
-            _profileState.update {
-                it.copy(avatar = newValue)
-            }
+            _updateProfileState.update { it.copy(avatar = newValue) }
+        }
+        checkUpdateEnable()
+    }
+
+    fun onUpdateFullNameChange(newValue: String) {
+        _updateProfileState.update { it.copy( fullName = newValue) }
+        checkUpdateEnable()
+    }
+
+    fun onUpdateEmailChange(newValue: String) {
+        _updateProfileState.update { it.copy( email = newValue ) }
+        checkUpdateEnable()
+    }
+
+    fun initUpdateSheet() {
+        _updateProfileState.update {
+            it.copy(
+                avatar = profileState.value.avatar,
+                fullName = profileState.value.fullName,
+                email = profileState.value.email,
+                isUpdateEnable = false
+            )
         }
     }
 
-    fun onFullNameChange(newValue: String) {
-        _profileState.update { it.copy(fullName = newValue) }
-    }
+    fun checkUpdateEnable(){
+        val original = _profileState.value
+        val update = _updateProfileState.value
 
-    fun onEmailChange(newValue: String) {
-        _profileState.update { it.copy(email = newValue) }
+        val isNotEmpty = update.fullName.isNotBlank() && update.email.isNotBlank()
+        val isChanged = (update.fullName != original.fullName)
+                || (update.email != original.email)
+                || (update.avatar != original.avatar)
+
+        _updateProfileState.update { it.copy(isUpdateEnable = isNotEmpty && isChanged) }
     }
 
     fun getMe() {
@@ -82,7 +116,11 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun logout(){
+    fun updateProfile() {
+
+    }
+
+    fun logout() {
         viewModelScope.launch {
             val result = logoutUseCase()
 

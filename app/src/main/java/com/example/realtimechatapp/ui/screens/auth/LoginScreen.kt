@@ -36,6 +36,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.ui.components.CustomClickableText
@@ -53,8 +54,9 @@ fun LoginScreen(
     val username by authViewModel.username.collectAsState()
     val password by authViewModel.password.collectAsState()
     var dialogState by remember{ mutableStateOf<AuthViewModel.AuthEvent?>(null) }
+    val lifeCycleOwner = LocalLifecycleOwner.current
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(lifeCycleOwner.lifecycle, authViewModel.authEvent) {
         authViewModel.authEvent.collect { event ->
             when(event){
                 is AuthViewModel.AuthEvent.Success -> {
@@ -167,16 +169,16 @@ fun LoginScreen(
                     }
                 }
             )
+        }
 
-            if(dialogState is AuthViewModel.AuthEvent.Failure){
-                val msg = (dialogState as AuthViewModel.AuthEvent.Failure).message
-                NotificationDialog(
-                    title = "Lỗi Đăng Nhập",
-                    message = msg,
-                    isSuccess = false,
-                    onDismiss = { dialogState = null }
-                )
-            }
+        if(dialogState is AuthViewModel.AuthEvent.Failure){
+            val msg = (dialogState as AuthViewModel.AuthEvent.Failure).message
+            NotificationDialog(
+                title = "Lỗi Đăng Nhập",
+                message = msg,
+                isSuccess = false,
+                onDismiss = { dialogState = null }
+            )
         }
     }
 }

@@ -201,30 +201,30 @@ fun SignupScreen(
                     }
                 }
             )
+        }
 
-            if(dialogState is AuthViewModel.AuthEvent.Success){
-                NotificationDialog(
-                    title = "Thành Công",
-                    message = "Đăng ký thành công, chuyển hướng về trang đăng nhập.",
-                    isSuccess = true,
-                    onDismiss = {
-                        dialogState = null
-                        navController.navigate(Screen.Login.route){
-                            popUpTo(Screen.Signup.route){ inclusive = true }
-                        }
+        if(dialogState is AuthViewModel.AuthEvent.Success){
+            NotificationDialog(
+                title = "Thành Công",
+                message = "Đăng ký thành công, chuyển hướng về trang đăng nhập.",
+                isSuccess = true,
+                onDismiss = {
+                    dialogState = null
+                    navController.navigate(Screen.Login.route){
+                        popUpTo(Screen.Signup.route){ inclusive = true }
                     }
-                )
-            }
+                }
+            )
+        }
 
-            if(dialogState is AuthViewModel.AuthEvent.Failure){
-                val msg = (dialogState as AuthViewModel.AuthEvent.Failure).message
-                NotificationDialog(
-                    title = "Lỗi Đăng Nhập",
-                    message = msg,
-                    isSuccess = false,
-                    onDismiss = { dialogState = null }
-                )
-            }
+        if(dialogState is AuthViewModel.AuthEvent.Failure){
+            val msg = (dialogState as AuthViewModel.AuthEvent.Failure).message
+            NotificationDialog(
+                title = "Lỗi Đăng Nhập",
+                message = msg,
+                isSuccess = false,
+                onDismiss = { dialogState = null }
+            )
         }
     }
 }
