@@ -1,3 +1,3 @@
 package com.example.realtimechatapp.data.remote.dto
 
-data class GetMeResponseDto(val user: UserDto)
+data class UserResponseDto(val message: String?, val user: UserDto)

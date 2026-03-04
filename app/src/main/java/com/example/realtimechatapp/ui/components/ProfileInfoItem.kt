@@ -18,16 +18,16 @@ fun ProfileInfoItem(label: String, value: String){
     ) {
         Text(
             text = label,
-            fontSize = 14.sp,
+            fontSize = 16.sp,
             color = Color.Gray,
-            modifier = Modifier.weight(0.4f)
+            modifier = Modifier.weight(0.5f)
         )
 
         Text(
             text = value,
-            fontSize = 14.sp,
+            fontSize = 16.sp,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(0.6f)
+            modifier = Modifier.weight(0.5f)
         )
     }
 }

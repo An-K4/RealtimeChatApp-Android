@@ -5,6 +5,7 @@ import com.example.realtimechatapp.data.remote.AuthApi
 import com.example.realtimechatapp.data.remote.AuthInterceptor
 import com.example.realtimechatapp.data.remote.GroupApi
 import com.example.realtimechatapp.data.remote.MessageApi
+import com.example.realtimechatapp.data.remote.UserApi
 import com.example.realtimechatapp.domain.model.User
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -63,6 +64,12 @@ object NetworkModule {
     @Singleton
     fun provideGroupApi(retrofit: Retrofit): GroupApi{
         return retrofit.create(GroupApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideUserApi(retrofit: Retrofit): UserApi{
+        return retrofit.create(UserApi::class.java)
     }
 
     @Provides

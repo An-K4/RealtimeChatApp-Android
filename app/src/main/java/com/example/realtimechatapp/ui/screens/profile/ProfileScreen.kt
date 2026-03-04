@@ -3,7 +3,6 @@ package com.example.realtimechatapp.ui.screens.profile
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -29,7 +27,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -48,30 +45,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.formatToTime
 import com.example.realtimechatapp.ui.components.AvatarPicker
-import com.example.realtimechatapp.ui.components.CustomClickableText
 import com.example.realtimechatapp.ui.components.NotificationDialog
 import com.example.realtimechatapp.ui.components.ProfileInfoItem
 import com.example.realtimechatapp.ui.navigation.Screen
-import com.example.realtimechatapp.ui.theme.Chewy
 import com.example.realtimechatapp.ui.theme.LightBlue
 import com.example.realtimechatapp.ui.theme.LightRed
 import com.example.realtimechatapp.ui.theme.RealtimeGreen
@@ -86,9 +76,12 @@ fun ProfileScreen(
 ) {
     val profileState by profileViewModel.profileState.collectAsState()
     val updateProfileState by profileViewModel.updateProfileState.collectAsState()
+    val changePasswordState by profileViewModel.changePasswordState.collectAsState()
     var dialogState by remember { mutableStateOf<ProfileViewModel.ProfileEvent?>(null) }
     var showUpdateSheet by remember { mutableStateOf(false) }
+    var showChangePasswordSheet by remember { mutableStateOf(false) }
     val updateSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val changePasswordSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val lifeCycleOwner = LocalLifecycleOwner.current
     val uiScope = rememberCoroutineScope()
@@ -124,24 +117,31 @@ fun ProfileScreen(
             CircularProgressIndicator()
         } else {
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
+                horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.Center,
-                modifier = Modifier.matchParentSize()
+                modifier = Modifier.matchParentSize().padding(20.dp)
             ) {
-                AsyncImage(
-                    model = profileState.avatar ?: R.drawable.default_avatar,
-                    contentDescription = "Avatar",
-                    modifier = Modifier
-                        .size(150.dp)
-                        .clip(CircleShape)
-                        .border(4.dp, Color.Gray, CircleShape)
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(
-                    text = profileState.fullName,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.padding(horizontal = 10.dp)
+                ) {
+                    AsyncImage(
+                        model = profileState.avatar ?: R.drawable.default_avatar,
+                        contentDescription = "Avatar",
+                        modifier = Modifier
+                            .size(150.dp)
+                            .clip(CircleShape)
+                            .border(4.dp, Color.Gray, CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = profileState.fullName,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
                 Spacer(modifier = Modifier.height(30.dp))
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp)
@@ -160,8 +160,8 @@ fun ProfileScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 5.dp, horizontal = 20.dp),
-                    enabled = true,
+                        .padding(vertical = 5.dp),
+                    enabled = !updateProfileState.isUpdating,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = LightBlue,
                         contentColor = Color.White
@@ -171,22 +171,26 @@ fun ProfileScreen(
                         pressedElevation = 4.dp
                     )
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "update profile",
-                        modifier = Modifier.padding(end = 10.dp)
-                    )
-                    Text(
-                        text = "Cập Nhật Thông Tin",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                    )
+                    if (updateProfileState.isUpdating){
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "update profile",
+                            modifier = Modifier.padding(end = 10.dp)
+                        )
+                        Text(
+                            text = "Cập Nhật Thông Tin",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                        )
+                    }
                 }
                 Button(
-                    onClick = {},
+                    onClick = { showChangePasswordSheet = true },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 5.dp, horizontal = 20.dp),
+                        .padding(vertical = 5.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = LightRed,
                         contentColor = Color.White
@@ -208,10 +212,10 @@ fun ProfileScreen(
                     )
                 }
                 Button(
-                    onClick = { profileViewModel.logout() },
+                    onClick = { profileViewModel.logout(true) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 5.dp, horizontal = 20.dp),
+                        .padding(vertical = 5.dp),
                     enabled = true,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Red,
@@ -348,6 +352,123 @@ fun ProfileScreen(
                     }
                 }
 
+                if (showChangePasswordSheet) {
+                    ModalBottomSheet(
+                        sheetState = changePasswordSheetState,
+                        onDismissRequest = {
+                            uiScope.launch { changePasswordSheetState.hide() }.invokeOnCompletion {
+                                if (!changePasswordSheetState.isVisible) showChangePasswordSheet = false
+                            }
+                        }
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp)
+                                .imePadding()
+                                .verticalScroll(rememberScrollState()),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            OutlinedTextField(
+                                value = changePasswordState.oldPassword,
+                                onValueChange = { profileViewModel.onOldPasswordChange(it) },
+                                label = { Text("Mật Khẩu Cũ") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = RealtimeGreen,
+                                    cursorColor = Color.Gray
+                                )
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            OutlinedTextField(
+                                value = changePasswordState.newPassword,
+                                onValueChange = { profileViewModel.onNewPasswordChange(it) },
+                                label = { Text("Mật Khẩu Mới") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = RealtimeGreen,
+                                    cursorColor = Color.Gray
+                                )
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            OutlinedTextField(
+                                value = changePasswordState.confirmNewPassword,
+                                onValueChange = { profileViewModel.onConfirmNewPasswordChange(it) },
+                                label = { Text("Xác Nhận Mật Khẩu Mới") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = RealtimeGreen,
+                                    cursorColor = Color.Gray
+                                )
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Row {
+                                OutlinedButton(
+                                    onClick = {
+                                        uiScope.launch { changePasswordSheetState.hide() }
+                                            .invokeOnCompletion {
+                                                if (!changePasswordSheetState.isVisible){
+                                                    showChangePasswordSheet = false
+                                                }
+                                            }
+                                    },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(10.dp)
+                                ) {
+                                    Text(
+                                        text = "Hủy",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp,
+                                    )
+                                }
+
+                                Button(
+                                    onClick = {
+                                        profileViewModel.changePassword()
+                                        uiScope.launch { changePasswordSheetState.hide() }
+                                            .invokeOnCompletion {
+                                                if (!changePasswordSheetState.isVisible){
+                                                    showChangePasswordSheet = false
+                                                }
+                                            }
+                                    },
+                                    enabled = changePasswordState.isChangePasswordEnable,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(10.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = RealtimeGreen,
+                                        contentColor = Color.White,
+                                        disabledContainerColor = RealtimeGreen.copy(alpha = 0.5f),
+                                        disabledContentColor = Color.White.copy(alpha = 0.7f)
+                                    ),
+                                    elevation = ButtonDefaults.buttonElevation(
+                                        defaultElevation = 8.dp,
+                                        pressedElevation = 4.dp
+                                    )
+                                ) {
+                                    Text(
+                                        text = "Lưu",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 when (dialogState) {
                     is ProfileViewModel.ProfileEvent.UpdateProfileSuccess -> {
                         NotificationDialog(
@@ -361,9 +482,12 @@ fun ProfileScreen(
                     is ProfileViewModel.ProfileEvent.ChangePasswordSuccess -> {
                         NotificationDialog(
                             title = "Thành Công",
-                            message = "Đổi mật khẩu thành công!",
+                            message = "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.",
                             isSuccess = true,
-                            onDismiss = { dialogState = null }
+                            onDismiss = {
+                                dialogState = null
+                                profileViewModel.logout(false)
+                            }
                         )
                     }
 
@@ -382,6 +506,15 @@ fun ProfileScreen(
                                 }
                             }
                         )
+                    }
+
+                    is ProfileViewModel.ProfileEvent.NavigateToLogin -> {
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(0) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
                     }
 
                     is ProfileViewModel.ProfileEvent.Failure -> {
@@ -404,50 +537,47 @@ fun ProfileScreen(
 @Composable
 fun ProfileScreen() {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(vertical = 20.dp, horizontal = 10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.padding(20.dp)
     ) {
-        AvatarPicker(
-            currentAvatar = null,
-            onAvatarPickerClick = {}
-        )
-        Spacer(modifier = Modifier.height(25.dp))
-        Text(
-            text = "Vũ Quốc An",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 10.dp)
+        ) {
+            AsyncImage(
+                model = R.drawable.default_avatar,
+                contentDescription = "Avatar",
+                modifier = Modifier
+                    .size(150.dp)
+                    .clip(CircleShape)
+                    .border(4.dp, Color.Gray, CircleShape),
+                contentScale = ContentScale.Crop
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = "Vũ Quốc An",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
         Spacer(modifier = Modifier.height(30.dp))
-        Row {
-            Column(
-                horizontalAlignment = Alignment.Start
-            ) {
-                Text("Tên Đăng Nhập:", fontSize = 16.sp)
-                Spacer(modifier = Modifier.height(10.dp))
-                Text("Email:", fontSize = 16.sp)
-                Spacer(modifier = Modifier.height(10.dp))
-                Text("Ngày tham gia:", fontSize = 16.sp)
-            }
-            Spacer(modifier = Modifier.width(30.dp))
-            Column(
-                horizontalAlignment = Alignment.Start
-            ) {
-                Text("An_K4", fontSize = 16.sp)
-                Spacer(modifier = Modifier.height(10.dp))
-                Text("an@vu.demo", fontSize = 16.sp)
-                Spacer(modifier = Modifier.height(10.dp))
-                Text("31/10/2025", fontSize = 16.sp)
-            }
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp)
+        ) {
+            ProfileInfoItem("Tên Đăng Nhập:", "An_K4")
+            Spacer(modifier = Modifier.height(10.dp))
+            ProfileInfoItem("Email:", "ank4@gmail.com")
+            Spacer(modifier = Modifier.height(10.dp))
+            ProfileInfoItem("Ngày tham gia:", "31/10/2004")
         }
         Spacer(modifier = Modifier.height(30.dp))
         Button(
             onClick = {},
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 5.dp, horizontal = 20.dp),
+                .padding(vertical = 5.dp),
             enabled = true,
             colors = ButtonDefaults.buttonColors(
                 containerColor = LightBlue,
@@ -473,8 +603,7 @@ fun ProfileScreen() {
             onClick = {},
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 5.dp, horizontal = 20.dp),
-            enabled = true,
+                .padding(vertical = 5.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = LightRed,
                 contentColor = Color.White
@@ -499,7 +628,7 @@ fun ProfileScreen() {
             onClick = {},
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 5.dp, horizontal = 20.dp),
+                .padding(vertical = 5.dp),
             enabled = true,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Red,

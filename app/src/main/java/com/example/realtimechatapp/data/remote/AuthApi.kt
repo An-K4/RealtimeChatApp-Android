@@ -1,11 +1,10 @@
 package com.example.realtimechatapp.data.remote
 
-import com.example.realtimechatapp.data.remote.dto.GetMeResponseDto
+import com.example.realtimechatapp.data.remote.dto.UserResponseDto
 import com.example.realtimechatapp.data.remote.dto.LoginRequestDto
 import com.example.realtimechatapp.data.remote.dto.LoginResponseDto
-import com.example.realtimechatapp.data.remote.dto.LogoutResponseDto
 import com.example.realtimechatapp.data.remote.dto.SignupRequestDto
-import com.example.realtimechatapp.data.remote.dto.SignupResponseDto
+import com.example.realtimechatapp.data.remote.dto.SimpleResponseDto
 import com.example.realtimechatapp.data.remote.dto.UploadResponseDto
 import okhttp3.MultipartBody
 import retrofit2.http.Body
@@ -21,10 +20,9 @@ interface AuthApi {
     @POST("/auth/upload-avatar")
     suspend fun uploadAvatar(@Part file: MultipartBody.Part): UploadResponseDto
     @POST("/auth/signup")
-    suspend fun signup(@Body request: SignupRequestDto): SignupResponseDto
+    suspend fun signup(@Body request: SignupRequestDto): SimpleResponseDto
     @POST("/auth/logout")
-    suspend fun logout(): LogoutResponseDto
-
+    suspend fun logout(): SimpleResponseDto
     @GET("/auth/me")
-    suspend fun getMe(): GetMeResponseDto
+    suspend fun getMe(): UserResponseDto
 }

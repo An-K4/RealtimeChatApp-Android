@@ -3,9 +3,11 @@ package com.example.realtimechatapp.di
 import com.example.realtimechatapp.data.repository.AuthRepositoryImpl
 import com.example.realtimechatapp.data.repository.GroupRepositoryImpl
 import com.example.realtimechatapp.data.repository.MessageRepositoryImpl
+import com.example.realtimechatapp.data.repository.UserRepositoryImpl
 import com.example.realtimechatapp.domain.repository.AuthRepository
 import com.example.realtimechatapp.domain.repository.GroupRepository
 import com.example.realtimechatapp.domain.repository.MessageRepository
+import com.example.realtimechatapp.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -27,4 +29,8 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindGroupRepository(groupRepository: GroupRepositoryImpl): GroupRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUserRepository(userRepositoryImpl: UserRepositoryImpl): UserRepository
 }
