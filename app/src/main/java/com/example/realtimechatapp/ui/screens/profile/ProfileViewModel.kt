@@ -58,8 +58,11 @@ class ProfileViewModel @Inject constructor(
     )
 
     sealed class ProfileEvent {
+        object UpdateProfileConfirm: ProfileEvent()
         object UpdateProfileSuccess : ProfileEvent()
+        object ChangePasswordConfirm: ProfileEvent()
         object ChangePasswordSuccess : ProfileEvent()
+        object LogoutConfirm: ProfileEvent()
         object LogoutSuccess : ProfileEvent()
         object NavigateToLogin : ProfileEvent()
         data class Failure(val message: String) : ProfileEvent()
@@ -162,6 +165,12 @@ class ProfileViewModel @Inject constructor(
                 _profileEvent.send(ProfileEvent.Failure(exception.getErrorMessage()))
                 _profileState.update { it.copy(isLoading = false) }
             }
+        }
+    }
+
+    fun showUpdateProfileConfirmDialog(){
+        viewModelScope.launch {
+            _profileEvent.send(ProfileEvent.UpdateProfileConfirm)
         }
     }
 
@@ -271,6 +280,12 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun showChangePasswordConfirmDialog(){
+        viewModelScope.launch {
+            _profileEvent.send(ProfileEvent.ChangePasswordConfirm)
+        }
+    }
+
     fun changePassword(){
         val oldPassword = _changePasswordState.value.oldPassword
         val newPassword = _changePasswordState.value.newPassword
@@ -290,6 +305,12 @@ class ProfileViewModel @Inject constructor(
             }.onFailure {
                 _profileEvent.send(ProfileEvent.Failure(it.getErrorMessage()))
             }
+        }
+    }
+
+    fun showLogoutConfirmDialog(){
+        viewModelScope.launch {
+            _profileEvent.send(ProfileEvent.LogoutConfirm)
         }
     }
 

@@ -59,6 +59,7 @@ import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.formatToTime
 import com.example.realtimechatapp.ui.components.AvatarPicker
+import com.example.realtimechatapp.ui.components.ConfirmationDialog
 import com.example.realtimechatapp.ui.components.NotificationDialog
 import com.example.realtimechatapp.ui.components.ProfileInfoItem
 import com.example.realtimechatapp.ui.navigation.Screen
@@ -212,7 +213,7 @@ fun ProfileScreen(
                     )
                 }
                 Button(
-                    onClick = { profileViewModel.logout(true) },
+                    onClick = { profileViewModel.showLogoutConfirmDialog() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 5.dp),
@@ -319,12 +320,12 @@ fun ProfileScreen(
 
                                 Button(
                                     onClick = {
-                                        profileViewModel.updateProfile()
                                         uiScope.launch { updateSheetState.hide() }
                                             .invokeOnCompletion {
                                                 if (!updateSheetState.isVisible) showUpdateSheet =
                                                     false
                                             }
+                                        profileViewModel.showUpdateProfileConfirmDialog()
                                     },
                                     enabled = updateProfileState.isUpdateEnable,
                                     modifier = Modifier
@@ -435,13 +436,13 @@ fun ProfileScreen(
 
                                 Button(
                                     onClick = {
-                                        profileViewModel.changePassword()
                                         uiScope.launch { changePasswordSheetState.hide() }
                                             .invokeOnCompletion {
                                                 if (!changePasswordSheetState.isVisible){
                                                     showChangePasswordSheet = false
                                                 }
                                             }
+                                        profileViewModel.showChangePasswordConfirmDialog()
                                     },
                                     enabled = changePasswordState.isChangePasswordEnable,
                                     modifier = Modifier
@@ -470,12 +471,42 @@ fun ProfileScreen(
                 }
 
                 when (dialogState) {
+                    is ProfileViewModel.ProfileEvent.UpdateProfileConfirm -> {
+                        ConfirmationDialog(
+                            title = "Thông Báo",
+                            message = "Xác nhận cập nhật thông tin?",
+                            dismissText = "Hủy",
+                            confirmText = "Xác Nhận",
+                            isDangerConfirm = false,
+                            onDismiss = { dialogState = null },
+                            onConfirm = {
+                                dialogState = null
+                                profileViewModel.updateProfile()
+                            }
+                        )
+                    }
+
                     is ProfileViewModel.ProfileEvent.UpdateProfileSuccess -> {
                         NotificationDialog(
                             title = "Thành Công",
                             message = "Cập nhật thông tin thành công!",
                             isSuccess = true,
                             onDismiss = { dialogState = null }
+                        )
+                    }
+
+                    is ProfileViewModel.ProfileEvent.ChangePasswordConfirm -> {
+                        ConfirmationDialog(
+                            title = "Thông Báo",
+                            message = "Bạn có chắc chắn muốn đổi mật khẩu?",
+                            dismissText = "Hủy",
+                            confirmText = "Xác Nhận",
+                            isDangerConfirm = true,
+                            onDismiss = { dialogState = null },
+                            onConfirm = {
+                                dialogState = null
+                                profileViewModel.changePassword()
+                            }
                         )
                     }
 
@@ -487,6 +518,21 @@ fun ProfileScreen(
                             onDismiss = {
                                 dialogState = null
                                 profileViewModel.logout(false)
+                            }
+                        )
+                    }
+
+                    is ProfileViewModel.ProfileEvent.LogoutConfirm -> {
+                        ConfirmationDialog(
+                            title = "Cảnh Báo",
+                            message = "Bạn có chắc chắn muốn đăng xuất?",
+                            dismissText = "Hủy",
+                            confirmText = "Đăng Xuất",
+                            isDangerConfirm = true,
+                            onDismiss = { dialogState = null },
+                            onConfirm = {
+                                dialogState = null
+                                profileViewModel.logout(true)
                             }
                         )
                     }
