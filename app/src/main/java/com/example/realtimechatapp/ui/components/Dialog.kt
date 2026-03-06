@@ -40,7 +40,15 @@ fun NotificationDialog(
     isSuccess: Boolean, // true = green, false = red
     onDismiss: () -> Unit
 ) {
-    Dialog(onDismissRequest = { onDismiss() }) {
+    Dialog(
+        onDismissRequest = { onDismiss() },
+        properties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true,
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false
+        )
+    ) {
         Card(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),

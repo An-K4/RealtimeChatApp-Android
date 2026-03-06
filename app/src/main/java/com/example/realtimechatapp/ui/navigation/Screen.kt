@@ -16,4 +16,8 @@ sealed class Screen(
     object Groups: Screen("group", "Nhóm", R.drawable.ic_group)
     object Profile: Screen("profile", "Tài Khoản", R.drawable.ic_profile)
     object More: Screen("more", "Khác", R.drawable.ic_menu)
+
+    // screens using message top app bar
+    object DetailMessage: Screen("detail_message", "Tin Nhắn")
+    object DetailGroup: Screen("detail_group", "Nhóm")
 }
