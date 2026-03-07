@@ -5,10 +5,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.realtimechatapp.ui.components.BottomNavBar
 import com.example.realtimechatapp.ui.components.MainTopAppBar
 import com.example.realtimechatapp.ui.components.MessageTopAppBar
@@ -90,7 +92,12 @@ fun AppNavigation() {
                 MessageScreen(navController)
             }
 
-            composable(Screen.Messages.route) {
+            composable(
+                Screen.DetailMessage.route,
+                arguments = listOf(
+                    navArgument(Screen.DetailMessage.ARG_FRIEND_ID){ type = NavType.StringType }
+                )
+            ) {
                 DetailMessageScreen(navController)
             }
 
@@ -98,7 +105,12 @@ fun AppNavigation() {
                 GroupScreen(navController)
             }
 
-            composable(Screen.Messages.route) {
+            composable(
+                Screen.DetailGroup.route,
+                arguments = listOf(
+                    navArgument(Screen.DetailGroup.ARG_GROUP_ID){ type = NavType.StringType }
+                )
+            ) {
                 DetailGroupScreen(navController)
             }
 

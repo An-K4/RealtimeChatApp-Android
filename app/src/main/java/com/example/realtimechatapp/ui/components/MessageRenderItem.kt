@@ -82,12 +82,14 @@ fun MessageRenderItem(
                     fontSize = 10.sp,
                     color = if (fromCurrentUser) Color.White else Color.Gray,
                     modifier = Modifier.padding(end = 3.dp))
-                Icon(
-                    imageVector = if (isSeen) Icons.Default.DoneAll else Icons.Default.Done,
-                    contentDescription = "status",
-                    tint = if (fromCurrentUser) Color.White else Color.Gray,
-                    modifier = Modifier.size(14.dp)
-                )
+                if (fromCurrentUser){
+                    Icon(
+                        imageVector = if (isSeen) Icons.Default.DoneAll else Icons.Default.Done,
+                        contentDescription = "status",
+                        tint = Color.White,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
             }
         }
     }

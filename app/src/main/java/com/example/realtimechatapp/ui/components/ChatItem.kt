@@ -2,6 +2,7 @@ package com.example.realtimechatapp.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -41,7 +42,8 @@ fun ChatItem(
     avatar: String?,
     name: String,
     unreadCount: Int,
-    lastMessage: LastMessage
+    lastMessage: LastMessage,
+    onItemClicked: () -> Unit
 ) {
     val previewLastMessage = if (lastMessage.isMine) {
         "Bạn: ${lastMessage.content}"
@@ -57,6 +59,7 @@ fun ChatItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 5.dp, horizontal = 10.dp)
+            .clickable{ onItemClicked() }
     )
     {
         Box(

@@ -18,6 +18,12 @@ sealed class Screen(
     object More: Screen("more", "Khác", R.drawable.ic_menu)
 
     // screens using message top app bar
-    object DetailMessage: Screen("detail_message", "Tin Nhắn")
-    object DetailGroup: Screen("detail_group", "Nhóm")
+    object DetailMessage: Screen("detail_message/{friendId}", "Tin Nhắn"){
+        const val ARG_FRIEND_ID = "friendId"
+        fun createRoute(friendId: String) = "detail_message/$friendId"
+    }
+    object DetailGroup: Screen("detail_group/{groupId}", "Nhóm"){
+        const val ARG_GROUP_ID = "groupId"
+        fun createRoute(groupId: String) = "detail_group/$groupId"
+    }
 }

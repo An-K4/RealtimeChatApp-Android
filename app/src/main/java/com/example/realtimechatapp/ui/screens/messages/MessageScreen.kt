@@ -18,6 +18,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.ui.components.ChatItem
+import com.example.realtimechatapp.ui.navigation.Screen
 import com.example.realtimechatapp.ui.screens.BeginScreen
 
 @Composable
@@ -54,7 +55,10 @@ fun MessageScreen(
                             avatar = user.avatar,
                             name = user.fullName,
                             unreadCount = user.unreadCount,
-                            lastMessage = user.lastMessage
+                            lastMessage = user.lastMessage,
+                            onItemClicked = {
+                                navController.navigate(Screen.DetailMessage.createRoute(user.id))
+                            }
                         )
                     }
                 }
