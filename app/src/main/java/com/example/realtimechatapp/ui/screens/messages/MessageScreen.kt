@@ -19,14 +19,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.ui.components.ChatItem
 import com.example.realtimechatapp.ui.navigation.Screen
-import com.example.realtimechatapp.ui.screens.BeginScreen
+import com.example.realtimechatapp.ui.components.BeginScreen
 
 @Composable
 fun MessageScreen(
     navController: NavController,
     messageViewModel: MessageViewModel = hiltViewModel()
 ){
-    val uiState by messageViewModel.uiState.collectAsStateWithLifecycle()
+    val messageState by messageViewModel.messageState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         messageViewModel.getUsers()
@@ -35,11 +35,11 @@ fun MessageScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ){
-        if (uiState.isLoading){
+        if (messageState.isLoading){
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
-            if (uiState.users.isEmpty()){
-                BeginScreen(false)
+            if (messageState.users.isEmpty()){
+                BeginScreen(isGroup = false, inDetailScreen = false)
             } else {
                 LazyColumn(
                     state = rememberLazyListState(),
@@ -47,7 +47,7 @@ fun MessageScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(
-                        items = uiState.users,
+                        items = messageState.users,
                         key = { user -> user.id}
                     ){ user ->
                         ChatItem(

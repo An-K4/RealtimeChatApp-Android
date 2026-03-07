@@ -33,7 +33,7 @@ import com.example.realtimechatapp.ui.theme.RealtimeRed
 
 @Composable
 fun MessageInput(
-    messageText: String,
+    messageText: String?,
     onMessageTextChange: (String) -> Unit,
     onCameraClick: () -> Unit,
     onGalleryClick: () -> Unit,
@@ -53,7 +53,7 @@ fun MessageInput(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextField(
-                    value = messageText,
+                    value = messageText?:"",
                     onValueChange = { onMessageTextChange(it) },
                     modifier = Modifier.weight(1f),
                     placeholder = { Text("Soạn tin nhắn...") },

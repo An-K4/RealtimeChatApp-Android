@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
@@ -36,59 +37,63 @@ fun MessageRenderItem(
     isSeen: Boolean,
     fromCurrentUser: Boolean
 ){
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-
     val currentUserShape = RoundedCornerShape(
         topStart = 16.dp,
         topEnd = 16.dp,
         bottomStart = 16.dp,
-        bottomEnd = 0.dp
+        bottomEnd = 4.dp
     )
 
     val otherUserShape = RoundedCornerShape(
         topStart = 16.dp,
         topEnd = 16.dp,
-        bottomStart = 0.dp,
+        bottomStart = 4.dp,
         bottomEnd = 16.dp
     )
 
-    Box(modifier = Modifier
-        .fillMaxWidth()
-        .widthIn(screenWidth * 0.75f)
-        .background(
-            color = if (fromCurrentUser) RealtimeGreen else Color.White,
-            shape = if (fromCurrentUser) currentUserShape else otherUserShape
-        )
-    ){
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = if (fromCurrentUser) Alignment.End else Alignment.Start,
-            modifier = Modifier.padding(10.dp)
-        ) {
-            Text(
-                text = message,
-                fontSize = 16.sp,
-                color = Color.White
+    Row(
+        horizontalArrangement = if (fromCurrentUser) Arrangement.End else Arrangement.Start,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Box(modifier = Modifier
+            .fillMaxWidth(0.75f)
+            .wrapContentWidth(
+                align = if (fromCurrentUser) Alignment.End else Alignment.Start
             )
-
-            Spacer(modifier = Modifier.height(3.dp))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = if (fromCurrentUser) Arrangement.End else Arrangement.Start
+            .background(
+                color = if (fromCurrentUser) RealtimeGreen else Color.White,
+                shape = if (fromCurrentUser) currentUserShape else otherUserShape
+            )
+        ){
+            Column(
+                horizontalAlignment = if (fromCurrentUser) Alignment.End else Alignment.Start,
+                modifier = Modifier.padding(10.dp)
             ) {
                 Text(
-                    time,
-                    fontSize = 10.sp,
-                    color = if (fromCurrentUser) Color.White else Color.Gray,
-                    modifier = Modifier.padding(end = 3.dp))
-                if (fromCurrentUser){
-                    Icon(
-                        imageVector = if (isSeen) Icons.Default.DoneAll else Icons.Default.Done,
-                        contentDescription = "status",
-                        tint = Color.White,
-                        modifier = Modifier.size(14.dp)
-                    )
+                    text = message,
+                    fontSize = 16.sp,
+                    color = if (fromCurrentUser) Color.White else Color.Black
+                )
+
+                Spacer(modifier = Modifier.height(3.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = if (fromCurrentUser) Arrangement.End else Arrangement.Start
+                ) {
+                    Text(
+                        time,
+                        fontSize = 10.sp,
+                        color = if (fromCurrentUser) Color.White else Color.Gray,
+                        modifier = Modifier.padding(end = 3.dp))
+                    if (fromCurrentUser){
+                        Icon(
+                            imageVector = if (isSeen) Icons.Default.DoneAll else Icons.Default.Done,
+                            contentDescription = "status",
+                            tint = Color.White,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
                 }
             }
         }

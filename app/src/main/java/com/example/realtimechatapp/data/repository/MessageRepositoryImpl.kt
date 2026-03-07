@@ -2,6 +2,7 @@ package com.example.realtimechatapp.data.repository
 
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.data.remote.MessageApi
+import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.model.UserContact
 import com.example.realtimechatapp.domain.repository.MessageRepository
 import timber.log.Timber
@@ -17,7 +18,18 @@ class MessageRepositoryImpl @Inject constructor(
             Result.success(users)
         } catch (e: Exception){
             e.printStackTrace()
-            Result.failure(Exception(e.getErrorMessage()))
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getMessage(friendId: String): Result<List<Message>> {
+        return try {
+            val response = messageApi.getMessage(friendId)
+            val messages = response.messages.map { it.toMessage() }
+            Result.success(messages)
+        } catch (e: Exception){
+            e.printStackTrace()
+            Result.failure(e)
         }
     }
 }

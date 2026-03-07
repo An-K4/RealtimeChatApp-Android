@@ -6,7 +6,7 @@ import com.example.realtimechatapp.data.remote.AuthInterceptor
 import com.example.realtimechatapp.data.remote.GroupApi
 import com.example.realtimechatapp.data.remote.MessageApi
 import com.example.realtimechatapp.data.remote.UserApi
-import com.example.realtimechatapp.domain.model.User
+import com.example.realtimechatapp.data.remote.dto.UserDto
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
@@ -42,7 +42,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(client: OkHttpClient): Retrofit{
         return Retrofit.Builder()
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(provideGson()))
             .baseUrl(BASE_URL)
             .client(client)
             .build()
@@ -76,7 +76,7 @@ object NetworkModule {
     @Singleton
     fun provideGson(): Gson{
         return GsonBuilder()
-            .registerTypeAdapter(User::class.java, UserAdapter())
+            .registerTypeAdapter(UserDto::class.java, UserAdapter())
             .create()
     }
 }

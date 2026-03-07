@@ -1,4 +1,4 @@
-package com.example.realtimechatapp.ui.screens
+package com.example.realtimechatapp.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -21,12 +21,23 @@ import com.example.realtimechatapp.R
 
 @Composable
 fun BeginScreen(
-    isGroup: Boolean
+    isGroup: Boolean,
+    inDetailScreen: Boolean
 ){
-    val suggestText = if (isGroup){
-        "Tạo nhóm và bắt đầu chia sẻ những câu chuyện thú vị cùng nhau!"
+    val suggestText1 = if (inDetailScreen) "Chưa có tin nhắn nào." else "Chào mừng đến với Clover Chatty"
+
+    val suggestText2 = if (isGroup){
+        if (inDetailScreen){
+            "Nhập tin nhắn để bắt đầu!"
+        } else {
+            "Tạo nhóm và chia sẻ những câu chuyện thú vị cùng nhau!"
+        }
     } else {
-        "Hãy tìm 1 người bạn và bắt đầu trò chuyện nào!"
+        if (inDetailScreen){
+            "Hãy thử làm quen bằng một lời chào!"
+        } else {
+            "Hãy tìm 1 người bạn và bắt đầu trò chuyện nào!"
+        }
     }
 
     Box(
@@ -40,14 +51,14 @@ fun BeginScreen(
             )
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "Chào mừng đến với Clover Chatty",
+                text = suggestText1,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = suggestText,
+                text = suggestText2,
                 fontSize = 16.sp,
                 textAlign = TextAlign.Center
             )

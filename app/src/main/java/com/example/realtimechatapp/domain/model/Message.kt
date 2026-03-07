@@ -7,18 +7,18 @@ data class Message(
 
     // sender
     val senderId: String,
-    val senderName: String,
-    val senderAvatar: String,
+    val senderName: String?,
+    val senderAvatar: String?,
 
     val receiverId: String?,
     val groupId: String?,
-    val content: String,
+    val content: String?,
 
     // reply
     val replyToMessageId: String?,
     val replyToContent: String?,
 
     val attachments: String?,
-    val seenUserIds: List<String>,
-    val createdAt: Date
+    val seenUserIds: List<String>?,
+    val createdAt: String
 )

@@ -16,7 +16,7 @@ class GroupRepositoryImpl @Inject constructor(
             Result.success(groups)
         } catch (e: Exception){
             e.printStackTrace()
-            Result.failure(Exception(e.getErrorMessage()))
+            Result.failure(e)
         }
     }
 }

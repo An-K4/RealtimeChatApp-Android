@@ -15,21 +15,21 @@ import javax.inject.Inject
 class MessageViewModel @Inject constructor(
     private val getUsersUseCase: GetUsersUseCase
 ) : ViewModel() {
-    data class UserListUiState(
+    data class MessageState(
         val isLoading: Boolean = false,
         val users: List<UserContact> = emptyList(),
         val info: String? = null
     )
 
-    private val _uiState = MutableStateFlow(UserListUiState())
-    val uiState = _uiState.asStateFlow()
+    private val _messageState = MutableStateFlow(MessageState())
+    val messageState = _messageState.asStateFlow()
 
     fun getUsers() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, info = null) }
+            _messageState.update { it.copy(isLoading = true, info = null) }
 
             getUsersUseCase().onSuccess { users ->
-                _uiState.update {
+                _messageState.update {
                     it.copy(
                         isLoading = false,
                         users = users,
@@ -37,7 +37,7 @@ class MessageViewModel @Inject constructor(
                     )
                 }
             }.onFailure { exception ->
-                _uiState.update {
+                _messageState.update {
                     it.copy(
                         isLoading = false,
                         info = "${exception.message}"
