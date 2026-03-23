@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.ui.components.AvatarPicker
 import com.example.realtimechatapp.ui.components.CustomClickableText
@@ -43,7 +44,7 @@ fun SignupScreen(
     navController: NavController,
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
-    val loadingState by authViewModel.isLoading.collectAsState()
+    val loadingState by authViewModel.isLoading.collectAsStateWithLifecycle()
     val username by authViewModel.username.collectAsState()
     val password by authViewModel.password.collectAsState()
     val passwordRetype by authViewModel.passwordRetype.collectAsState()

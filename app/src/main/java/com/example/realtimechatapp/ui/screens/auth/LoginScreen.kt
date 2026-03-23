@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.ui.components.CustomClickableText
@@ -50,7 +51,7 @@ fun LoginScreen(
     navController: NavController,
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
-    val loadingState by authViewModel.isLoading.collectAsState()
+    val loadingState by authViewModel.isLoading.collectAsStateWithLifecycle()
     val username by authViewModel.username.collectAsState()
     val password by authViewModel.password.collectAsState()
     var dialogState by remember{ mutableStateOf<AuthViewModel.AuthEvent?>(null) }

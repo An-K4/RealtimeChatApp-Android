@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -75,7 +76,7 @@ fun ProfileScreen(
     navController: NavController,
     profileViewModel: ProfileViewModel = hiltViewModel(),
 ) {
-    val profileState by profileViewModel.profileState.collectAsState()
+    val profileState by profileViewModel.profileState.collectAsStateWithLifecycle()
     val updateProfileState by profileViewModel.updateProfileState.collectAsState()
     val changePasswordState by profileViewModel.changePasswordState.collectAsState()
     var dialogState by remember { mutableStateOf<ProfileViewModel.ProfileEvent?>(null) }
