@@ -44,20 +44,14 @@ fun SignupScreen(
     navController: NavController,
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
-    val loadingState by authViewModel.isLoading.collectAsStateWithLifecycle()
-    val username by authViewModel.username.collectAsState()
-    val password by authViewModel.password.collectAsState()
-    val passwordRetype by authViewModel.passwordRetype.collectAsState()
-    val fullName by authViewModel.fullName.collectAsState()
-    val email by authViewModel.email.collectAsState()
-    val avatar by authViewModel.avatar.collectAsState()
+    val signupState by authViewModel.signupState.collectAsStateWithLifecycle()
     var dialogState by remember { mutableStateOf<AuthViewModel.AuthEvent?>(null) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
             if (uri != null){
-                authViewModel.onAvatarChange(uri)
+                authViewModel.onSignupAvatarChange(uri)
             }
         }
     )
@@ -65,7 +59,7 @@ fun SignupScreen(
     LaunchedEffect(Unit) {
         authViewModel.authEvent.collect { event ->
             when(event){
-                is AuthViewModel.AuthEvent.Success -> {
+                is AuthViewModel.AuthEvent.AuthSuccess -> {
                     dialogState = event
                 }
                 is AuthViewModel.AuthEvent.Failure -> {
@@ -87,7 +81,7 @@ fun SignupScreen(
             verticalArrangement = Arrangement.Center
         ) {
             AvatarPicker(
-                currentAvatar = avatar,
+                currentAvatar = signupState.avatar,
                 onAvatarPickerClick = {
                     photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                 }
@@ -96,8 +90,8 @@ fun SignupScreen(
             Spacer(modifier = Modifier.size(20.dp))
 
             OutlinedTextField(
-                value = username,
-                onValueChange = { authViewModel.onUsernameChange(it) },
+                value = signupState.username,
+                onValueChange = { authViewModel.onSignupUsernameChange(it) },
                 label = { Text("Tên đăng nhập") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -110,8 +104,8 @@ fun SignupScreen(
             Spacer(modifier = Modifier.size(16.dp))
 
             OutlinedTextField(
-                value = password,
-                onValueChange = { authViewModel.onPasswordChange(it) },
+                value = signupState.password,
+                onValueChange = { authViewModel.onSignupPasswordChange(it) },
                 label = { Text("Mật khẩu") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -124,8 +118,8 @@ fun SignupScreen(
             Spacer(modifier = Modifier.size(16.dp))
 
             OutlinedTextField(
-                value = passwordRetype,
-                onValueChange = { authViewModel.onPasswordRetypeChange(it) },
+                value = signupState.passwordRetype,
+                onValueChange = { authViewModel.onSignupPasswordRetypeChange(it) },
                 label = { Text("Nhập lại mật khẩu") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -138,8 +132,8 @@ fun SignupScreen(
             Spacer(modifier = Modifier.size(16.dp))
 
             OutlinedTextField(
-                value = fullName,
-                onValueChange = { authViewModel.onFullNameChange(it) },
+                value = signupState.fullName,
+                onValueChange = { authViewModel.onSignupFullNameChange(it) },
                 label = { Text("Họ và tên") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -152,8 +146,8 @@ fun SignupScreen(
             Spacer(modifier = Modifier.size(16.dp))
 
             OutlinedTextField(
-                value = email,
-                onValueChange = { authViewModel.onEmailChange(it) },
+                value = signupState.email,
+                onValueChange = { authViewModel.onSignupEmailChange(it) },
                 label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -168,7 +162,7 @@ fun SignupScreen(
             Button(
                 onClick = { authViewModel.signup() },
                 modifier = Modifier.fillMaxWidth().padding(10.dp),
-                enabled = !loadingState,
+                enabled = !signupState.isLoading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = RealtimeGreen,
                     contentColor = Color.White
@@ -178,7 +172,7 @@ fun SignupScreen(
                     pressedElevation = 4.dp
                 )
             ) {
-                if (loadingState){
+                if (signupState.isLoading){
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = MaterialTheme.colorScheme.onPrimary
@@ -204,7 +198,7 @@ fun SignupScreen(
             )
         }
 
-        if(dialogState is AuthViewModel.AuthEvent.Success){
+        if(dialogState is AuthViewModel.AuthEvent.AuthSuccess){
             NotificationDialog(
                 title = "Thành Công",
                 message = "Đăng ký thành công, chuyển hướng về trang đăng nhập.",

@@ -87,12 +87,12 @@ interface MessageDao {
         groupId: String
     ): Flow<List<MessageEntity>>
 
-    @Query("""
-        UPDATE messages
-        SET seen_by = json_insert(seen_by, ${'$'}, :userId)
-        WHERE (receiver_id = :userId OR group_id = :groupId)
-        AND json_extract(seen_by, ${'$'}) NOT LIKE ''%' || :userId || '%''
-    """)
+    @Query(
+        "UPDATE messages " +
+        "SET seen_by = json_insert(seen_by, '\$', :userId)" +
+        "WHERE (receiver_id = :userId OR group_id = :groupId)" +
+        "AND json_extract(seen_by, '\$') NOT LIKE '%' || :userId || '%'"
+    )
     suspend fun markMessageAsSeen(userId: String, groupId: String? = null)
 
     @Query("""

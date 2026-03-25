@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.realtimechatapp.common.FileUtils
 import com.example.realtimechatapp.common.ImageUtils
 import com.example.realtimechatapp.common.getErrorMessage
+import com.example.realtimechatapp.data.local.TokenManager
 import com.example.realtimechatapp.domain.usecase.auth.LoginUseCase
 import com.example.realtimechatapp.domain.usecase.auth.SignupUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,7 +16,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.File
@@ -25,86 +28,117 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val signupUseCase: SignupUseCase,
+    private val tokenManager: TokenManager,
     @ApplicationContext private val context: Context
-): ViewModel() {
+) : ViewModel() {
+
+    data class LoginState(
+        val username: String = "",
+        val password: String = "",
+        val isLoading: Boolean = false
+    )
+
+    data class SignupState(
+        val username: String = "",
+        val password: String = "",
+        val passwordRetype: String = "",
+        val fullName: String = "",
+        val email: String = "",
+        val avatar: Uri? = null,
+        val isLoading: Boolean = false
+    )
 
     sealed class AuthEvent {
-        object Success: AuthEvent()
-        data class Failure(val message: String): AuthEvent()
+        object AuthSuccess : AuthEvent()
+        data class Failure(val message: String) : AuthEvent()
     }
 
-    private val _username = MutableStateFlow("")
-    val username : StateFlow<String> = _username.asStateFlow()
-
-    private val _password = MutableStateFlow("")
-    val password : StateFlow<String> = _password.asStateFlow()
-
-    private val _passwordRetype = MutableStateFlow("")
-    val passwordRetype : StateFlow<String> = _passwordRetype.asStateFlow()
-
-    private val _fullName = MutableStateFlow("")
-    val fullName : StateFlow<String> = _fullName.asStateFlow()
-
-    private val _email = MutableStateFlow("")
-    val email : StateFlow<String> = _email.asStateFlow()
-
-    private val _avatar = MutableStateFlow(null as Uri?)
-    val avatar : StateFlow<Uri?> = _avatar.asStateFlow()
-
-    fun onUsernameChange(newValue: String){
-        _username.value = newValue
+    fun onLoginUsernameChange(newValue: String) {
+        _loginState.update { it.copy(username = newValue) }
     }
 
-    fun onPasswordChange(newValue: String){
-        _password.value = newValue
+    fun onLoginPasswordChange(newValue: String) {
+        _loginState.update { it.copy(password = newValue) }
     }
 
-    fun onPasswordRetypeChange(newValue: String){
-        _passwordRetype.value = newValue
+    fun onSignupUsernameChange(newValue: String) {
+        _signupState.update { it.copy(username = newValue) }
     }
 
-    fun onFullNameChange(newValue: String){
-        _fullName.value = newValue
+    fun onSignupPasswordChange(newValue: String) {
+        _signupState.update { it.copy(password = newValue) }
     }
 
-    fun onEmailChange(newValue: String){
-        _email.value = newValue
+    fun onSignupPasswordRetypeChange(newValue: String) {
+        _signupState.update { it.copy(passwordRetype = newValue) }
     }
 
-    fun onAvatarChange(newValue: Uri?){
-        _avatar.value = newValue
+    fun onSignupFullNameChange(newValue: String) {
+        _signupState.update { it.copy(fullName = newValue) }
+    }
+
+    fun onSignupEmailChange(newValue: String) {
+        _signupState.update { it.copy(email = newValue) }
+    }
+
+    fun onSignupAvatarChange(newValue: Uri?) {
+        _signupState.update { it.copy(avatar = newValue) }
     }
 
     private var _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
+    private val _loginState = MutableStateFlow(LoginState())
+    val loginState = _loginState.asStateFlow()
+
+    private val _signupState = MutableStateFlow(SignupState())
+    val signupState = _signupState.asStateFlow()
+
     private val _authEvent = Channel<AuthEvent>()
     val authEvent = _authEvent.receiveAsFlow()
 
-    fun login(){
+    fun loginWithToken() {
         viewModelScope.launch {
             _isLoading.value = true
-            val result = loginUseCase(username.value, password.value)
-            _isLoading.value = false
+
+            try {
+                val token = tokenManager.token.first()
+
+                if (token.isNullOrEmpty()){
+                    _isLoading.value = false
+                } else {
+                    _authEvent.send(AuthEvent.AuthSuccess)
+                }
+            } catch (e: Exception){
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun login() {
+        viewModelScope.launch {
+            _loginState.update { it.copy(isLoading = true) }
+            val result = with(_loginState.value) { loginUseCase(username, password) }
+            _loginState.update { it.copy(isLoading = false) }
 
             result.onSuccess { user ->
-                _authEvent.send(AuthEvent.Success)
+                _authEvent.send(AuthEvent.AuthSuccess)
             }.onFailure { exception ->
                 _authEvent.send(AuthEvent.Failure(exception.getErrorMessage()))
             }
         }
     }
 
-    fun signup(){
+    fun signup() {
         viewModelScope.launch {
             var compressAvatar: File? = null
 
-            if (password.value != passwordRetype.value){
+            if (_signupState.value.password != _signupState.value.passwordRetype) {
                 _authEvent.send(AuthEvent.Failure("Mật khẩu xác nhận không khớp"))
             } else {
-                _isLoading.value = true
+                _signupState.update { it.copy(isLoading = true) }
 
-                avatar.value?.let { uri ->
+                _signupState.value.avatar?.let { uri ->
                     Timber.d("Avatar tải lên: %s", uri)
                     val file = FileUtils.getFileFromUri(context, uri)
                     file?.let {
@@ -113,21 +147,17 @@ class AuthViewModel @Inject constructor(
                     }
                 }
 
-                val result = signupUseCase(
-                    compressAvatar,
-                    username.value,
-                    password.value,
-                    fullName.value,
-                    email.value
-                )
+                val result = with(_signupState.value) {
+                    signupUseCase(compressAvatar, username, password, fullName, email)
+                }
 
-                result.onSuccess{ message ->
-                    _authEvent.send(AuthEvent.Success)
+                result.onSuccess { message ->
+                    _authEvent.send(AuthEvent.AuthSuccess)
                 }.onFailure { exception ->
                     _authEvent.send(AuthEvent.Failure(exception.getErrorMessage()))
                 }
 
-                _isLoading.value = false
+                _signupState.update { it.copy(isLoading = false) }
             }
         }
     }

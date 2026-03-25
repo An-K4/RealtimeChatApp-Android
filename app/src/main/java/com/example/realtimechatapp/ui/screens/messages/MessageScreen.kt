@@ -10,16 +10,22 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.ui.components.ChatItem
 import com.example.realtimechatapp.ui.navigation.Screen
 import com.example.realtimechatapp.ui.components.BeginScreen
+import com.example.realtimechatapp.ui.components.NotificationDialog
 
 @Composable
 fun MessageScreen(
@@ -27,9 +33,18 @@ fun MessageScreen(
     messageViewModel: MessageViewModel = hiltViewModel()
 ){
     val messageState by messageViewModel.messageState.collectAsStateWithLifecycle()
+    var dialogState by remember { mutableStateOf<MessageViewModel.MessageEvent?>(null) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(Unit) {
         messageViewModel.getUsers()
+        messageViewModel.checkToken()
+    }
+
+    LaunchedEffect(lifecycleOwner.lifecycle) {
+        messageViewModel.messageEvent.collect{ event ->
+            dialogState = event
+        }
     }
 
     Box(
@@ -63,6 +78,21 @@ fun MessageScreen(
                     }
                 }
             }
+        }
+
+        if (dialogState is MessageViewModel.MessageEvent.Unauthenticated){
+            NotificationDialog(
+                title = "Lỗi",
+                message = "Phiên đăng nhập hết hạn, vui lòng đăng nhập lại!",
+                isSuccess = false,
+                onDismiss = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
         }
     }
 }

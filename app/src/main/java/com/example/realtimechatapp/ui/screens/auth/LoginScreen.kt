@@ -52,15 +52,18 @@ fun LoginScreen(
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val loadingState by authViewModel.isLoading.collectAsStateWithLifecycle()
-    val username by authViewModel.username.collectAsState()
-    val password by authViewModel.password.collectAsState()
+    val loginState by authViewModel.loginState.collectAsStateWithLifecycle()
     var dialogState by remember{ mutableStateOf<AuthViewModel.AuthEvent?>(null) }
     val lifeCycleOwner = LocalLifecycleOwner.current
+
+    LaunchedEffect(Unit) {
+        authViewModel.loginWithToken()
+    }
 
     LaunchedEffect(lifeCycleOwner.lifecycle, authViewModel.authEvent) {
         authViewModel.authEvent.collect { event ->
             when(event){
-                is AuthViewModel.AuthEvent.Success -> {
+                is AuthViewModel.AuthEvent.AuthSuccess -> {
                     navController.navigate(Screen.Messages.route){
                         popUpTo(Screen.Login.route){ inclusive = true }
                     }
@@ -76,100 +79,104 @@ fun LoginScreen(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Image(
-                painter = painterResource(R.drawable.logo),
-                contentDescription = stringResource(R.string.app_logo),
+        if (loadingState){
+            CircularProgressIndicator()
+        } else {
+            Column(
                 modifier = Modifier
-                    .size(200.dp)
-                    .padding(bottom = 16.dp)
-            )
-
-            Text(
-                text = stringResource(R.string.app_name),
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Black,
-                fontFamily = Chewy,
-                fontStyle = FontStyle.Italic,
-                color = RealtimeGreen
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            OutlinedTextField(
-                value = username,
-                onValueChange = { authViewModel.onUsernameChange(it) },
-                label = { Text("Tên đăng nhập") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = RealtimeGreen,
-                    cursorColor = Color.Gray
-                )
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = { authViewModel.onPasswordChange(it) },
-                label = { Text("Mật khẩu") },
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = RealtimeGreen,
-                    cursorColor = Color.Gray
-                )
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = { authViewModel.login() },
-                modifier = Modifier.fillMaxWidth().padding(10.dp),
-                enabled = !loadingState,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = RealtimeGreen,
-                    contentColor = Color.White
-                ),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 8.dp,
-                    pressedElevation = 4.dp
-                )
+                    .fillMaxWidth()
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                if (loadingState) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
+                Image(
+                    painter = painterResource(R.drawable.logo),
+                    contentDescription = stringResource(R.string.app_logo),
+                    modifier = Modifier
+                        .size(200.dp)
+                        .padding(bottom = 16.dp)
+                )
+
+                Text(
+                    text = stringResource(R.string.app_name),
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Black,
+                    fontFamily = Chewy,
+                    fontStyle = FontStyle.Italic,
+                    color = RealtimeGreen
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                OutlinedTextField(
+                    value = loginState.username,
+                    onValueChange = { authViewModel.onLoginUsernameChange(it) },
+                    label = { Text("Tên đăng nhập") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = RealtimeGreen,
+                        cursorColor = Color.Gray
                     )
-                } else Text(
-                    text = "Đăng nhập",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = loginState.password,
+                    onValueChange = { authViewModel.onLoginPasswordChange(it) },
+                    label = { Text("Mật khẩu") },
+                    modifier = Modifier.fillMaxWidth(),
+                    visualTransformation = PasswordVisualTransformation(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = RealtimeGreen,
+                        cursorColor = Color.Gray
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = { authViewModel.login() },
+                    modifier = Modifier.fillMaxWidth().padding(10.dp),
+                    enabled = !loginState.isLoading,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = RealtimeGreen,
+                        contentColor = Color.White
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(
+                        defaultElevation = 8.dp,
+                        pressedElevation = 4.dp
+                    )
+                ) {
+                    if (loginState.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else Text(
+                        text = "Đăng nhập",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                CustomClickableText(
+                    "Bạn chưa có tài khoản? ",
+                    "Đăng ký",
+                    "signup",
+                    "",
+                    "",
+                    onTextClicked = {
+                        navController.navigate(Screen.Signup.route){
+                            popUpTo(Screen.Login.route){ inclusive = true }
+                        }
+                    }
                 )
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            CustomClickableText(
-                "Bạn chưa có tài khoản? ",
-                "Đăng ký",
-                "signup",
-                "",
-                "",
-                onTextClicked = {
-                    navController.navigate(Screen.Signup.route){
-                        popUpTo(Screen.Login.route){ inclusive = true }
-                    }
-                }
-            )
         }
 
         if(dialogState is AuthViewModel.AuthEvent.Failure){

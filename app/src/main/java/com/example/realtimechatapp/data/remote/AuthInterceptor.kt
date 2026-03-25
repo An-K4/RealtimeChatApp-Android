@@ -14,7 +14,7 @@ class AuthInterceptor @Inject constructor(private val tokenManager: TokenManager
             tokenManager.token.first()
         }
 
-        return if (token != null){
+        val response = if (token != null){
             val newRequest = originalRequest.newBuilder()
                 .header("Authorization", "Bearer $token")
                 .build()
@@ -22,5 +22,12 @@ class AuthInterceptor @Inject constructor(private val tokenManager: TokenManager
         } else {
             chain.proceed(originalRequest)
         }
+
+        if (response.code == 401){
+            val currentToken = runBlocking { tokenManager.token.first() }
+            if (!currentToken.isNullOrEmpty()) runBlocking { tokenManager.deleteToken() }
+        }
+
+        return response
     }
 }

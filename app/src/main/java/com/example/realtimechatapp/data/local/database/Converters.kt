@@ -1,5 +1,6 @@
 package com.example.realtimechatapp.data.local.database
 
+import androidx.room.ProvidedTypeConverter
 import androidx.room.TypeConverter
 import com.example.realtimechatapp.data.local.entity.MessageStatus
 import com.example.realtimechatapp.data.local.entity.ParticipantRole
@@ -7,6 +8,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import javax.inject.Inject
 
+@ProvidedTypeConverter
 class Converters @Inject constructor(private val gson: Gson){
     @TypeConverter
     fun fromStringList(list: List<String>?): String?{
