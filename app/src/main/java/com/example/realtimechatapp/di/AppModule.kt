@@ -1,12 +1,14 @@
 package com.example.realtimechatapp.di
 
-import com.example.realtimechatapp.data.remote.NetworkChecker
+import com.example.realtimechatapp.data.local.manager.CurrentUserManagerImpl
+import com.example.realtimechatapp.domain.repository.NetworkChecker
 import com.example.realtimechatapp.data.repository.AuthRepositoryImpl
 import com.example.realtimechatapp.data.repository.GroupRepositoryImpl
 import com.example.realtimechatapp.data.repository.MessageRepositoryImpl
 import com.example.realtimechatapp.data.repository.NetworkCheckerImpl
 import com.example.realtimechatapp.data.repository.UserRepositoryImpl
 import com.example.realtimechatapp.domain.repository.AuthRepository
+import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.repository.GroupRepository
 import com.example.realtimechatapp.domain.repository.MessageRepository
 import com.example.realtimechatapp.domain.repository.UserRepository
@@ -39,4 +41,8 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindNetworkChecker(networkCheckerImpl: NetworkCheckerImpl): NetworkChecker
+
+    @Binds
+    @Singleton
+    abstract fun bindCurrentUserManager(currentUserManagerImpl: CurrentUserManagerImpl): CurrentUserManager
 }

@@ -29,26 +29,33 @@ fun Throwable.getErrorMessage(): String{
     }
 }
 
-fun String?.formatToTime(toHourMinute: Boolean): String {
-    if (this.isNullOrBlank()) return ""
-
+fun String?.isoToLong(): Long{
+    if (this.isNullOrBlank()) return System.currentTimeMillis()
     return try {
-        // parse string ISO 8601 (E.g: "2024-05-21T10:15:30.000Z") to Instant
-        val instant = Instant.parse(this)
+        Instant.parse(this).toEpochMilli()
+    } catch (e: Exception){
+        Timber.e(e, "Failed to convert to Long: %s", this)
+        System.currentTimeMillis()
+    }
+}
 
-        // convert Instant to device timezone
+fun Long.formatToTime(toHourMinute: Boolean): String{
+    return try {
+        val instant = Instant.ofEpochMilli(this)
         val zonedDateTime = instant.atZone(ZoneId.systemDefault())
 
-        if (toHourMinute){
-            // format to "HH:mm"
-            zonedDateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
-        } else {
-            // format to "dd/MM/yyyy"
-            zonedDateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-        }
-    } catch (e: Exception) {
-        // log
+        val pattern = if(toHourMinute) "HH:mm" else "dd/MM/yyyy"
+        val formatter = DateTimeFormatter.ofPattern(pattern)
+
+        return zonedDateTime.format(formatter)
+    } catch (e: Exception){
         Timber.e(e, "Failed to parse timestamp: %s", this)
         "" // return null
     }
+}
+
+fun String?.formatToTime(toHourMinute: Boolean): String {
+    if (this.isNullOrBlank()) return ""
+
+    return this.isoToLong().formatToTime(toHourMinute)
 }

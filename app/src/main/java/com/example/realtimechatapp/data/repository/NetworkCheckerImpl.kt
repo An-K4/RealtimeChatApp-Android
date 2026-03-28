@@ -3,11 +3,11 @@ package com.example.realtimechatapp.data.repository
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import com.example.realtimechatapp.data.remote.NetworkChecker
+import com.example.realtimechatapp.domain.repository.NetworkChecker
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
-data class NetworkCheckerImpl @Inject constructor(
+class NetworkCheckerImpl @Inject constructor(
     @ApplicationContext private val context: Context
 ): NetworkChecker{
     override fun isNetworkAvailable(): Boolean {

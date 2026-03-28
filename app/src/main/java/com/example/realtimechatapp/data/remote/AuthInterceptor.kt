@@ -1,6 +1,6 @@
 package com.example.realtimechatapp.data.remote
 
-import com.example.realtimechatapp.data.local.TokenManager
+import com.example.realtimechatapp.data.local.manager.TokenManager
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
