@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -15,13 +16,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.example.realtimechatapp.common.formatToTime
 import com.example.realtimechatapp.ui.components.BeginScreen
 import com.example.realtimechatapp.ui.components.ContactHeader
 import com.example.realtimechatapp.ui.components.MessageInput
@@ -53,7 +54,9 @@ fun DetailMessageScreen(
 
         Box(
             modifier = Modifier
-                .weight(1f)
+                .fillMaxWidth()
+                .weight(1f),
+            contentAlignment = Alignment.Center
         ){
             if (detailMessageState.isLoading){
                 CircularProgressIndicator()
@@ -66,15 +69,17 @@ fun DetailMessageScreen(
                         reverseLayout = true,
                         contentPadding = PaddingValues(10.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier.background(color = Color.Gray)
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(color = Color.Gray)
                     ) {
                         items(
-                            items = detailMessageState.messages.reversed(),
+                            items = detailMessageState.messages,
                             key = { message -> message.id }
                         ){ item ->
                             MessageRenderItem(
                                 message = item.content?:"",
-                                time = item.createdAt.formatToTime(toHourMinute = true),
+                                time = item.createdAt,
                                 isSeen = item.seenUserIds?.isNotEmpty() == true,
                                 fromCurrentUser = item.senderId != detailMessageState.friendId
                             )

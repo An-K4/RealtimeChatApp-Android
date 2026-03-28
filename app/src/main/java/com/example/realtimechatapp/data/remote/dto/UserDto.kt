@@ -21,7 +21,7 @@ data class UserDto(
             fullName = fullName,
             email = email,
             avatar = avatar?.takeIf { it.isNotBlank() },
-            createdAt = createdAt
+            createdAt = createdAt.formatToTime(false)
         )
     }
 

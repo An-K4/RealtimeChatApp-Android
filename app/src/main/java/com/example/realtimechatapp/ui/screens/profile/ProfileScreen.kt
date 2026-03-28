@@ -58,7 +58,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
-import com.example.realtimechatapp.common.formatToTime
 import com.example.realtimechatapp.ui.components.AvatarPicker
 import com.example.realtimechatapp.ui.components.ConfirmationDialog
 import com.example.realtimechatapp.ui.components.NotificationDialog
@@ -152,7 +151,7 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(10.dp))
                     ProfileInfoItem("Email:", profileState.email)
                     Spacer(modifier = Modifier.height(10.dp))
-                    ProfileInfoItem("Ngày tham gia:", profileState.createdAt.formatToTime(false))
+                    ProfileInfoItem("Ngày tham gia:", profileState.createdAt)
                 }
                 Spacer(modifier = Modifier.height(30.dp))
                 Button(
