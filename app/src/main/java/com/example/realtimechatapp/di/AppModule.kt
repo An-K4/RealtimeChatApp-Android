@@ -1,8 +1,10 @@
 package com.example.realtimechatapp.di
 
+import com.example.realtimechatapp.data.remote.NetworkChecker
 import com.example.realtimechatapp.data.repository.AuthRepositoryImpl
 import com.example.realtimechatapp.data.repository.GroupRepositoryImpl
 import com.example.realtimechatapp.data.repository.MessageRepositoryImpl
+import com.example.realtimechatapp.data.repository.NetworkCheckerImpl
 import com.example.realtimechatapp.data.repository.UserRepositoryImpl
 import com.example.realtimechatapp.domain.repository.AuthRepository
 import com.example.realtimechatapp.domain.repository.GroupRepository
@@ -33,4 +35,8 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindUserRepository(userRepositoryImpl: UserRepositoryImpl): UserRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindNetworkChecker(networkCheckerImpl: NetworkCheckerImpl): NetworkChecker
 }

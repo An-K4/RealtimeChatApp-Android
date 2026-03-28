@@ -5,8 +5,10 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.example.realtimechatapp.data.local.dao.ContactDao
+import com.example.realtimechatapp.data.local.dao.GroupContactDao
 import com.example.realtimechatapp.data.local.dao.GroupDao
+import com.example.realtimechatapp.data.local.dao.GroupMessageDao
+import com.example.realtimechatapp.data.local.dao.MessageContactDao
 import com.example.realtimechatapp.data.local.dao.MessageDao
 import com.example.realtimechatapp.data.local.dao.ParticipantDao
 import com.example.realtimechatapp.data.local.dao.UserDao
@@ -32,11 +34,13 @@ import kotlinx.coroutines.asExecutor
 @TypeConverters(Converters::class)
 abstract class LocalDatabase: RoomDatabase() {
 
-    abstract fun contactDao(): ContactDao
+    abstract fun messageContactDao(): MessageContactDao
+    abstract fun groupContactDao(): GroupContactDao
     abstract fun userDao(): UserDao
     abstract fun groupDao(): GroupDao
     abstract fun participantDao(): ParticipantDao
     abstract fun messageDao(): MessageDao
+    abstract fun groupMessageDao(): GroupMessageDao
 
     companion object{
         @Volatile

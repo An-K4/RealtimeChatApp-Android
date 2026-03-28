@@ -9,7 +9,7 @@ import com.example.realtimechatapp.data.local.entity.MessageEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface MessageDao {
+interface GroupMessageDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMessage(message: MessageEntity)
 
@@ -22,42 +22,42 @@ interface MessageDao {
     @Query(
         """
             SELECT * FROM messages
-            WHERE (receiver_id = :userId OR sender_id = :userId)
+            WHERE (group_id = :groupId)
             ORDER BY created_at DESC
             LIMIT :limit OFFSET :offset
         """
     )
-    suspend fun getMessages(
-        userId: String,
+    suspend fun getGroupMessages(
+        groupId: String,
         limit: Int,
         offset: Int
     ): List<MessageEntity>
 
     @Query("""
         SELECT * FROM messages
-        WHERE (receiver_id = :userId OR sender_id = :userId)
+        WHERE (group_id = :groupId)
         AND created_at > :since
         ORDER BY created_at ASC
     """)
-    suspend fun getNewMessages(
-        userId: String,
+    suspend fun getNewGroupMessages(
+        groupId: String,
         since: Long
     ): List<MessageEntity>
 
     @Query("""
         SELECT * FROM messages
-        WHERE (receiver_id = :userId OR sender_id = :userId)
+        WHERE (group_id = :groupId)
         ORDER BY created_at DESC
     """)
-    fun observeMessages(
-        userId: String
+    fun observeGroupMessages(
+        groupId: String
     ): Flow<List<MessageEntity>>
 
     @Query(
         "UPDATE messages " +
-        "SET seen_by = json_insert(seen_by, '\$', :userId)" +
-        "WHERE (receiver_id = :userId OR group_id = :groupId)" +
-        "AND json_extract(seen_by, '\$') NOT LIKE '%' || :userId || '%'"
+                "SET seen_by = json_insert(seen_by, '\$', :userId)" +
+                "WHERE (receiver_id = :userId OR group_id = :groupId)" +
+                "AND json_extract(seen_by, '\$') NOT LIKE '%' || :userId || '%'"
     )
     suspend fun markMessageAsSeen(userId: String, groupId: String? = null)
 

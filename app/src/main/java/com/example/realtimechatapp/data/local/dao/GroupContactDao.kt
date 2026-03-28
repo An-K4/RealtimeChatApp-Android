@@ -7,12 +7,15 @@ import com.example.realtimechatapp.data.local.entity.ContactEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface ContactDao {
+interface GroupContactDao {
+    @Query("SELECT * FROM contacts WHERE is_group=1 ORDER BY last_time_stamp DESC")
+    fun getGroupContact(): Flow<List<ContactEntity>>
+
+    @Query("SELECT * FROM contacts WHERE is_group=1 ORDER BY last_time_stamp")
+    fun observeGroupContact(): Flow<List<ContactEntity>>
+
     @Upsert
     suspend fun insertContact(contactEntity: ContactEntity)
-
-    @Query("SELECT * FROM contacts ORDER BY last_time_stamp DESC")
-    fun getAllContact(): Flow<List<ContactEntity>>
 
     @Query("UPDATE contacts SET unread_count = unread_count + 1 WHERE id = :contactId")
     suspend fun updateUnreadCount(contactId: String)

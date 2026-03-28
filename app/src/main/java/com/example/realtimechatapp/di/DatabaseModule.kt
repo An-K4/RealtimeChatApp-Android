@@ -1,8 +1,10 @@
 package com.example.realtimechatapp.di
 
 import android.content.Context
-import com.example.realtimechatapp.data.local.dao.ContactDao
+import com.example.realtimechatapp.data.local.dao.GroupContactDao
 import com.example.realtimechatapp.data.local.dao.GroupDao
+import com.example.realtimechatapp.data.local.dao.GroupMessageDao
+import com.example.realtimechatapp.data.local.dao.MessageContactDao
 import com.example.realtimechatapp.data.local.dao.MessageDao
 import com.example.realtimechatapp.data.local.dao.ParticipantDao
 import com.example.realtimechatapp.data.local.dao.UserDao
@@ -37,7 +39,11 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideContactDao(localDatabase: LocalDatabase): ContactDao = localDatabase.contactDao()
+    fun provideMessageContactDao(localDatabase: LocalDatabase): MessageContactDao = localDatabase.messageContactDao()
+
+    @Provides
+    @Singleton
+    fun provideGroupContactDao(localDatabase: LocalDatabase): GroupContactDao = localDatabase.groupContactDao()
 
     @Provides
     @Singleton
@@ -54,4 +60,9 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideMessageDao(localDatabase: LocalDatabase): MessageDao = localDatabase.messageDao()
+
+    @Provides
+    @Singleton
+    fun provideGroupMessageDao(localDatabase: LocalDatabase): GroupMessageDao = localDatabase.groupMessageDao()
+
 }
