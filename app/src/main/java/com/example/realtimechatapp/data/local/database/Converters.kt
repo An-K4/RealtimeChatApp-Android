@@ -2,7 +2,6 @@ package com.example.realtimechatapp.data.local.database
 
 import androidx.room.ProvidedTypeConverter
 import androidx.room.TypeConverter
-import com.example.realtimechatapp.data.local.entity.MessageStatus
 import com.example.realtimechatapp.data.local.entity.ParticipantRole
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -28,16 +27,4 @@ class Converters @Inject constructor(private val gson: Gson){
 
     @TypeConverter
     fun toParticipantRole(role: String): ParticipantRole = ParticipantRole.valueOf(role)
-
-    @TypeConverter
-    fun fromMessageStatus(status: MessageStatus): String = status.name
-
-    @TypeConverter
-    fun toMessageStatus(status: String): MessageStatus{
-        return try {
-            MessageStatus.valueOf(status)
-        } catch (e: Exception){
-            MessageStatus.SENT
-        }
-    }
 }

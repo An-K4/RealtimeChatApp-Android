@@ -54,10 +54,11 @@ class DetailMessageViewModel @Inject constructor(
     fun getMessages() {
         viewModelScope.launch {
             _detailMessageState.update { it.copy(isLoading = true) }
+            val result = getMessageUseCase(_detailMessageState.value.friendId)
 
-            getMessageUseCase(_detailMessageState.value.friendId).onSuccess { messages ->
+            result.onSuccess { messages ->
                 _detailMessageState.update { it.copy(messages = messages, isLoading = false) }
-                Timber.log(1, detailMessageState.value.messages.toString())
+                Timber.d(detailMessageState.value.messages.toString())
             }.onFailure { e ->
                 _detailMessageEvent.send(DetailMessageEvent.Failure(e.getErrorMessage()))
                 _detailMessageState.update { it.copy(isLoading = false) }

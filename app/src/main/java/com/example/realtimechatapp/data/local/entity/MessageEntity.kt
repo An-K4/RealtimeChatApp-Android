@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.realtimechatapp.domain.model.Message
 
 @Entity(
     tableName = "messages",
@@ -32,12 +33,12 @@ data class MessageEntity(
     @ColumnInfo(name = "reply_to_id")
     val replyToId: String? = null,
 
-    val attachments: List<String>?,
+    val attachments: String?,
 
     @ColumnInfo(name = "seen_by")
     val seenBy: List<String>?,
 
-    val status: MessageStatus, // SENT, DELIVERED, READ
+    // val status: MessageStatus, // SENT, DELIVERED, READ
 
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
@@ -45,7 +46,3 @@ data class MessageEntity(
     @ColumnInfo(name = "updated_at")
     val updatedAt: Long = System.currentTimeMillis()
 )
-
-enum class MessageStatus{
-    SENDING, SENT, DELIVERED, READ, FAILED
-}

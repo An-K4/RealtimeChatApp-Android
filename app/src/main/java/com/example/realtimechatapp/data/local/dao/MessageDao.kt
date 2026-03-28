@@ -4,8 +4,10 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.example.realtimechatapp.data.local.entity.MessageEntity
+import com.example.realtimechatapp.data.local.pojo.MessageWithSender
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -19,39 +21,48 @@ interface MessageDao {
     @Update
     suspend fun updateMessage(message: MessageEntity)
 
+    @Transaction
     @Query(
         """
             SELECT * FROM messages
-            WHERE (receiver_id = :userId OR sender_id = :userId)
+            WHERE (receiver_id = :myId AND sender_id = :friendId)
+            OR (receiver_id = :friendId AND sender_id = :myId)
             ORDER BY created_at DESC
             LIMIT :limit OFFSET :offset
         """
     )
     suspend fun getMessages(
-        userId: String,
+        myId: String,
+        friendId: String,
         limit: Int,
         offset: Int
-    ): List<MessageEntity>
+    ): List<MessageWithSender>
 
+    @Transaction
     @Query("""
         SELECT * FROM messages
-        WHERE (receiver_id = :userId OR sender_id = :userId)
+        WHERE (receiver_id = :myId AND sender_id = :friendId)
+        OR (receiver_id = :friendId AND sender_id = :myId)
         AND created_at > :since
         ORDER BY created_at ASC
     """)
     suspend fun getNewMessages(
-        userId: String,
+        myId: String,
+        friendId: String,
         since: Long
-    ): List<MessageEntity>
+    ): List<MessageWithSender>
 
+    @Transaction
     @Query("""
         SELECT * FROM messages
-        WHERE (receiver_id = :userId OR sender_id = :userId)
+        WHERE (receiver_id = :myId AND sender_id = :friendId)
+        OR (receiver_id = :friendId AND sender_id = :myId)
         ORDER BY created_at DESC
     """)
     fun observeMessages(
-        userId: String
-    ): Flow<List<MessageEntity>>
+        myId: String,
+        friendId: String
+    ): Flow<List<MessageWithSender>>
 
     @Query(
         "UPDATE messages " +

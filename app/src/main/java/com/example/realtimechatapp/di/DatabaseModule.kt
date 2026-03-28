@@ -1,6 +1,10 @@
 package com.example.realtimechatapp.di
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStoreFile
 import com.example.realtimechatapp.data.local.dao.GroupContactDao
 import com.example.realtimechatapp.data.local.dao.GroupDao
 import com.example.realtimechatapp.data.local.dao.GroupMessageDao
@@ -65,4 +69,13 @@ object DatabaseModule {
     @Singleton
     fun provideGroupMessageDao(localDatabase: LocalDatabase): GroupMessageDao = localDatabase.groupMessageDao()
 
+    @Provides
+    @Singleton
+    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences>{
+        return PreferenceDataStoreFactory.create (
+            produceFile = {
+                context.preferencesDataStoreFile("user_prefs")
+            }
+        )
+    }
 }

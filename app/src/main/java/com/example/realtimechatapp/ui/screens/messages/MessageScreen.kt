@@ -35,10 +35,6 @@ fun MessageScreen(
     var dialogState by remember { mutableStateOf<MessageViewModel.MessageEvent?>(null) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    LaunchedEffect(Unit) {
-        messageViewModel.getUsers()
-    }
-
     LaunchedEffect(lifecycleOwner.lifecycle) {
         messageViewModel.messageEvent.collect{ event ->
             dialogState = event

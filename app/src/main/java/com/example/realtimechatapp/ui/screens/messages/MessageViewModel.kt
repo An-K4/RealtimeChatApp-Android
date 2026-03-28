@@ -2,9 +2,10 @@ package com.example.realtimechatapp.ui.screens.messages
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.realtimechatapp.data.local.TokenManager
-import com.example.realtimechatapp.domain.model.UserContact
-import com.example.realtimechatapp.domain.usecase.messages.GetUsersUseCase
+import com.example.realtimechatapp.common.getErrorMessage
+import com.example.realtimechatapp.data.local.manager.TokenManager
+import com.example.realtimechatapp.domain.model.MessageContact
+import com.example.realtimechatapp.domain.usecase.messages.GetMessageContactUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,12 +17,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MessageViewModel @Inject constructor(
-    private val getUsersUseCase: GetUsersUseCase,
+    private val getMessageContactUseCase: GetMessageContactUseCase,
     private val tokenManager: TokenManager
 ) : ViewModel() {
     data class MessageState(
         val isLoading: Boolean = false,
-        val users: List<UserContact> = emptyList(),
+        val users: List<MessageContact> = emptyList(),
         val info: String? = null
     )
 
@@ -38,6 +39,7 @@ class MessageViewModel @Inject constructor(
 
     init {
         checkToken()
+        getUsers() // auto load
     }
 
     fun checkToken(){
@@ -54,7 +56,9 @@ class MessageViewModel @Inject constructor(
         viewModelScope.launch {
             _messageState.update { it.copy(isLoading = true, info = null) }
 
-            getUsersUseCase().onSuccess { users ->
+            val result = getMessageContactUseCase()
+
+            result.onSuccess { users ->
                 _messageState.update {
                     it.copy(
                         isLoading = false,
@@ -66,7 +70,7 @@ class MessageViewModel @Inject constructor(
                 _messageState.update {
                     it.copy(
                         isLoading = false,
-                        info = "${exception.message}"
+                        info = exception.getErrorMessage()
                     )
                 }
             }

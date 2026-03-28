@@ -4,6 +4,8 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.realtimechatapp.common.formatToTime
+import com.example.realtimechatapp.domain.model.User
 
 @Entity(
     tableName = "users",
@@ -17,7 +19,6 @@ data class UserEntity(
     val id: String,
 
     val username: String,
-    val password: String,
     val fullName: String,
     val email: String,
     val avatar: String?,
@@ -33,4 +34,13 @@ data class UserEntity(
 
     @ColumnInfo(name = "updated_at")
     val updatedAt: Long = System.currentTimeMillis()
+)
+
+fun UserEntity.toUser() = User(
+        id = this.id,
+        username = this.username,
+        fullName = this.fullName,
+        email = this.email,
+        avatar = this.avatar,
+        createdAt = this.createdAt.formatToTime(false)
 )

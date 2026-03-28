@@ -7,9 +7,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.realtimechatapp.common.FileUtils
 import com.example.realtimechatapp.common.ImageUtils
 import com.example.realtimechatapp.common.getErrorMessage
-import com.example.realtimechatapp.data.local.TokenManager
+import com.example.realtimechatapp.data.local.manager.TokenManager
 import com.example.realtimechatapp.domain.usecase.auth.LoginUseCase
 import com.example.realtimechatapp.domain.usecase.auth.SignupUseCase
+import com.example.realtimechatapp.domain.usecase.user.GetMeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
@@ -27,6 +28,7 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val signupUseCase: SignupUseCase,
+    private val getMeUseCase: GetMeUseCase,
     private val tokenManager: TokenManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
@@ -106,9 +108,17 @@ class AuthViewModel @Inject constructor(
                 if (token.isNullOrEmpty()){
                     _isLoading.value = false
                 } else {
-                    _authEvent.send(AuthEvent.AuthSuccess)
+                    getMeUseCase().onSuccess {
+                        _authEvent.send(AuthEvent.AuthSuccess)
+                        _isLoading.value = false
+                    }.onFailure {
+                        _isLoading.value = false
+                    }
                 }
             } catch (e: Exception){
+                _isLoading.value = false
+                Timber.d(e.getErrorMessage())
+            } finally {
                 _isLoading.value = false
             }
         }

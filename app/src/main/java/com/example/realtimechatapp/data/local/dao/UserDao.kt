@@ -14,19 +14,19 @@ interface UserDao {
     suspend fun insertUser(user: UserEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAllUser(user: List<UserEntity>)
+    suspend fun insertAllUser(users: List<UserEntity>)
 
     @Update
     suspend fun updateUser(newUser: UserEntity)
 
     @Query("SELECT * FROM users WHERE id = :id")
-    suspend fun getUserById(id: String): UserEntity
+    suspend fun getUserById(id: String): UserEntity?
 
     @Query("SELECT * FROM users WHERE username = :username")
-    suspend fun getUserByUsername(username: String): UserEntity
+    suspend fun getUserByUsername(username: String): UserEntity?
 
     @Query("SELECT * FROM users WHERE email = :email")
-    suspend fun getUserByEmail(email: String): UserEntity
+    suspend fun getUserByEmail(email: String): UserEntity?
 
     @Query("""
         SELECT * FROM users

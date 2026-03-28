@@ -3,6 +3,9 @@ package com.example.realtimechatapp.data.local.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.example.realtimechatapp.common.formatToTime
+import com.example.realtimechatapp.domain.model.LastMessage
+import com.example.realtimechatapp.domain.model.MessageContact
 
 @Entity(tableName = "contacts")
 data class ContactEntity(
@@ -18,6 +21,9 @@ data class ContactEntity(
     @ColumnInfo("last_sender_name")
     val lastSenderName: String?,
 
+    @ColumnInfo("is_mine")
+    val isMine: Boolean,
+
     @ColumnInfo("last_time_stamp")
     val lastTimeStamp: Long,
 
@@ -29,4 +35,18 @@ data class ContactEntity(
 
     @ColumnInfo("contact_avatar")
     val contactAvatar: String?
+)
+
+fun ContactEntity.toMessageContact() = MessageContact(
+    id = this.id,
+    fullName = this.contactName ?: "",
+    avatar = this.contactAvatar,
+    unreadCount = this.unreadCount,
+    lastMessage = LastMessage(
+        content = this.lastMessage ?: "",
+        createdAt = this.lastTimeStamp.formatToTime(true),
+        senderName = this.lastSenderName,
+        isMine = this.isMine
+    ),
+    lastMessageTime = this.lastTimeStamp.formatToTime(true)
 )

@@ -1,5 +1,7 @@
 package com.example.realtimechatapp.data.remote.dto
 
+import com.example.realtimechatapp.common.isoToLong
+import com.example.realtimechatapp.data.local.entity.MessageEntity
 import com.example.realtimechatapp.domain.model.Message
 import com.google.gson.annotations.SerializedName
 
@@ -14,23 +16,14 @@ data class MessageDto(
     val seenBy: List<UserDto>?,
     val createdAt: String
 ){
-    fun toMessage(): Message {
-        val senderId = senderId.toUser()
-        val receiverId = receiverId?.toUser()
-
-        return Message(
-            id = id,
-            senderId = senderId.id,
-            senderName = senderId.fullName,
-            senderAvatar = senderId.avatar,
-            receiverId = receiverId?.id,
-            groupId = groupId?.toGroup()?.id,
-            content = content,
-            replyToMessageId = replyTo?.id,
-            replyToContent = replyTo?.content,
-            attachments = attachments,
-            seenUserIds = seenBy?.map { it.id },
-            createdAt = createdAt
-        )
-    }
+    fun toMessageEntity() = MessageEntity(
+        id = this.id,
+        senderId = this.senderId.id,
+        receiverId = this.receiverId?.id,
+        content = content,
+        replyToId = replyTo?.id,
+        attachments = attachments,
+        seenBy = seenBy?.map { it.id },
+        createdAt = createdAt.isoToLong()
+    )
 }

@@ -115,7 +115,7 @@ fun ChatItem(
             modifier = Modifier.padding(start = 5.dp)
         ) {
             Text(
-                text = lastMessage.createdAt.formatToTime(true),
+                text = lastMessage.createdAt,
                 fontSize = 14.sp
             )
             if (unreadCount > 0) {

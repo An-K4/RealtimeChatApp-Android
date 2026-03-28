@@ -1,5 +1,8 @@
 package com.example.realtimechatapp.data.remote.dto
 
+import com.example.realtimechatapp.common.formatToTime
+import com.example.realtimechatapp.common.isoToLong
+import com.example.realtimechatapp.data.local.entity.UserEntity
 import com.example.realtimechatapp.domain.model.User
 import com.google.gson.annotations.SerializedName
 
@@ -21,4 +24,13 @@ data class UserDto(
             createdAt = createdAt
         )
     }
+
+    fun toUserEntity() = UserEntity(
+        id = this.id,
+        username = this.username,
+        fullName = this.fullName,
+        email = this.email,
+        avatar = avatar,
+        createdAt = this.createdAt.isoToLong()
+    )
 }
