@@ -10,7 +10,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,7 +37,6 @@ fun MessageScreen(
 
     LaunchedEffect(Unit) {
         messageViewModel.getUsers()
-        messageViewModel.checkToken()
     }
 
     LaunchedEffect(lifecycleOwner.lifecycle) {

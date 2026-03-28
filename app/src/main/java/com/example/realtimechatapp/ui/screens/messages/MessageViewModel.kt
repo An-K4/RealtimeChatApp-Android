@@ -36,6 +36,10 @@ class MessageViewModel @Inject constructor(
     private val _messageEvent = Channel<MessageEvent>()
     val messageEvent = _messageEvent.receiveAsFlow()
 
+    init {
+        checkToken()
+    }
+
     fun checkToken(){
         viewModelScope.launch {
             tokenManager.token.collect { token ->

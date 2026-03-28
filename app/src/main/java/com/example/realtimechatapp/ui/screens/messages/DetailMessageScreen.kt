@@ -15,7 +15,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -24,11 +23,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.common.formatToTime
 import com.example.realtimechatapp.ui.components.BeginScreen
-import com.example.realtimechatapp.ui.components.ChatItem
 import com.example.realtimechatapp.ui.components.ContactHeader
 import com.example.realtimechatapp.ui.components.MessageInput
 import com.example.realtimechatapp.ui.components.MessageRenderItem
-import javax.inject.Inject
 
 @Composable
 fun DetailMessageScreen(
@@ -66,19 +63,20 @@ fun DetailMessageScreen(
                 } else {
                     LazyColumn(
                         state = rememberLazyListState(),
+                        reverseLayout = true,
                         contentPadding = PaddingValues(10.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier.background(color = Color.Gray)
                     ) {
                         items(
-                            items = detailMessageState.messages,
+                            items = detailMessageState.messages.reversed(),
                             key = { message -> message.id }
                         ){ item ->
                             MessageRenderItem(
                                 message = item.content?:"",
                                 time = item.createdAt.formatToTime(toHourMinute = true),
                                 isSeen = item.seenUserIds?.isNotEmpty() == true,
-                                fromCurrentUser = item.senderId == detailMessageState.friendId
+                                fromCurrentUser = item.senderId != detailMessageState.friendId
                             )
                         }
                     }

@@ -14,7 +14,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -85,7 +84,7 @@ class AuthViewModel @Inject constructor(
         _signupState.update { it.copy(avatar = newValue) }
     }
 
-    private var _isLoading = MutableStateFlow(false)
+    private var _isLoading = MutableStateFlow(true)
     val isLoading = _isLoading.asStateFlow()
 
     private val _loginState = MutableStateFlow(LoginState())
