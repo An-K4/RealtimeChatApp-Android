@@ -54,11 +54,15 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun uploadAvatar(file: File): Result<String?> {
         return try {
-            val part = NetworkUtils.createPartFromFile("avatar", file)
-            val uploadResult = authApi.uploadAvatar(part)
-            val url = uploadResult.url
-            Timber.d("Upload thành công, url là %s", url)
-            Result.success(url)
+            if (networkChecker.isNetworkAvailable()){
+                val part = NetworkUtils.createPartFromFile("avatar", file)
+                val uploadResult = authApi.uploadAvatar(part)
+                val url = uploadResult.url
+                Timber.d("Upload thành công, url là %s", url)
+                Result.success(url)
+            } else {
+                Result.failure(Exception("Mất kết nối tới máy chủ"))
+            }
         } catch (e: Exception) {
             Timber.d("Upload lỗi: %s", e.getErrorMessage())
             Result.failure(e)
@@ -73,8 +77,9 @@ class AuthRepositoryImpl @Inject constructor(
         avatar: String?
     ): Result<String> {
         return try {
-            val response =
-                authApi.signup(SignupRequestDto(username, password, fullName, email, avatar))
+            val response = authApi.signup(
+                SignupRequestDto(username, password, fullName, email, avatar)
+            )
             Result.success(response.message)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -84,11 +89,12 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun logout(): Result<String> = withContext(Dispatchers.IO) {
         return@withContext try {
-            val response = try {
+            try {
                 if (networkChecker.isNetworkAvailable()) {
                     authApi.logout()
                 } else null
-            } catch (e: Exception){
+            } catch (e: Exception) {
+                e.printStackTrace()
                 null
             }
 
