@@ -52,9 +52,9 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun uploadAvatar(file: File): Result<String?> {
-        return try {
-            if (networkChecker.isNetworkAvailable()){
+    override suspend fun uploadAvatar(file: File): Result<String?> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            if (networkChecker.isNetworkAvailable()) {
                 val part = NetworkUtils.createPartFromFile("avatar", file)
                 val uploadResult = authApi.uploadAvatar(part)
                 val url = uploadResult.url
@@ -75,8 +75,8 @@ class AuthRepositoryImpl @Inject constructor(
         fullName: String,
         email: String,
         avatar: String?
-    ): Result<String> {
-        return try {
+    ): Result<String> = withContext(Dispatchers.IO) {
+        return@withContext try {
             val response = authApi.signup(
                 SignupRequestDto(username, password, fullName, email, avatar)
             )
@@ -108,34 +108,41 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getMe(): Result<User> {
-        return try {
+    override suspend fun getMe(): Result<User> = withContext(Dispatchers.IO) {
+        val currentUserId = currentUserManager.getCurrentUserId()
+        val cachedUser =
+            if (currentUserId.isNotEmpty()) userDao.getUserById(currentUserId) else null
+
+        return@withContext try {
             if (networkChecker.isNetworkAvailable()) {
                 val response = authApi.getMe()
-                currentUserManager.switchUser(response.user.id)
-                userDao.insertUser(response.user.toUserEntity())
-                Result.success(response.user.toUser())
-            } else {
-                if (currentUserManager.getCurrentUserId().isEmpty()) {
-                    Result.failure(Exception("Mất kết nối tới máy chủ"))
+                val userResponse = response.user
+
+                currentUserManager.switchUser(userResponse.id)
+                userDao.insertUser(userResponse.toUserEntity())
+
+                val me = userDao.getUserById(userResponse.id)
+                if (me != null) {
+                    Result.success(me.toUser())
                 } else {
-                    val cachedUser = userDao.getUserById(currentUserManager.getCurrentUserId())
-                    if (cachedUser != null) {
-                        Result.success(cachedUser.toUser())
-                    } else {
-                        Result.failure(Exception("Không tìm thấy dữ liệu người dùng"))
-                    }
+                    Timber.d("Lỗi khi truy xuất db")
+                    Result.success(userResponse.toUser())
+                }
+            } else {
+                if (cachedUser != null) {
+                    Result.success(cachedUser.toUser())
+                } else {
+                    Result.failure(Exception("Mất kết nối tới máy chủ"))
                 }
             }
         } catch (e: Exception) {
             e.printStackTrace()
 
-            val currentId = currentUserManager.getCurrentUserId()
-            val localUser = if (currentId.isNotEmpty()) userDao.getUserById(currentId) else null
-            if (localUser != null) {
-                Result.success(localUser.toUser())
+            if (cachedUser != null) {
+                Timber.d("Lỗi trong quá trình gọi api, lấy dữ liệu cũ")
+                Result.success(cachedUser.toUser())
             } else {
-                Result.failure(Exception(e))
+                Result.failure(e)
             }
         }
     }

@@ -68,6 +68,10 @@ class ProfileViewModel @Inject constructor(
         data class Failure(val message: String) : ProfileEvent()
     }
 
+    init {
+        getMe()
+    }
+
     private val _profileState = MutableStateFlow(ProfileState())
     val profileState = _profileState.asStateFlow()
 

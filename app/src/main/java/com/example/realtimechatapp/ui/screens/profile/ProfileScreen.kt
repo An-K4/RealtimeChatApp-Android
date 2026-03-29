@@ -96,10 +96,6 @@ fun ProfileScreen(
         }
     )
 
-    LaunchedEffect(Unit) {
-        profileViewModel.getMe()
-    }
-
     LaunchedEffect(lifeCycleOwner.lifecycle) {
         lifeCycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             profileViewModel.profileEvent.collect { event ->
