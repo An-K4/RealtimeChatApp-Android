@@ -68,10 +68,6 @@ class ProfileViewModel @Inject constructor(
         data class Failure(val message: String) : ProfileEvent()
     }
 
-    init {
-        getMe()
-    }
-
     private val _profileState = MutableStateFlow(ProfileState())
     val profileState = _profileState.asStateFlow()
 
@@ -83,6 +79,11 @@ class ProfileViewModel @Inject constructor(
 
     private val _profileEvent = Channel<ProfileEvent>()
     val profileEvent = _profileEvent.receiveAsFlow()
+
+    // init after state variables
+    init {
+        getMe()
+    }
 
     fun onUpdateAvatarChange(newValue: Any?) {
         if (newValue is String || newValue is Uri || newValue == null) {

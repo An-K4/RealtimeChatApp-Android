@@ -55,6 +55,12 @@ class DetailMessageViewModel @Inject constructor(
     private val _detailMessageEvent = Channel<DetailMessageEvent>()
     val detailMessageEvent = _detailMessageEvent.receiveAsFlow()
 
+    // init after state variables
+    init {
+        getHeaderInfo()
+        getMessages()
+    }
+
     fun getMessages() {
         viewModelScope.launch {
             _detailMessageState.update { it.copy(isLoading = true) }
@@ -62,7 +68,7 @@ class DetailMessageViewModel @Inject constructor(
 
             result.onSuccess { messages ->
                 _detailMessageState.update { it.copy(messages = messages, isLoading = false) }
-                Timber.d(detailMessageState.value.messages.toString())
+                Timber.d(messages.toString())
             }.onFailure { e ->
                 _detailMessageEvent.send(DetailMessageEvent.Failure(e.getErrorMessage()))
                 _detailMessageState.update { it.copy(isLoading = false) }

@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,6 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.ui.components.ChatItem
 import com.example.realtimechatapp.ui.components.BeginScreen
+import com.example.realtimechatapp.ui.navigation.Screen
 
 @Composable
 fun GroupScreen(
@@ -26,10 +26,6 @@ fun GroupScreen(
     groupViewModel: GroupViewModel = hiltViewModel()
 ){
     val uiState by groupViewModel.uiState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(Unit) {
-        groupViewModel.getGroup()
-    }
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -48,15 +44,15 @@ fun GroupScreen(
                     items(
                         items = uiState.groups,
                         key = { group -> group.id}
-                    ){
+                    ){ group ->
                         ChatItem(
                             isGroup = true,
-                            avatar = it.avatar,
-                            name = it.name,
-                            unreadCount = it.unreadCount,
-                            lastMessage = it.lastMessage,
+                            avatar = group.avatar,
+                            name = group.name,
+                            unreadCount = group.unreadCount,
+                            lastMessage = group.lastMessage,
                             onItemClicked = {
-                                // navController.navigate("group_detail/${it.id}")
+                                navController.navigate(Screen.DetailGroup.createRoute(group.id))
                             }
                         )
                     }

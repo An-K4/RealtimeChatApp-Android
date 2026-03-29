@@ -2,7 +2,6 @@ package com.example.realtimechatapp.ui.screens.messages
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.data.local.manager.TokenManager
 import com.example.realtimechatapp.domain.model.MessageContact
 import com.example.realtimechatapp.domain.usecase.messages.GetMessageContactUseCase
@@ -22,8 +21,7 @@ class MessageViewModel @Inject constructor(
 ) : ViewModel() {
     data class MessageState(
         val isLoading: Boolean = false,
-        val users: List<MessageContact> = emptyList(),
-        val info: String? = null
+        val users: List<MessageContact> = emptyList()
     )
 
     sealed class MessageEvent{
@@ -54,7 +52,7 @@ class MessageViewModel @Inject constructor(
 
     fun getUsers() {
         viewModelScope.launch {
-            _messageState.update { it.copy(isLoading = true, info = null) }
+            _messageState.update { it.copy(isLoading = true) }
 
             val result = getMessageContactUseCase()
 
@@ -62,15 +60,13 @@ class MessageViewModel @Inject constructor(
                 _messageState.update {
                     it.copy(
                         isLoading = false,
-                        users = users,
-                        info = if (users.isEmpty()) "Hãy tìm 1 người bạn và bắt đầu trò chuyện nào!" else null
+                        users = users
                     )
                 }
             }.onFailure { exception ->
                 _messageState.update {
                     it.copy(
-                        isLoading = false,
-                        info = exception.getErrorMessage()
+                        isLoading = false
                     )
                 }
             }

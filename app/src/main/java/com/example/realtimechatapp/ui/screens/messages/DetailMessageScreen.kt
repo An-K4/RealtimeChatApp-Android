@@ -1,5 +1,6 @@
 package com.example.realtimechatapp.ui.screens.messages
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,13 +15,13 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.ui.components.BeginScreen
@@ -34,11 +35,20 @@ fun DetailMessageScreen(
     detailMessageViewModel: DetailMessageViewModel = hiltViewModel()
 ){
     val detailMessageState by detailMessageViewModel.detailMessageState.collectAsStateWithLifecycle()
-    val dialogState by remember { mutableStateOf<DetailMessageViewModel.DetailMessageEvent?>(null) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
-        detailMessageViewModel.getHeaderInfo()
-        detailMessageViewModel.getMessages()
+    LaunchedEffect(lifecycleOwner.lifecycle) {
+        detailMessageViewModel.detailMessageEvent.collect{ event ->
+            when(event){
+                is DetailMessageViewModel.DetailMessageEvent.GetMessageSuccess -> {
+                    Toast.makeText(context, "Lấy tin nhắn từ db thành công", Toast.LENGTH_SHORT).show()
+                }
+                is DetailMessageViewModel.DetailMessageEvent.Failure -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     Column(
@@ -79,9 +89,12 @@ fun DetailMessageScreen(
                             key = { message -> message.id }
                         ){ item ->
                             MessageRenderItem(
+                                senderAvatar = item.senderAvatar,
+                                senderName = item.senderName,
                                 message = item.content?:"",
                                 time = item.createdAt,
                                 isSeen = item.seenUserIds?.isNotEmpty() == true,
+                                isGroup = false,
                                 fromCurrentUser = item.senderId != detailMessageState.friendId
                             )
                         }

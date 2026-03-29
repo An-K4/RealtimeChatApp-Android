@@ -8,9 +8,9 @@ import com.example.realtimechatapp.common.FileUtils
 import com.example.realtimechatapp.common.ImageUtils
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.data.local.manager.TokenManager
+import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.usecase.auth.LoginUseCase
 import com.example.realtimechatapp.domain.usecase.auth.SignupUseCase
-import com.example.realtimechatapp.domain.usecase.user.GetMeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
@@ -28,8 +28,8 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val signupUseCase: SignupUseCase,
-    private val getMeUseCase: GetMeUseCase,
     private val tokenManager: TokenManager,
+    private val currentUserManager: CurrentUserManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -53,6 +53,18 @@ class AuthViewModel @Inject constructor(
         object AuthSuccess : AuthEvent()
         data class Failure(val message: String) : AuthEvent()
     }
+
+    private var _isLoading = MutableStateFlow(true)
+    val isLoading = _isLoading.asStateFlow()
+
+    private val _loginState = MutableStateFlow(LoginState())
+    val loginState = _loginState.asStateFlow()
+
+    private val _signupState = MutableStateFlow(SignupState())
+    val signupState = _signupState.asStateFlow()
+
+    private val _authEvent = Channel<AuthEvent>()
+    val authEvent = _authEvent.receiveAsFlow()
 
     fun onLoginUsernameChange(newValue: String) {
         _loginState.update { it.copy(username = newValue) }
@@ -86,34 +98,18 @@ class AuthViewModel @Inject constructor(
         _signupState.update { it.copy(avatar = newValue) }
     }
 
-    private var _isLoading = MutableStateFlow(true)
-    val isLoading = _isLoading.asStateFlow()
-
-    private val _loginState = MutableStateFlow(LoginState())
-    val loginState = _loginState.asStateFlow()
-
-    private val _signupState = MutableStateFlow(SignupState())
-    val signupState = _signupState.asStateFlow()
-
-    private val _authEvent = Channel<AuthEvent>()
-    val authEvent = _authEvent.receiveAsFlow()
-
     fun loginWithToken() {
         viewModelScope.launch {
             _isLoading.value = true
 
             try {
                 val token = tokenManager.token.first()
+                val currentUserId = currentUserManager.getCurrentUserId()
 
-                if (token.isNullOrEmpty()){
-                    _isLoading.value = false
+                if (!token.isNullOrEmpty() && currentUserId.isNotEmpty()){
+                    _authEvent.send(AuthEvent.AuthSuccess)
                 } else {
-                    getMeUseCase().onSuccess {
-                        _authEvent.send(AuthEvent.AuthSuccess)
-                        _isLoading.value = false
-                    }.onFailure {
-                        _isLoading.value = false
-                    }
+                    _isLoading.value = false
                 }
             } catch (e: Exception){
                 _isLoading.value = false
