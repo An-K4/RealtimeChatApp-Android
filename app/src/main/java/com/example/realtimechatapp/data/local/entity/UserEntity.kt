@@ -37,10 +37,10 @@ data class UserEntity(
 )
 
 fun UserEntity.toUser() = User(
-        id = this.id,
-        username = this.username,
-        fullName = this.fullName,
-        email = this.email,
-        avatar = this.avatar,
-        createdAt = this.createdAt.formatToTime(false)
+    id = this.id,
+    username = this.username,
+    fullName = this.fullName,
+    email = this.email,
+    avatar = this.avatar,
+    createdAt = this.createdAt.formatToTime(false)
 )

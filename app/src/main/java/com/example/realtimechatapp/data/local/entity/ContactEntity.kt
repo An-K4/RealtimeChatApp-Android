@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.example.realtimechatapp.common.formatToTime
+import com.example.realtimechatapp.domain.model.GroupContact
 import com.example.realtimechatapp.domain.model.LastMessage
 import com.example.realtimechatapp.domain.model.MessageContact
 
@@ -49,4 +50,21 @@ fun ContactEntity.toMessageContact() = MessageContact(
         isMine = this.isMine
     ),
     lastMessageTime = this.lastTimeStamp.formatToTime(true)
+)
+
+fun ContactEntity.toGroupContact() = GroupContact(
+    id = this.id,
+    name = this.contactName ?: "",
+    avatar = this.contactAvatar,
+    description = "",
+    ownerId = this.id,
+    unreadCount = this.unreadCount,
+    lastMessage = LastMessage(
+        content = this.lastMessage ?: "",
+        createdAt = this.lastTimeStamp.formatToTime(true),
+        senderName = this.lastSenderName,
+        isMine = this.isMine
+    ),
+    updatedAt = this.lastTimeStamp.formatToTime(true)
+
 )

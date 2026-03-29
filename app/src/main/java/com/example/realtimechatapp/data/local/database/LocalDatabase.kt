@@ -10,22 +10,20 @@ import com.example.realtimechatapp.data.local.dao.GroupDao
 import com.example.realtimechatapp.data.local.dao.GroupMessageDao
 import com.example.realtimechatapp.data.local.dao.MessageContactDao
 import com.example.realtimechatapp.data.local.dao.MessageDao
-import com.example.realtimechatapp.data.local.dao.ParticipantDao
+import com.example.realtimechatapp.data.local.dao.MemberDao
 import com.example.realtimechatapp.data.local.dao.UserDao
 import com.example.realtimechatapp.data.local.entity.ContactEntity
 import com.example.realtimechatapp.data.local.entity.GroupEntity
 import com.example.realtimechatapp.data.local.entity.MessageEntity
-import com.example.realtimechatapp.data.local.entity.ParticipantEntity
+import com.example.realtimechatapp.data.local.entity.MemberEntity
 import com.example.realtimechatapp.data.local.entity.UserEntity
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.asExecutor
 
 @Database(
     entities = [
         ContactEntity::class,
         UserEntity::class,
         GroupEntity::class,
-        ParticipantEntity::class,
+        MemberEntity::class,
         MessageEntity::class
     ],
     version = 1,
@@ -38,7 +36,7 @@ abstract class LocalDatabase: RoomDatabase() {
     abstract fun groupContactDao(): GroupContactDao
     abstract fun userDao(): UserDao
     abstract fun groupDao(): GroupDao
-    abstract fun participantDao(): ParticipantDao
+    abstract fun participantDao(): MemberDao
     abstract fun messageDao(): MessageDao
     abstract fun groupMessageDao(): GroupMessageDao
 

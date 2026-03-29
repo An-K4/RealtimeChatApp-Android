@@ -34,7 +34,7 @@ interface UserDao {
     @Query("""
         SELECT * FROM users
         WHERE id IN (
-            SELECT user_id FROM participants WHERE group_id = :groupId
+            SELECT user_id FROM members WHERE group_id = :groupId
         )"""
     )
     suspend fun getGroupMember(groupId: String): List<UserEntity>

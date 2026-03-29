@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.model.Message
+import com.example.realtimechatapp.domain.usecase.messages.GetHeaderInfoUseCase
 import com.example.realtimechatapp.domain.usecase.messages.GetMessageUseCase
 import com.example.realtimechatapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,19 +21,22 @@ import javax.inject.Inject
 @HiltViewModel
 class DetailMessageViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    private val getMessageUseCase: GetMessageUseCase
-): ViewModel(){
+    private val getMessageUseCase: GetMessageUseCase,
+    private val getHeaderInfoUseCase: GetHeaderInfoUseCase
+) : ViewModel() {
     data class DetailMessageState(
         val friendId: String = "",
+        val friendName: String? = null,
+        val friendStatus: String? = null,
+        val friendAvatar: String? = null,
         val messages: List<Message> = emptyList(),
         val messageInput: String? = null,
-        val info: String? = null,
         val isLoading: Boolean = false
     )
 
-    sealed class DetailMessageEvent{
-        object GetMessageSuccess: DetailMessageEvent()
-        data class Failure(val message: String): DetailMessageEvent()
+    sealed class DetailMessageEvent {
+        object GetMessageSuccess : DetailMessageEvent()
+        data class Failure(val message: String) : DetailMessageEvent()
     }
 
     private val _detailMessageState = MutableStateFlow(
@@ -44,7 +48,7 @@ class DetailMessageViewModel @Inject constructor(
     )
     val detailMessageState = _detailMessageState.asStateFlow()
 
-    fun onMessageInputChange(newValue: String){
+    fun onMessageInputChange(newValue: String) {
         _detailMessageState.update { it.copy(messageInput = newValue) }
     }
 
@@ -62,6 +66,27 @@ class DetailMessageViewModel @Inject constructor(
             }.onFailure { e ->
                 _detailMessageEvent.send(DetailMessageEvent.Failure(e.getErrorMessage()))
                 _detailMessageState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+    fun getHeaderInfo() {
+        viewModelScope.launch {
+
+            val result = getHeaderInfoUseCase(_detailMessageState.value.friendId)
+
+            result.onSuccess {
+                val user = result.getOrNull()
+
+                _detailMessageState.update {
+                    it.copy(
+                        friendName = user?.fullName,
+                        friendStatus = if (user?.isOnline == true) "Đang hoạt động" else "Offline",
+                        friendAvatar = user?.avatar
+                    )
+                }
+            }.onFailure { e ->
+                _detailMessageEvent.send(DetailMessageEvent.Failure(e.getErrorMessage()))
             }
         }
     }

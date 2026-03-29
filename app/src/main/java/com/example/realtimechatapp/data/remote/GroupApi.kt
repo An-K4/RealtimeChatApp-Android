@@ -6,4 +6,6 @@ import retrofit2.http.GET
 interface GroupApi {
     @GET("/groups/getGroups")
     suspend fun getGroups(): GetGroupResponseDto
+
+
 }

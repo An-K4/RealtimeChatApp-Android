@@ -10,7 +10,7 @@ import com.example.realtimechatapp.data.local.dao.GroupDao
 import com.example.realtimechatapp.data.local.dao.GroupMessageDao
 import com.example.realtimechatapp.data.local.dao.MessageContactDao
 import com.example.realtimechatapp.data.local.dao.MessageDao
-import com.example.realtimechatapp.data.local.dao.ParticipantDao
+import com.example.realtimechatapp.data.local.dao.MemberDao
 import com.example.realtimechatapp.data.local.dao.UserDao
 import com.example.realtimechatapp.data.local.database.Converters
 import com.example.realtimechatapp.data.local.database.LocalDatabase
@@ -59,7 +59,7 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideParticipantDao(localDatabase: LocalDatabase): ParticipantDao = localDatabase.participantDao()
+    fun provideParticipantDao(localDatabase: LocalDatabase): MemberDao = localDatabase.participantDao()
 
     @Provides
     @Singleton

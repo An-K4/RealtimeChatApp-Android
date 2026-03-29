@@ -5,11 +5,11 @@ import androidx.room.Entity
 import androidx.room.Index
 
 @Entity(
-    tableName = "participants",
+    tableName = "members",
     primaryKeys = ["group_id", "user_id"],
     indices = [Index(value = ["user_id"])]
 )
-data class ParticipantEntity(
+data class MemberEntity(
     @ColumnInfo(name = "group_id")
     val groupId: String,
 

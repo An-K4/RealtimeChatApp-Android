@@ -25,12 +25,9 @@ interface GroupDao {
     @Query("""
         SELECT * FROM `groups`
         WHERE id IN (
-            SELECT group_id FROM participants WHERE user_id = :userId
+            SELECT group_id FROM members WHERE user_id = :userId
         )
         ORDER BY updated_at DESC
     """)
     fun observeUserGroups(userId: String): Flow<List<GroupEntity>>
-
-    @Query("UPDATE `groups` SET is_active = 0 WHERE id = :groupId")
-    suspend fun deActiveGroup(groupId: String)
 }

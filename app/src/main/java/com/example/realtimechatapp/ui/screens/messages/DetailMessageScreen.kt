@@ -37,6 +37,7 @@ fun DetailMessageScreen(
     val dialogState by remember { mutableStateOf<DetailMessageViewModel.DetailMessageEvent?>(null) }
 
     LaunchedEffect(Unit) {
+        detailMessageViewModel.getHeaderInfo()
         detailMessageViewModel.getMessages()
     }
 
@@ -45,9 +46,9 @@ fun DetailMessageScreen(
     ){
         // in development
         ContactHeader(
-            avatarContactPreview = null,
-            contactName = "Vũ Quốc An",
-            contactAdditionalInfo = "Đang hoạt động",
+            avatarContactPreview = detailMessageState.friendAvatar,
+            contactName = detailMessageState.friendName ?: "",
+            contactAdditionalInfo = detailMessageState.friendStatus ?: "",
             onVideoCallClick = {},
             onVoiceCallClick = {}
         )

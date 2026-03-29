@@ -72,8 +72,6 @@ fun ContactHeader(
                 fontWeight = FontWeight.Bold
             )
 
-            Spacer(modifier = Modifier.height(5.dp))
-
             Text(
                 text = contactAdditionalInfo,
                 fontSize = 12.sp

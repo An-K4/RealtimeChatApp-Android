@@ -76,7 +76,7 @@ interface MessageDao {
         SELECT COUNT(*) FROM messages
         WHERE group_id = :groupId
         AND created_at > (
-            SELECT last_read_timestamp FROM participants
+            SELECT last_read_timestamp FROM members
             WHERE group_id = :groupId AND user_id = :userId
         
         )

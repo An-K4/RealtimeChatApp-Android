@@ -1,5 +1,8 @@
 package com.example.realtimechatapp.data.remote.dto
 
+import com.example.realtimechatapp.common.isoToLong
+import com.example.realtimechatapp.data.local.entity.ContactEntity
+import com.example.realtimechatapp.data.local.entity.GroupEntity
 import com.example.realtimechatapp.domain.model.GroupContact
 import com.google.gson.annotations.SerializedName
 
@@ -13,16 +16,17 @@ data class GroupContactDto(
     val lastMessage: LastMessageDto,
     val updatedAt: String
 ){
-    fun toGroup(): GroupContact{
-        return GroupContact(
+    fun toContactEntity(): ContactEntity{
+        return ContactEntity(
             id = this.id,
-            name = this.name,
-            avatar = this.avatar,
-            description = this.description,
-            ownerId = this.ownerId,
+            isGroup = true,
+            lastMessage = this.lastMessage.content,
+            lastSenderName = this.lastMessage.senderName,
+            isMine = this.lastMessage.isMine,
+            lastTimeStamp = this.lastMessage.createdAt.isoToLong(),
             unreadCount = this.unreadCount,
-            lastMessage = this.lastMessage.toLastMessage(),
-            updatedAt = this.updatedAt
+            contactName = this.name,
+            contactAvatar = this.avatar
         )
     }
 }

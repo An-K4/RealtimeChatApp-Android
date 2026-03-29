@@ -49,6 +49,16 @@ fun GroupScreen(
                         items = uiState.groups,
                         key = { group -> group.id}
                     ){
+                        ChatItem(
+                            isGroup = true,
+                            avatar = it.avatar,
+                            name = it.name,
+                            unreadCount = it.unreadCount,
+                            lastMessage = it.lastMessage,
+                            onItemClicked = {
+                                // navController.navigate("group_detail/${it.id}")
+                            }
+                        )
                     }
                 }
             }

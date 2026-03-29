@@ -6,6 +6,6 @@ import javax.inject.Inject
 
 class GetMessageContactUseCase @Inject constructor(private val messageRepository: MessageRepository) {
     suspend operator fun invoke(): Result<List<MessageContact>> {
-        return messageRepository.getUsers()
+        return messageRepository.getMessageContacts()
     }
 }

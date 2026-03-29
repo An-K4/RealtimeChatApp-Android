@@ -20,9 +20,6 @@ data class GroupEntity(
     @ColumnInfo(name = "owner_id")
     val ownerId: String,
 
-    @ColumnInfo(name = "is_active")
-    val isActive: Boolean,
-
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
 

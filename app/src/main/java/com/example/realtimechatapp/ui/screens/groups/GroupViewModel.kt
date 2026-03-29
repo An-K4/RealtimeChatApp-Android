@@ -27,8 +27,9 @@ class GroupViewModel @Inject constructor(
     fun getGroup() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, info = null) }
+            val result = getGroupsUseCase()
 
-            getGroupsUseCase().onSuccess { groups ->
+            result.onSuccess { groups ->
                 _uiState.update {
                     it.copy(
                         isLoading = false,
