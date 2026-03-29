@@ -6,6 +6,7 @@ import com.example.realtimechatapp.data.local.dao.MessageDao
 import com.example.realtimechatapp.data.local.dao.UserDao
 import com.example.realtimechatapp.data.local.entity.toMessageContact
 import com.example.realtimechatapp.data.local.entity.toUser
+import com.example.realtimechatapp.data.local.pojo.toMessage
 import com.example.realtimechatapp.data.remote.MessageApi
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.model.MessageContact
@@ -96,9 +97,9 @@ class MessageRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getHeaderInfo(userId: String): Result<User> {
+    override suspend fun getHeaderInfo(friendId: String): Result<User> {
         return try {
-            val userInfo = userDao.getUserById(userId)
+            val userInfo = userDao.getUserById(friendId)
             if (userInfo == null){
                 Result.failure(Exception("Không tìm thấy thông tin người dùng"))
             } else {

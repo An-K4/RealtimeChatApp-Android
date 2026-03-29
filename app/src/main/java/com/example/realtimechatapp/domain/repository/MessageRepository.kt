@@ -7,5 +7,5 @@ import com.example.realtimechatapp.domain.model.User
 interface MessageRepository {
     suspend fun getMessageContacts(): Result<List<MessageContact>>
     suspend fun getMessage(friendId: String): Result<List<Message>>
-    suspend fun getHeaderInfo(userId: String): Result<User>
+    suspend fun getHeaderInfo(friendId: String): Result<User>
 }

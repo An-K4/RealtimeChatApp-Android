@@ -7,6 +7,5 @@ data class Group(
     val description: String?,
     val owner: User,
     val members: List<Member>,
-    val isActive: Boolean = true,
     val createdAt: String
 )

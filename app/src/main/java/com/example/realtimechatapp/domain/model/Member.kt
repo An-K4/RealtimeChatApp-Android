@@ -1,11 +1,10 @@
 package com.example.realtimechatapp.domain.model
 
-import com.google.gson.annotations.SerializedName
-
 enum class Role{
     // OWNER,
     ADMIN,
-    MEMBER
+    MEMBER,
+    OWNER
 }
 data class Member(
     val userId: User,

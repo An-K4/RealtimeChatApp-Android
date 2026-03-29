@@ -6,6 +6,8 @@ import javax.inject.Inject
 
 class GetMessageUseCase @Inject constructor(private val messageRepository: MessageRepository) {
     suspend operator fun invoke(friendId: String): Result<List<Message>>{
+        if (friendId.isBlank()) return Result.failure(Exception("ID người dùng không hợp lệ"))
+
         return messageRepository.getMessage(friendId)
     }
 }
