@@ -16,12 +16,12 @@ data class UserDto(
 ) {
     fun toUser(): User {
         return User(
-            id = id,
-            username = username,
-            fullName = fullName,
-            email = email,
-            avatar = avatar?.takeIf { it.isNotBlank() },
-            createdAt = createdAt.formatToTime(false)
+            id = this.id,
+            username = this.username,
+            fullName = this.fullName,
+            email = this.email,
+            avatar = this.avatar?.takeIf { it.isNotBlank() },
+            createdAt = this.createdAt.formatToTime(false)
         )
     }
 

@@ -1,17 +1,20 @@
 package com.example.realtimechatapp.data.remote.dto
 
-import com.example.realtimechatapp.domain.model.Member
-import com.example.realtimechatapp.domain.model.Role
+import com.example.realtimechatapp.common.isoToLong
+import com.example.realtimechatapp.data.local.entity.MemberEntity
+import com.example.realtimechatapp.data.local.entity.MemberRole
 import com.google.gson.annotations.SerializedName
 
 enum class RoleDto{
+    @SerializedName("owner") OWNER,
     @SerializedName("admin") ADMIN,
     @SerializedName("member") MEMBER;
 
-    fun toRole(): Role{
+    fun toMemberRole(): MemberRole{
         return when(this){
-            ADMIN -> Role.ADMIN
-            MEMBER -> Role.MEMBER
+            OWNER -> MemberRole.OWNER
+            ADMIN -> MemberRole.ADMIN
+            MEMBER -> MemberRole.MEMBER
         }
     }
 }
@@ -21,11 +24,12 @@ data class MemberDto(
     val role: RoleDto,
     val joinedAt: String
 ){
-    fun toMember(): Member{
-        return Member(
-            userId = userId.toUser(),
-            role = role.toRole(),
-            joinedAt = joinedAt
+    fun toMemberEntity(groupId: String): MemberEntity{
+        return MemberEntity(
+            groupId = groupId,
+            userId = userId.id,
+            role = role.toMemberRole(),
+            joinedAt = joinedAt.isoToLong()
         )
     }
 }

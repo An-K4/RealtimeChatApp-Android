@@ -1,7 +1,6 @@
 package com.example.realtimechatapp.data.adapter
 
 import com.example.realtimechatapp.data.remote.dto.UserDto
-import com.example.realtimechatapp.domain.model.User
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -13,8 +12,10 @@ class UserAdapter: JsonDeserializer<UserDto?> {
         typeOfT: Type?,
         context: JsonDeserializationContext?
     ): UserDto? {
+        if (json == null || json.isJsonNull) return null
+
         return when {
-            json!!.isJsonPrimitive -> UserDto(id = json.asString, username = "", fullName = "", email = "", avatar = "", createdAt = "")
+            json.isJsonPrimitive -> UserDto(id = json.asString, username = "", fullName = "", email = "", avatar = "", createdAt = "")
             json.isJsonObject -> {
                 // use deserialize causes infinity recursive!
 
