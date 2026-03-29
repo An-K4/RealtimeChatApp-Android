@@ -3,6 +3,7 @@ package com.example.realtimechatapp.data.local.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
+import com.example.realtimechatapp.domain.model.Role
 
 @Entity(
     tableName = "members",
@@ -16,7 +17,7 @@ data class MemberEntity(
     @ColumnInfo(name = "user_id")
     val userId: String,
 
-    val role: ParticipantRole,
+    val role: MemberRole,
 
     @ColumnInfo(name = "joined_at")
     val joinedAt: Long = System.currentTimeMillis(),
@@ -25,6 +26,12 @@ data class MemberEntity(
     val lastReadTimestamp: Long = System.currentTimeMillis()
 )
 
-enum class ParticipantRole{
+fun MemberEntity.toRole() = when(this.role){
+        MemberRole.OWNER -> Role.OWNER
+        MemberRole.ADMIN -> Role.ADMIN
+        MemberRole.MEMBER -> Role.MEMBER
+    }
+
+enum class MemberRole{
     OWNER, ADMIN, MEMBER
 }

@@ -8,7 +8,7 @@ import com.example.realtimechatapp.data.local.entity.UserEntity
 import com.example.realtimechatapp.domain.model.Message
 
 // map to Message on domain layer
-data class MessageWithSender(
+data class MessageWithDetails(
     @Embedded val message: MessageEntity,
 
     @Relation(
@@ -22,19 +22,19 @@ data class MessageWithSender(
         entityColumn = "id"
     )
     val messageReply: MessageEntity? = null
-){
-    fun toMessage() = Message(
-        id = message.id,
-        senderId = sender.id,
-        senderName = sender.fullName,
-        senderAvatar = sender.avatar,
-        receiverId = message.receiverId,
-        groupId = message.groupId,
-        content = message.content,
-        replyToMessageId = message.replyToId,
-        replyToContent = messageReply?.content,
-        attachments = message.attachments,
-        seenUserIds = message.seenBy,
-        createdAt = message.createdAt.formatToTime(toHourMinute = true)
-    )
-}
+)
+
+fun MessageWithDetails.toMessage() = Message(
+    id = message.id,
+    senderId = sender.id,
+    senderName = sender.fullName,
+    senderAvatar = sender.avatar,
+    receiverId = message.receiverId,
+    groupId = message.groupId,
+    content = message.content,
+    replyToMessageId = message.replyToId,
+    replyToContent = messageReply?.content,
+    attachments = message.attachments,
+    seenUserIds = message.seenBy,
+    createdAt = message.createdAt.formatToTime(toHourMinute = true)
+)

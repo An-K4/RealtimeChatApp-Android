@@ -4,8 +4,10 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.example.realtimechatapp.data.local.entity.MemberEntity
+import com.example.realtimechatapp.data.local.pojo.MemberWithDetails
 
 @Dao
 interface MemberDao {
@@ -18,14 +20,16 @@ interface MemberDao {
     @Update
     suspend fun updateMember(member: MemberEntity)
 
+    @Transaction
     @Query("SELECT * FROM members WHERE group_id = :groupId AND user_id = :userId")
-    suspend fun getMember(groupId: String, userId: String): MemberEntity?
+    suspend fun getMemberById(groupId: String, userId: String): MemberWithDetails?
 
+    @Transaction
     @Query("SELECT * FROM members WHERE group_id = :groupId")
-    suspend fun getGroupMember(groupId: String): List<MemberEntity>
+    suspend fun getGroupMember(groupId: String): List<MemberWithDetails>
 
-    @Query("SELECT * FROM members WHERE user_id = :userId")
-    suspend fun getMemberById(userId: String): List<MemberEntity>
+//    @Query("SELECT * FROM members WHERE user_id = :userId")
+//    suspend fun getGroupByUserId(userId: String): List<MemberEntity>
 
     @Query(
         """

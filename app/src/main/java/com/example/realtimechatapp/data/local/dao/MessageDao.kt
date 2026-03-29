@@ -7,7 +7,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import com.example.realtimechatapp.data.local.entity.MessageEntity
-import com.example.realtimechatapp.data.local.pojo.MessageWithSender
+import com.example.realtimechatapp.data.local.pojo.MessageWithDetails
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -36,7 +36,7 @@ interface MessageDao {
         friendId: String,
         limit: Int,
         offset: Int
-    ): List<MessageWithSender>
+    ): List<MessageWithDetails>
 
     @Transaction
     @Query("""
@@ -50,7 +50,7 @@ interface MessageDao {
         myId: String,
         friendId: String,
         since: Long
-    ): List<MessageWithSender>
+    ): List<MessageWithDetails>
 
     @Transaction
     @Query("""
@@ -62,7 +62,7 @@ interface MessageDao {
     fun observeMessages(
         myId: String,
         friendId: String
-    ): Flow<List<MessageWithSender>>
+    ): Flow<List<MessageWithDetails>>
 
     @Query(
         "UPDATE messages " +

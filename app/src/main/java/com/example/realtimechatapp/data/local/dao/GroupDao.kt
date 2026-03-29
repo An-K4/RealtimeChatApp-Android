@@ -4,8 +4,10 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.example.realtimechatapp.data.local.entity.GroupEntity
+import com.example.realtimechatapp.data.local.pojo.GroupWithDetails
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -19,8 +21,9 @@ interface GroupDao {
     @Update
     suspend fun updateGroup(group: GroupEntity)
 
+    @Transaction
     @Query("SELECT * FROM `groups` WHERE id = :groupId")
-    suspend fun getGroupById(groupId: String): GroupEntity?
+    suspend fun getGroupById(groupId: String): GroupWithDetails?
 
     @Query("""
         SELECT * FROM `groups`
@@ -29,5 +32,5 @@ interface GroupDao {
         )
         ORDER BY updated_at DESC
     """)
-    fun observeUserGroups(userId: String): Flow<List<GroupEntity>>
+    fun observeUserGroups(userId: String): Flow<List<GroupWithDetails>>
 }

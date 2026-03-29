@@ -4,8 +4,10 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.example.realtimechatapp.data.local.entity.MessageEntity
+import com.example.realtimechatapp.data.local.pojo.MessageWithDetails
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -14,11 +16,13 @@ interface GroupMessageDao {
     suspend fun insertMessage(message: MessageEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAllMessage(messages: List<MessageEntity>)
+    suspend fun insertAllMessages(messages: List<MessageEntity>)
 
     @Update
     suspend fun updateMessage(message: MessageEntity)
 
+    // REMEMBER TO ADD TRANSACTION ANNOTATION
+    @Transaction
     @Query(
         """
             SELECT * FROM messages
@@ -31,8 +35,9 @@ interface GroupMessageDao {
         groupId: String,
         limit: Int,
         offset: Int
-    ): List<MessageEntity>
+    ): List<MessageWithDetails>
 
+    @Transaction
     @Query("""
         SELECT * FROM messages
         WHERE (group_id = :groupId)
@@ -42,8 +47,9 @@ interface GroupMessageDao {
     suspend fun getNewGroupMessages(
         groupId: String,
         since: Long
-    ): List<MessageEntity>
+    ): List<MessageWithDetails>
 
+    @Transaction
     @Query("""
         SELECT * FROM messages
         WHERE (group_id = :groupId)
@@ -51,7 +57,7 @@ interface GroupMessageDao {
     """)
     fun observeGroupMessages(
         groupId: String
-    ): Flow<List<MessageEntity>>
+    ): Flow<List<MessageWithDetails>>
 
     @Query(
         "UPDATE messages " +
