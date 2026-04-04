@@ -10,8 +10,8 @@ import com.example.realtimechatapp.domain.model.User
 @Entity(
     tableName = "users",
     indices = [
-        Index(value = ["username"], unique = true),
-        Index(value = ["email"], unique = true)
+        Index(value = ["username"]),
+        Index(value = ["email"])
     ]
 )
 data class UserEntity(

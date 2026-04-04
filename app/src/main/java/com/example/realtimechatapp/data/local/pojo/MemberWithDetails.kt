@@ -16,11 +16,11 @@ class MemberWithDetails(
         parentColumn = "user_id",
         entityColumn = "id"
     )
-    val user: UserEntity
+    val user: UserEntity?
 )
 
 fun MemberWithDetails.toMember() = Member(
-    userId = user.toUser(),
+    userId = user?.toUser(),
     role = member.toRole(),
     joinedAt = member.joinedAt.formatToTime(false)
 )

@@ -7,7 +7,7 @@ enum class Role{
     OWNER
 }
 data class Member(
-    val userId: User,
+    val userId: User?,
     val role: Role = Role.MEMBER,
     val joinedAt: String
 )

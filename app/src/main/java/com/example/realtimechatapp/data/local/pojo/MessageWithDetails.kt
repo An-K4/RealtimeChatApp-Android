@@ -15,7 +15,7 @@ data class MessageWithDetails(
         parentColumn = "sender_id",
         entityColumn = "id"
     )
-    val sender: UserEntity,
+    val sender: UserEntity?,
 
     @Relation(
         parentColumn = "reply_to_id",
@@ -26,9 +26,9 @@ data class MessageWithDetails(
 
 fun MessageWithDetails.toMessage() = Message(
     id = message.id,
-    senderId = sender.id,
-    senderName = sender.fullName,
-    senderAvatar = sender.avatar,
+    senderId = sender?.id ?: "",
+    senderName = sender?.fullName,
+    senderAvatar = sender?.avatar,
     receiverId = message.receiverId,
     groupId = message.groupId,
     content = message.content,
