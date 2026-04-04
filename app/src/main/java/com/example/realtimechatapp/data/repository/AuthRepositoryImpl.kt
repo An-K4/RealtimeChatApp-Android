@@ -37,6 +37,7 @@ class AuthRepositoryImpl @Inject constructor(
 
                 // clear all old data
                 localDatabase.clearAllTables()
+                Timber.d("Đã xóa toàn bộ dữ liệu")
 
                 val user = response.user.toUser()
                 tokenManager.saveToken(response.token)
@@ -101,6 +102,7 @@ class AuthRepositoryImpl @Inject constructor(
             tokenManager.deleteToken()
             currentUserManager.switchUser("")
             localDatabase.clearAllTables()
+            Timber.d("Đã xóa toàn bộ dữ liệu")
             Result.success("Đăng xuất thành công!")
         } catch (e: Exception) {
             e.printStackTrace()

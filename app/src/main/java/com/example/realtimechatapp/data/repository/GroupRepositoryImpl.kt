@@ -65,9 +65,20 @@ class GroupRepositoryImpl @Inject constructor(
             if (networkChecker.isNetworkAvailable()){
                 val result = groupApi.getGroupMessage(groupId)
                 val responseGroupMessages = result.groupMessages
-                val responseSender = result.groupMessages.map { it.senderId.toUserEntity() }
+                val responseSender = result.groupMessages.map { it.senderId.toUserEntity() }.distinctBy { it.id }
 
-                userDao.insertAllUser(responseSender)
+                // debug - before
+                Timber.d("${userDao.getUserCount()}")
+                Timber.d(responseSender.toString())
+                Timber.d("${responseSender.size}")
+
+                userDao.insertAllUsers(responseSender)
+
+                // debug - after
+                Timber.d("${userDao.getUserCount()}")
+                Timber.d(responseSender.toString())
+                Timber.d("${responseSender.size}")
+
                 groupMessageDao.insertAllMessages(responseGroupMessages.map { it.toMessageEntity() })
                 val groupMessages = groupMessageDao.getGroupMessages(groupId, 30, 0).map { it.toMessage() }
                 Result.success(groupMessages)

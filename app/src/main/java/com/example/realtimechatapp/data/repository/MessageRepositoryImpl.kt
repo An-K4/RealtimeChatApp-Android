@@ -37,7 +37,7 @@ class MessageRepositoryImpl @Inject constructor(
                 val messageContacts = response.users.map { it.toMessageContactEntity() }
 
                 Timber.d(users.toString())
-                userDao.insertAllUser(users)
+                userDao.insertAllUsers(users)
                 messageContactDao.insertAllContact(messageContacts)
 
                 val contacts = messageContactDao.getMessageContact().map {
