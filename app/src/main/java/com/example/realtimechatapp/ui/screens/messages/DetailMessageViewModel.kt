@@ -3,10 +3,13 @@ package com.example.realtimechatapp.ui.screens.messages
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.realtimechatapp.common.formatToTime
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.usecase.messages.GetHeaderInfoUseCase
 import com.example.realtimechatapp.domain.usecase.messages.GetMessageUseCase
+import com.example.realtimechatapp.domain.usecase.socket.ObserveMessageUseCase
+import com.example.realtimechatapp.domain.usecase.socket.SendMessageUseCase
 import com.example.realtimechatapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -22,7 +25,9 @@ import javax.inject.Inject
 class DetailMessageViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val getMessageUseCase: GetMessageUseCase,
-    private val getHeaderInfoUseCase: GetHeaderInfoUseCase
+    private val getHeaderInfoUseCase: GetHeaderInfoUseCase,
+    private val observeMessageUseCase: ObserveMessageUseCase,
+    private val sendMessageUseCase: SendMessageUseCase
 ) : ViewModel() {
     data class DetailMessageState(
         val friendId: String = "",
@@ -58,7 +63,21 @@ class DetailMessageViewModel @Inject constructor(
     // init after state variables
     init {
         getHeaderInfo()
+        observeMessage()
         getMessages()
+    }
+
+    fun observeMessage(){
+        viewModelScope.launch {
+            observeMessageUseCase(_detailMessageState.value.friendId).collect{ newMessageList ->
+                val content = newMessageList.map { it.content }
+
+                _detailMessageState.update {
+                    Timber.d("Observe được gọi: $content")
+                    it.copy(messages = newMessageList)
+                }
+            }
+        }
     }
 
     fun getMessages() {
@@ -66,9 +85,11 @@ class DetailMessageViewModel @Inject constructor(
             _detailMessageState.update { it.copy(isLoading = true) }
             val result = getMessageUseCase(_detailMessageState.value.friendId)
 
-            result.onSuccess { messages ->
-                _detailMessageState.update { it.copy(messages = messages, isLoading = false) }
-                Timber.d(messages.toString())
+            result.onSuccess {
+                // phải sửa use case và hàm nhận tin nhắn ở impl, không trả về danh sách nữa
+
+                _detailMessageState.update { it.copy(isLoading = false) }
+                Timber.d("Lấy tin nhắn thành công")
             }.onFailure { e ->
                 _detailMessageEvent.send(DetailMessageEvent.Failure(e.getErrorMessage()))
                 _detailMessageState.update { it.copy(isLoading = false) }
@@ -94,6 +115,20 @@ class DetailMessageViewModel @Inject constructor(
             }.onFailure { e ->
                 _detailMessageEvent.send(DetailMessageEvent.Failure(e.getErrorMessage()))
             }
+        }
+    }
+
+    fun sendMessage(){
+        val content = _detailMessageState.value.messageInput?.trim() ?: ""
+        if (content.isEmpty()) return
+
+        viewModelScope.launch {
+            sendMessageUseCase(
+                content = content,
+                receiverId = _detailMessageState.value.friendId
+            )
+
+            _detailMessageState.update { it.copy(messageInput = "") }
         }
     }
 }

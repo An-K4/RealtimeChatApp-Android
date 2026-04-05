@@ -7,14 +7,23 @@ import com.example.realtimechatapp.data.local.dao.UserDao
 import com.example.realtimechatapp.data.local.entity.toMessageContact
 import com.example.realtimechatapp.data.local.entity.toUser
 import com.example.realtimechatapp.data.local.pojo.toMessage
-import com.example.realtimechatapp.data.remote.MessageApi
+import com.example.realtimechatapp.data.remote.api.MessageApi
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.model.MessageContact
+import com.example.realtimechatapp.domain.model.SendMessageParam
 import com.example.realtimechatapp.domain.model.User
 import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.repository.MessageRepository
 import com.example.realtimechatapp.domain.repository.NetworkChecker
+import com.example.realtimechatapp.domain.repository.SocketRepository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
@@ -23,10 +32,29 @@ class MessageRepositoryImpl @Inject constructor(
     private val messageApi: MessageApi,
     private val messageContactDao: MessageContactDao,
     private val messageDao: MessageDao,
+    private val socketRepository: SocketRepository,
     private val userDao: UserDao,
     private val networkChecker: NetworkChecker,
     private val currentUserManager: CurrentUserManager
 ) : MessageRepository {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    init {
+        scope.launch {
+            socketRepository.observeMessages().collect { messageDto ->
+                val messageEntity = if (messageDto.receiverId == null){
+                    messageDto.toMessageEntity().copy(
+                        receiverId = currentUserManager.getCurrentUserId()
+                    )
+                } else {
+                    messageDto.toMessageEntity()
+                }
+                messageDao.insertMessage(messageEntity)
+                Timber.d("Đã chèn tin nhắn vào db: ${messageDto.toMessageEntity()}")
+            }
+        }
+    }
+
     override suspend fun getMessageContacts(): Result<List<MessageContact>> = withContext(Dispatchers.IO) {
         val cachedContacts = messageContactDao.getMessageContact().map { it.toMessageContact() }
 
@@ -108,5 +136,19 @@ class MessageRepositoryImpl @Inject constructor(
         } catch (e: Exception){
             Result.failure(e)
         }
+    }
+
+    override fun observeMessage(friendId: String): Flow<List<Message>> = flow {
+        val currentUserId = currentUserManager.getCurrentUserId()
+        emitAll(
+            messageDao.observeMessages(currentUserId, friendId).map { messageWithDetails ->
+                messageWithDetails.map { it.toMessage() }
+            }
+        )
+    }
+
+    override suspend fun sendMessage(message: SendMessageParam) {
+        Timber.d("Impl gọi socket nghe rõ trả lời")
+        socketRepository.sendMessage(message)
     }
 }

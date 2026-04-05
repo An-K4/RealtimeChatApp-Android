@@ -1,7 +1,5 @@
 package com.example.realtimechatapp.domain.model
 
-import java.util.Date
-
 data class Message(
     val id: String,
 
