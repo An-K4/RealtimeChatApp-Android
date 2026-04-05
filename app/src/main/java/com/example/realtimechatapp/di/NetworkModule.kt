@@ -1,11 +1,11 @@
 package com.example.realtimechatapp.di
 
 import com.example.realtimechatapp.data.adapter.UserAdapter
-import com.example.realtimechatapp.data.remote.AuthApi
+import com.example.realtimechatapp.data.remote.api.AuthApi
 import com.example.realtimechatapp.data.remote.AuthInterceptor
-import com.example.realtimechatapp.data.remote.GroupApi
-import com.example.realtimechatapp.data.remote.MessageApi
-import com.example.realtimechatapp.data.remote.UserApi
+import com.example.realtimechatapp.data.remote.api.GroupApi
+import com.example.realtimechatapp.data.remote.api.MessageApi
+import com.example.realtimechatapp.data.remote.api.UserApi
 import com.example.realtimechatapp.data.remote.dto.UserDto
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -79,4 +79,8 @@ object NetworkModule {
             .registerTypeAdapter(UserDto::class.java, UserAdapter())
             .create()
     }
+
+    @Provides
+    @Singleton
+    fun provideBaseUrl(): String = BASE_URL
 }
