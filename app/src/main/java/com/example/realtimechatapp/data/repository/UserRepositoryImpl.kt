@@ -2,7 +2,7 @@ package com.example.realtimechatapp.data.repository
 
 import com.example.realtimechatapp.common.NetworkUtils
 import com.example.realtimechatapp.data.local.dao.UserDao
-import com.example.realtimechatapp.data.remote.UserApi
+import com.example.realtimechatapp.data.remote.api.UserApi
 import com.example.realtimechatapp.data.remote.dto.ChangePasswordRequestDto
 import com.example.realtimechatapp.data.remote.dto.UpdateProfileRequestDto
 import com.example.realtimechatapp.domain.model.User

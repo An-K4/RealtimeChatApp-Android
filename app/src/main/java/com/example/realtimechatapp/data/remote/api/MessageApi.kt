@@ -1,9 +1,7 @@
-package com.example.realtimechatapp.data.remote
+package com.example.realtimechatapp.data.remote.api
 
 import com.example.realtimechatapp.data.remote.dto.GetMessageResponseDto
 import com.example.realtimechatapp.data.remote.dto.GetUserResponseDto
-import com.example.realtimechatapp.data.remote.dto.MessageDto
-import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Path
 

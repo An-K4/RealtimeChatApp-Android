@@ -1,4 +1,4 @@
-package com.example.realtimechatapp.data.remote
+package com.example.realtimechatapp.data.remote.api
 
 import com.example.realtimechatapp.data.remote.dto.GetGroupInfoResponseDto
 import com.example.realtimechatapp.data.remote.dto.GetGroupMessageResponseDto

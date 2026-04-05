@@ -6,7 +6,7 @@ import com.example.realtimechatapp.data.local.dao.UserDao
 import com.example.realtimechatapp.data.local.database.LocalDatabase
 import com.example.realtimechatapp.data.local.entity.toUser
 import com.example.realtimechatapp.data.local.manager.TokenManager
-import com.example.realtimechatapp.data.remote.AuthApi
+import com.example.realtimechatapp.data.remote.api.AuthApi
 import com.example.realtimechatapp.data.remote.dto.LoginRequestDto
 import com.example.realtimechatapp.data.remote.dto.SignupRequestDto
 import com.example.realtimechatapp.domain.model.User
