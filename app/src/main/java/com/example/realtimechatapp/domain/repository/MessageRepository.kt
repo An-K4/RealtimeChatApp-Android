@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface MessageRepository {
     suspend fun getMessageContacts(): Result<List<MessageContact>>
-    suspend fun getMessage(friendId: String): Result<List<Message>>
+    suspend fun getMessage(friendId: String): Result<Unit>
     suspend fun getHeaderInfo(friendId: String): Result<User>
     fun observeMessage(friendId: String): Flow<List<Message>>
     suspend fun sendMessage(message: SendMessageParam)

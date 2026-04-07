@@ -42,7 +42,7 @@ class MessageRepositoryImpl @Inject constructor(
     init {
         scope.launch {
             socketRepository.observeMessages().collect { messageDto ->
-                val messageEntity = if (messageDto.receiverId == null){
+                val messageEntity = if (messageDto.receiverId == null) {
                     messageDto.toMessageEntity().copy(
                         receiverId = currentUserManager.getCurrentUserId()
                     )
@@ -55,85 +55,71 @@ class MessageRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getMessageContacts(): Result<List<MessageContact>> = withContext(Dispatchers.IO) {
-        val cachedContacts = messageContactDao.getMessageContact().map { it.toMessageContact() }
+    override suspend fun getMessageContacts(): Result<List<MessageContact>> =
+        withContext(Dispatchers.IO) {
+            val cachedContacts = messageContactDao.getMessageContact().map { it.toMessageContact() }
+
+            return@withContext try {
+                if (networkChecker.isNetworkAvailable()) {
+                    val response = messageApi.getUsers()
+                    val users = response.users.map { it.toUserEntity() }
+                    val messageContacts = response.users.map { it.toMessageContactEntity() }
+
+                    Timber.d(users.toString())
+                    userDao.insertAllUsers(users)
+                    messageContactDao.insertAllContact(messageContacts)
+
+                    val contacts = messageContactDao.getMessageContact().map {
+                        it.toMessageContact()
+                    }
+                    Result.success(contacts)
+                } else {
+                    Timber.d("Mất kết nối, lấy trong cache")
+                    Result.success(cachedContacts)
+                }
+            } catch (e: Exception) {
+                if (cachedContacts.isNotEmpty()) {
+                    Timber.d(e.getErrorMessage())
+                    Result.success(cachedContacts)
+                } else {
+                    Result.failure(e)
+                }
+            }
+        }
+
+    override suspend fun getMessage(friendId: String): Result<Unit> = withContext(
+        Dispatchers.IO
+    ) {
+        val currentUserId = currentUserManager.getCurrentUserId()
 
         return@withContext try {
             if (networkChecker.isNetworkAvailable()) {
-                val response = messageApi.getUsers()
-                val users = response.users.map { it.toUserEntity() }
-                val messageContacts = response.users.map { it.toMessageContactEntity() }
-
-                Timber.d(users.toString())
-                userDao.insertAllUsers(users)
-                messageContactDao.insertAllContact(messageContacts)
-
-                val contacts = messageContactDao.getMessageContact().map {
-                    it.toMessageContact()
-                }
-                Result.success(contacts)
-            } else {
-                Timber.d("Mất kết nối, lấy trong cache")
-                Result.success(cachedContacts)
-            }
-        } catch (e: Exception) {
-            if (cachedContacts.isNotEmpty()) {
-                Timber.d(e.getErrorMessage())
-                Result.success(cachedContacts)
-            } else {
-                Result.failure(e)
-            }
-        }
-    }
-
-    override suspend fun getMessage(friendId: String): Result<List<Message>> = withContext(
-        Dispatchers.IO) {
-        val currentUserId = currentUserManager.getCurrentUserId()
-        val cachedMessages = messageDao.getMessages(
-            currentUserId,
-            friendId,
-            10,
-            0
-        ).map { it.toMessage() }
-
-        return@withContext try {
-            if (networkChecker.isNetworkAvailable()){
                 val response = messageApi.getMessage(friendId)
                 val responseMessages = response.messages.map { it.toMessageEntity() }
 
                 messageDao.insertAllMessage(responseMessages)
 
-                val messages = messageDao.getMessages(
-                    currentUserId,
-                    friendId,
-                    10,
-                    0
-                ).map {
-                    it.toMessage()
-                }
-                Timber.d(messages.toString())
-                Result.success(messages)
+                Timber.d(responseMessages.toString())
+                Result.success(Unit)
             } else {
-                Result.success(cachedMessages)
+                Timber.d("Mất kết nối")
+                Result.failure(Exception("Mất kết nối tới máy chủ"))
             }
         } catch (e: Exception) {
-            if (cachedMessages.isNotEmpty()) {
-                Result.success(cachedMessages)
-            } else {
-                Result.failure(e)
-            }
+            e.printStackTrace()
+            Result.failure(e)
         }
     }
 
     override suspend fun getHeaderInfo(friendId: String): Result<User> {
         return try {
             val userInfo = userDao.getUserById(friendId)
-            if (userInfo == null){
+            if (userInfo == null) {
                 Result.failure(Exception("Không tìm thấy thông tin người dùng"))
             } else {
                 Result.success(userInfo.toUser())
             }
-        } catch (e: Exception){
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }

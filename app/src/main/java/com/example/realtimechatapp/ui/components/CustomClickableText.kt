@@ -24,7 +24,7 @@ fun CustomClickableText(
         pushStringAnnotation(tag = clickableTextTag, annotation = clickableTextAnnotation?:clickableTextTag)
         withStyle(
             style = SpanStyle(
-                color = RealtimeGreen, // Chọn màu nổi bật
+                color = RealtimeGreen, // bright color
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
             )

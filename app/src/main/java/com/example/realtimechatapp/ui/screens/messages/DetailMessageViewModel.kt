@@ -86,8 +86,6 @@ class DetailMessageViewModel @Inject constructor(
             val result = getMessageUseCase(_detailMessageState.value.friendId)
 
             result.onSuccess {
-                // phải sửa use case và hàm nhận tin nhắn ở impl, không trả về danh sách nữa
-
                 _detailMessageState.update { it.copy(isLoading = false) }
                 Timber.d("Lấy tin nhắn thành công")
             }.onFailure { e ->
