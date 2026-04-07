@@ -1,9 +1,11 @@
 package com.example.realtimechatapp.data.repository
 
 import com.example.realtimechatapp.common.getErrorMessage
+import com.example.realtimechatapp.common.isoToLong
 import com.example.realtimechatapp.data.local.dao.MessageContactDao
 import com.example.realtimechatapp.data.local.dao.MessageDao
 import com.example.realtimechatapp.data.local.dao.UserDao
+import com.example.realtimechatapp.data.local.entity.ContactEntity
 import com.example.realtimechatapp.data.local.entity.toMessageContact
 import com.example.realtimechatapp.data.local.entity.toUser
 import com.example.realtimechatapp.data.local.pojo.toMessage
@@ -53,11 +55,31 @@ class MessageRepositoryImpl @Inject constructor(
                 Timber.d("Đã chèn tin nhắn vào db: ${messageDto.toMessageEntity()}")
             }
         }
+
+        scope.launch {
+            socketRepository.observeMessageContacts().collect { messageDto ->
+                val currentUserId = currentUserManager.getCurrentUserId()
+                val contactId = messageDto.getMessageContactId(currentUserId)
+                val isMine = messageDto.senderId.id == currentUserId
+
+                messageContactDao.upsertMessageContact(
+                    contactId = contactId,
+                    isMine = isMine,
+                    lastMessage = messageDto.content,
+                    lastSenderName = messageDto.senderId.fullName,
+                    lastTimeStamp = messageDto.createdAt.isoToLong(),
+                    contactName = if (isMine) messageDto.receiverId?.fullName else messageDto.senderId.fullName,
+                    contactAvatar = if (isMine) messageDto.receiverId?.avatar else messageDto.senderId.avatar
+                )
+                Timber.d("Đã cập nhật tin nhắn mới đến ở contact: $contactId")
+                Timber.d("Tin nhắn mói chèn: ${messageDto.content}")
+            }
+        }
     }
 
     override suspend fun getMessageContacts(): Result<List<MessageContact>> =
         withContext(Dispatchers.IO) {
-            val cachedContacts = messageContactDao.getMessageContact().map { it.toMessageContact() }
+            val cachedContacts = messageContactDao.getMessageContacts().map { it.toMessageContact() }
 
             return@withContext try {
                 if (networkChecker.isNetworkAvailable()) {
@@ -69,7 +91,7 @@ class MessageRepositoryImpl @Inject constructor(
                     userDao.insertAllUsers(users)
                     messageContactDao.insertAllContact(messageContacts)
 
-                    val contacts = messageContactDao.getMessageContact().map {
+                    val contacts = messageContactDao.getMessageContacts().map {
                         it.toMessageContact()
                     }
                     Result.success(contacts)
@@ -124,11 +146,19 @@ class MessageRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun observeMessage(friendId: String): Flow<List<Message>> = flow {
+    override fun observeMessages(friendId: String): Flow<List<Message>> = flow {
         val currentUserId = currentUserManager.getCurrentUserId()
         emitAll(
             messageDao.observeMessages(currentUserId, friendId).map { messageWithDetails ->
                 messageWithDetails.map { it.toMessage() }
+            }
+        )
+    }
+
+    override fun observeMessageContacts(): Flow<List<MessageContact>> = flow {
+        emitAll(
+            messageContactDao.observeMessageContact().map { contactEntities ->
+                contactEntities.map { it.toMessageContact() }
             }
         )
     }

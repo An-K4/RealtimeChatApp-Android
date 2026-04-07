@@ -10,6 +10,7 @@ interface SocketRepository {
     suspend fun isConnected(): Boolean
 
     fun observeMessages(): Flow<MessageDto>
+    fun observeMessageContacts(): Flow<MessageDto>
     fun observeConnectionState(): Flow<SocketConnectionState>
 
     suspend fun sendMessage(message: SendMessageParam)

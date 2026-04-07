@@ -3,7 +3,6 @@ package com.example.realtimechatapp.ui.screens.messages
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.realtimechatapp.common.formatToTime
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.usecase.messages.GetHeaderInfoUseCase
@@ -63,11 +62,11 @@ class DetailMessageViewModel @Inject constructor(
     // init after state variables
     init {
         getHeaderInfo()
-        observeMessage()
+        observeMessages()
         getMessages()
     }
 
-    fun observeMessage(){
+    fun observeMessages(){
         viewModelScope.launch {
             observeMessageUseCase(_detailMessageState.value.friendId).collect{ newMessageList ->
                 val content = newMessageList.map { it.content }

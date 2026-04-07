@@ -26,4 +26,12 @@ data class MessageDto(
         seenBy = this.seenBy?.map { it.id },
         createdAt = this.createdAt.isoToLong()
     )
+
+    fun getMessageContactId(currentUserId: String): String{
+        return if (this.receiverId?.id == currentUserId){
+            this.senderId.id
+        } else {
+            this.receiverId!!.id
+        }
+    }
 }

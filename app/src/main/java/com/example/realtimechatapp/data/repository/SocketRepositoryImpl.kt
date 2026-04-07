@@ -34,6 +34,7 @@ class SocketRepositoryImpl @Inject constructor(
 
     private val _messagesFlow = MutableSharedFlow<MessageDto>()
     override fun observeMessages(): Flow<MessageDto> = _messagesFlow.asSharedFlow()
+    override fun observeMessageContacts(): Flow<MessageDto> = _messagesFlow.asSharedFlow()
 
     private val _socketConnectionState = MutableStateFlow<SocketConnectionState>(
         SocketConnectionState.Disconnected
