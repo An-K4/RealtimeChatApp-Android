@@ -1,5 +1,6 @@
 package com.example.realtimechatapp.ui.screens.messages
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -34,10 +36,18 @@ fun MessageScreen(
     val messageState by messageViewModel.messageState.collectAsStateWithLifecycle()
     var dialogState by remember { mutableStateOf<MessageViewModel.MessageEvent?>(null) }
     val lifecycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current
 
     LaunchedEffect(lifecycleOwner.lifecycle) {
         messageViewModel.messageEvent.collect{ event ->
-            dialogState = event
+            when(event){
+                is MessageViewModel.MessageEvent.Unauthenticated, MessageViewModel.MessageEvent.Authenticated -> {
+                    dialogState = event
+                }
+                is MessageViewModel.MessageEvent.Failure -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 

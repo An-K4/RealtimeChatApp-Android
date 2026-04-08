@@ -8,7 +8,7 @@ import com.example.realtimechatapp.domain.model.User
 import kotlinx.coroutines.flow.Flow
 
 interface MessageRepository {
-    suspend fun getMessageContacts(): Result<List<MessageContact>>
+    suspend fun getMessageContacts(): Result<Unit>
     suspend fun getMessage(friendId: String): Result<Unit>
     suspend fun getHeaderInfo(friendId: String): Result<User>
     fun observeMessages(friendId: String): Flow<List<Message>>

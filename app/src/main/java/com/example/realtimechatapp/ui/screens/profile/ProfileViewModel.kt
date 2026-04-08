@@ -8,6 +8,7 @@ import com.example.realtimechatapp.common.FileUtils
 import com.example.realtimechatapp.common.ImageUtils
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.usecase.auth.LogoutUseCase
+import com.example.realtimechatapp.domain.usecase.socket.DisconnectSocketUseCase
 import com.example.realtimechatapp.domain.usecase.user.ChangePasswordUseCase
 import com.example.realtimechatapp.domain.usecase.user.GetMeUseCase
 import com.example.realtimechatapp.domain.usecase.user.UpdateAvatarUseCase
@@ -29,6 +30,7 @@ class ProfileViewModel @Inject constructor(
     private val updateProfileUseCase: UpdateProfileUseCase,
     private val updateAvatarUseCase: UpdateAvatarUseCase,
     private val changePasswordUseCase: ChangePasswordUseCase,
+    private val disconnectSocketUseCase: DisconnectSocketUseCase,
     private val logoutUseCase: LogoutUseCase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
@@ -321,6 +323,7 @@ class ProfileViewModel @Inject constructor(
 
     fun logout(showLogoutSuccessDialog: Boolean) {
         viewModelScope.launch {
+            disconnectSocketUseCase()
             val result = logoutUseCase()
 
             result.onSuccess {

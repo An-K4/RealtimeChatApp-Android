@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import timber.log.Timber
@@ -41,14 +42,19 @@ class SocketRepositoryImpl @Inject constructor(
     )
     override fun observeConnectionState(): Flow<SocketConnectionState> = _socketConnectionState.asStateFlow()
 
-    init {
-        scope.launch { connect() }
-    }
-
     override suspend fun connect() {
+        if (socket?.connected() == true){
+            Timber.d("Socket đã kết nối trước đó")
+            return
+        }
+
         val token = tokenManager.token.first()
+        if (token?.isEmpty() == true) return
+
         val options = IO.Options.builder()
             .setAuth(mapOf("token" to token))
+            .setForceNew(true)
+            .setReconnection(true)
             .build()
 
         socket = IO.socket(baseUrl, options)
@@ -60,7 +66,13 @@ class SocketRepositoryImpl @Inject constructor(
     }
 
     override suspend fun disconnect() {
-        socket?.disconnect()
+        Timber.d("Ngắt kết nối socket...")
+        socket?.let { socket ->
+            socket.disconnect()
+            socket.off()
+            socket.close()
+        }
+        socket = null
     }
 
     override suspend fun isConnected(): Boolean = socket?.connected() ?: false
@@ -72,13 +84,13 @@ class SocketRepositoryImpl @Inject constructor(
         }
 
         socket?.on(Socket.EVENT_DISCONNECT){
-            Timber.d(Socket.EVENT_DISCONNECT)
+            Timber.e(Socket.EVENT_DISCONNECT)
             _socketConnectionState.value = SocketConnectionState.Disconnected
         }
 
         socket?.on(Socket.EVENT_CONNECT_ERROR){ args ->
             val error = args.firstOrNull()?.toString() ?: "Unknown Error"
-            Timber.d("${Socket.EVENT_CONNECT_ERROR}: $error")
+            Timber.e("${Socket.EVENT_CONNECT_ERROR}: $error")
             _socketConnectionState.value = SocketConnectionState.Error(error)
         }
     }

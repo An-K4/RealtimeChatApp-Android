@@ -77,10 +77,8 @@ class MessageRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getMessageContacts(): Result<List<MessageContact>> =
+    override suspend fun getMessageContacts(): Result<Unit> =
         withContext(Dispatchers.IO) {
-            val cachedContacts = messageContactDao.getMessageContacts().map { it.toMessageContact() }
-
             return@withContext try {
                 if (networkChecker.isNetworkAvailable()) {
                     val response = messageApi.getUsers()
@@ -90,30 +88,20 @@ class MessageRepositoryImpl @Inject constructor(
                     Timber.d(users.toString())
                     userDao.insertAllUsers(users)
                     messageContactDao.insertAllContact(messageContacts)
-
-                    val contacts = messageContactDao.getMessageContacts().map {
-                        it.toMessageContact()
-                    }
-                    Result.success(contacts)
+                    Result.success(Unit)
                 } else {
                     Timber.d("Mất kết nối, lấy trong cache")
-                    Result.success(cachedContacts)
+                    Result.failure(Exception("Mất kết nối tới máy chủ"))
                 }
             } catch (e: Exception) {
-                if (cachedContacts.isNotEmpty()) {
-                    Timber.d(e.getErrorMessage())
-                    Result.success(cachedContacts)
-                } else {
-                    Result.failure(e)
-                }
+                e.printStackTrace()
+                Result.failure(e)
             }
         }
 
     override suspend fun getMessage(friendId: String): Result<Unit> = withContext(
         Dispatchers.IO
     ) {
-        val currentUserId = currentUserManager.getCurrentUserId()
-
         return@withContext try {
             if (networkChecker.isNetworkAvailable()) {
                 val response = messageApi.getMessage(friendId)

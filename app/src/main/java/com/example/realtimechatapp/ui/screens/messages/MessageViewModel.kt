@@ -2,9 +2,11 @@ package com.example.realtimechatapp.ui.screens.messages
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.data.local.manager.TokenManager
 import com.example.realtimechatapp.domain.model.MessageContact
 import com.example.realtimechatapp.domain.usecase.messages.GetMessageContactUseCase
+import com.example.realtimechatapp.domain.usecase.socket.ConnectSocketUseCase
 import com.example.realtimechatapp.domain.usecase.socket.ObserveMessageContactUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -20,6 +22,7 @@ import javax.inject.Inject
 class MessageViewModel @Inject constructor(
     private val getMessageContactUseCase: GetMessageContactUseCase,
     private val observeMessageContactUseCase: ObserveMessageContactUseCase,
+    private val connectSocketUseCase: ConnectSocketUseCase,
     private val tokenManager: TokenManager
 ) : ViewModel() {
     data class MessageState(
@@ -30,6 +33,7 @@ class MessageViewModel @Inject constructor(
     sealed class MessageEvent{
         object Authenticated: MessageEvent()
         object Unauthenticated: MessageEvent()
+        data class Failure(val message: String): MessageEvent()
     }
 
     private val _messageState = MutableStateFlow(MessageState())
@@ -40,6 +44,7 @@ class MessageViewModel @Inject constructor(
 
     init {
         checkToken()
+        connectSocket()
         getUsers() // auto load
         observeMessageContacts()
     }
@@ -54,17 +59,20 @@ class MessageViewModel @Inject constructor(
         }
     }
 
+    fun connectSocket(){
+        viewModelScope.launch {
+            connectSocketUseCase()
+        }
+    }
+
     fun getUsers() {
         viewModelScope.launch {
             _messageState.update { it.copy(isLoading = true) }
 
-            val result = getMessageContactUseCase()
-
-            result.onSuccess { users ->
+            getMessageContactUseCase().onSuccess {
                 _messageState.update {
                     it.copy(
-                        isLoading = false,
-                        users = users
+                        isLoading = false
                     )
                 }
             }.onFailure { exception ->
@@ -73,6 +81,7 @@ class MessageViewModel @Inject constructor(
                         isLoading = false
                     )
                 }
+                _messageEvent.send(MessageEvent.Failure(exception.getErrorMessage()))
             }
         }
     }
