@@ -28,15 +28,16 @@ fun AvatarPicker(
     currentAvatar: Any?,
     onAvatarPickerClick: () -> Unit
 ) {
-    val avatarToDisplay = currentAvatar?:R.drawable.default_avatar
-
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier.size(150.dp)
     ) {
         AsyncImage(
-            model = avatarToDisplay,
+            model = currentAvatar,
             contentDescription = "Avatar",
+            placeholder = painterResource(R.drawable.default_avatar),
+            error = painterResource(R.drawable.default_avatar),
+            fallback = painterResource(R.drawable.default_avatar),
             modifier = Modifier.matchParentSize()
                 .clip(CircleShape)
                 .border(4.dp, Color.Gray, CircleShape),
