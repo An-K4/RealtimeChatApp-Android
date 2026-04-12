@@ -7,14 +7,14 @@ import java.io.FileOutputStream
 
 object ImageUtils {
 
-    // nen anh
+    // compress img
     fun compressImageFile(file: File) : File{
         return try {
-            // doc anh tu file
+            // get img from file
             val bitmap = BitmapFactory.decodeFile(file.path)
             val outputStream = FileOutputStream(file)
 
-            // nen anh va ghi de chinh file goc
+            // compress and overwrite original file
             bitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
 
             outputStream.flush()
