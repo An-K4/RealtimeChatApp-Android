@@ -97,7 +97,15 @@ class SocketRepositoryImpl @Inject constructor(
 
         socket?.on(Socket.EVENT_CONNECT_ERROR){ args ->
             val error = args.firstOrNull()?.toString() ?: "Unknown Error"
-            Timber.e("${Socket.EVENT_CONNECT_ERROR}: $error")
+
+            if (error.contains("401") || error.contains("unauthorized")){
+                scope.launch {
+                    tokenManager.deleteToken()
+                    socket?.disconnect()
+                }
+            }
+
+            Timber.e("${Socket.EVENT_CONNECT_ERROR}: $error, disconnect right now!")
             _socketConnectionState.value = SocketConnectionState.Error(error)
         }
     }
