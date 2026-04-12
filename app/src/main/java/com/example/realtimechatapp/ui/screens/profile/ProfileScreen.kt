@@ -3,6 +3,7 @@ package com.example.realtimechatapp.ui.screens.profile
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -34,6 +36,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -46,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -86,6 +90,7 @@ fun ProfileScreen(
 
     val lifeCycleOwner = LocalLifecycleOwner.current
     val uiScope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -116,7 +121,9 @@ fun ProfileScreen(
             Column(
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.Center,
-                modifier = Modifier.matchParentSize().padding(20.dp)
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(20.dp)
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -124,8 +131,11 @@ fun ProfileScreen(
                     modifier = Modifier.padding(horizontal = 10.dp)
                 ) {
                     AsyncImage(
-                        model = profileState.avatar ?: R.drawable.default_avatar,
+                        model = profileState.avatar,
                         contentDescription = "Avatar",
+                        placeholder = painterResource(R.drawable.default_avatar),
+                        error = painterResource(R.drawable.default_avatar),
+                        fallback = painterResource(R.drawable.default_avatar),
                         modifier = Modifier
                             .size(150.dp)
                             .clip(CircleShape)
@@ -141,437 +151,445 @@ fun ProfileScreen(
                 }
                 Spacer(modifier = Modifier.height(30.dp))
                 Column(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp)
                 ) {
                     ProfileInfoItem("Tên Đăng Nhập:", profileState.username)
-                    Spacer(modifier = Modifier.height(10.dp))
                     ProfileInfoItem("Email:", profileState.email)
-                    Spacer(modifier = Modifier.height(10.dp))
                     ProfileInfoItem("Ngày tham gia:", profileState.createdAt)
                 }
                 Spacer(modifier = Modifier.height(30.dp))
-                Button(
-                    onClick = {
-                        profileViewModel.initUpdateSheet()
-                        showUpdateSheet = true
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 5.dp),
-                    enabled = !updateProfileState.isUpdating,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = LightBlue,
-                        contentColor = Color.White
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 8.dp,
-                        pressedElevation = 4.dp
-                    )
-                ) {
-                    if (updateProfileState.isUpdating){
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "update profile",
-                            modifier = Modifier.padding(end = 10.dp)
+
+                CompositionLocalProvider(LocalOverscrollFactory provides null) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(5.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(scrollState)
+                    ) {
+                        Button(
+                            onClick = {
+                                profileViewModel.initUpdateSheet()
+                                showUpdateSheet = true
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !updateProfileState.isUpdating,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = LightBlue,
+                                contentColor = Color.White
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 6.dp,
+                                pressedElevation = 3.dp
+                            )
+                        ) {
+                            if (updateProfileState.isUpdating) {
+                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "update profile",
+                                    modifier = Modifier.padding(end = 10.dp)
+                                )
+                                Text(
+                                    text = "Cập Nhật Thông Tin",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                )
+                            }
+                        }
+                        Button(
+                            onClick = { showChangePasswordSheet = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = LightRed,
+                                contentColor = Color.White
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 6.dp,
+                                pressedElevation = 3.dp
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = "change password",
+                                modifier = Modifier.padding(end = 10.dp)
+                            )
+                            Text(
+                                text = "Đổi Mật Khẩu",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                            )
+                        }
+                        Button(
+                            onClick = { profileViewModel.showLogoutConfirmDialog() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 5.dp),
+                            enabled = true,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Red,
+                                contentColor = Color.White
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 6.dp,
+                                pressedElevation = 3.dp
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                                contentDescription = "logout",
+                                modifier = Modifier.padding(end = 10.dp)
+                            )
+                            Text(
+                                text = "Đăng Xuất",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showUpdateSheet) {
+        ModalBottomSheet(
+            sheetState = updateSheetState,
+            onDismissRequest = {
+                uiScope.launch { updateSheetState.hide() }.invokeOnCompletion {
+                    if (!updateSheetState.isVisible) showUpdateSheet = false
+                }
+            }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp)
+                    .imePadding()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                AvatarPicker(
+                    currentAvatar = updateProfileState.avatar,
+                    onAvatarPickerClick = {
+                        photoPickerLauncher.launch(
+                            PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                            )
                         )
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = updateProfileState.fullName,
+                    onValueChange = { profileViewModel.onUpdateFullNameChange(it) },
+                    label = { Text("Họ Tên") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = RealtimeGreen,
+                        cursorColor = Color.Gray
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = updateProfileState.email,
+                    onValueChange = { profileViewModel.onUpdateEmailChange(it) },
+                    label = { Text("Email") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = RealtimeGreen,
+                        cursorColor = Color.Gray
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row {
+                    OutlinedButton(
+                        onClick = {
+                            uiScope.launch { updateSheetState.hide() }
+                                .invokeOnCompletion {
+                                    if (!updateSheetState.isVisible) showUpdateSheet =
+                                        false
+                                }
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(10.dp)
+                    ) {
                         Text(
-                            text = "Cập Nhật Thông Tin",
+                            text = "Hủy",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                        )
+                    }
+
+                    Button(
+                        onClick = {
+                            uiScope.launch { updateSheetState.hide() }
+                                .invokeOnCompletion {
+                                    if (!updateSheetState.isVisible) showUpdateSheet =
+                                        false
+                                }
+                            profileViewModel.showUpdateProfileConfirmDialog()
+                        },
+                        enabled = updateProfileState.isUpdateEnable,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = RealtimeGreen,
+                            contentColor = Color.White,
+                            disabledContainerColor = RealtimeGreen.copy(alpha = 0.5f),
+                            disabledContentColor = Color.White.copy(alpha = 0.7f)
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 8.dp,
+                            pressedElevation = 4.dp
+                        )
+                    ) {
+                        Text(
+                            text = "Lưu",
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
                         )
                     }
                 }
-                Button(
-                    onClick = { showChangePasswordSheet = true },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 5.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = LightRed,
-                        contentColor = Color.White
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 8.dp,
-                        pressedElevation = 4.dp
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = "change password",
-                        modifier = Modifier.padding(end = 10.dp)
-                    )
-                    Text(
-                        text = "Đổi Mật Khẩu",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                    )
+            }
+        }
+    }
+
+    if (showChangePasswordSheet) {
+        ModalBottomSheet(
+            sheetState = changePasswordSheetState,
+            onDismissRequest = {
+                uiScope.launch { changePasswordSheetState.hide() }.invokeOnCompletion {
+                    if (!changePasswordSheetState.isVisible) showChangePasswordSheet =
+                        false
                 }
-                Button(
-                    onClick = { profileViewModel.showLogoutConfirmDialog() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 5.dp),
-                    enabled = true,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Red,
-                        contentColor = Color.White
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 8.dp,
-                        pressedElevation = 4.dp
+            }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp)
+                    .imePadding()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                OutlinedTextField(
+                    value = changePasswordState.oldPassword,
+                    onValueChange = { profileViewModel.onOldPasswordChange(it) },
+                    label = { Text("Mật Khẩu Cũ") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = RealtimeGreen,
+                        cursorColor = Color.Gray
                     )
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                        contentDescription = "logout",
-                        modifier = Modifier.padding(end = 10.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = changePasswordState.newPassword,
+                    onValueChange = { profileViewModel.onNewPasswordChange(it) },
+                    label = { Text("Mật Khẩu Mới") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = RealtimeGreen,
+                        cursorColor = Color.Gray
                     )
-                    Text(
-                        text = "Đăng Xuất",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = changePasswordState.confirmNewPassword,
+                    onValueChange = { profileViewModel.onConfirmNewPasswordChange(it) },
+                    label = { Text("Xác Nhận Mật Khẩu Mới") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = RealtimeGreen,
+                        cursorColor = Color.Gray
                     )
-                }
+                )
 
-                if (showUpdateSheet) {
-                    ModalBottomSheet(
-                        sheetState = updateSheetState,
-                        onDismissRequest = {
-                            uiScope.launch { updateSheetState.hide() }.invokeOnCompletion {
-                                if (!updateSheetState.isVisible) showUpdateSheet = false
-                            }
-                        }
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp)
-                                .imePadding()
-                                .verticalScroll(rememberScrollState()),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            AvatarPicker(
-                                currentAvatar = updateProfileState.avatar,
-                                onAvatarPickerClick = {
-                                    photoPickerLauncher.launch(
-                                        PickVisualMediaRequest(
-                                            ActivityResultContracts.PickVisualMedia.ImageOnly
-                                        )
-                                    )
-                                }
-                            )
+                Spacer(modifier = Modifier.height(16.dp))
 
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            OutlinedTextField(
-                                value = updateProfileState.fullName,
-                                onValueChange = { profileViewModel.onUpdateFullNameChange(it) },
-                                label = { Text("Họ Tên") },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = RealtimeGreen,
-                                    cursorColor = Color.Gray
-                                )
-                            )
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            OutlinedTextField(
-                                value = updateProfileState.email,
-                                onValueChange = { profileViewModel.onUpdateEmailChange(it) },
-                                label = { Text("Email") },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = RealtimeGreen,
-                                    cursorColor = Color.Gray
-                                )
-                            )
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Row {
-                                OutlinedButton(
-                                    onClick = {
-                                        uiScope.launch { updateSheetState.hide() }
-                                            .invokeOnCompletion {
-                                                if (!updateSheetState.isVisible) showUpdateSheet =
-                                                    false
-                                            }
-                                    },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(10.dp)
-                                ) {
-                                    Text(
-                                        text = "Hủy",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp,
-                                    )
-                                }
-
-                                Button(
-                                    onClick = {
-                                        uiScope.launch { updateSheetState.hide() }
-                                            .invokeOnCompletion {
-                                                if (!updateSheetState.isVisible) showUpdateSheet =
-                                                    false
-                                            }
-                                        profileViewModel.showUpdateProfileConfirmDialog()
-                                    },
-                                    enabled = updateProfileState.isUpdateEnable,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(10.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = RealtimeGreen,
-                                        contentColor = Color.White,
-                                        disabledContainerColor = RealtimeGreen.copy(alpha = 0.5f),
-                                        disabledContentColor = Color.White.copy(alpha = 0.7f)
-                                    ),
-                                    elevation = ButtonDefaults.buttonElevation(
-                                        defaultElevation = 8.dp,
-                                        pressedElevation = 4.dp
-                                    )
-                                ) {
-                                    Text(
-                                        text = "Lưu",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (showChangePasswordSheet) {
-                    ModalBottomSheet(
-                        sheetState = changePasswordSheetState,
-                        onDismissRequest = {
-                            uiScope.launch { changePasswordSheetState.hide() }.invokeOnCompletion {
-                                if (!changePasswordSheetState.isVisible) showChangePasswordSheet = false
-                            }
-                        }
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp)
-                                .imePadding()
-                                .verticalScroll(rememberScrollState()),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            OutlinedTextField(
-                                value = changePasswordState.oldPassword,
-                                onValueChange = { profileViewModel.onOldPasswordChange(it) },
-                                label = { Text("Mật Khẩu Cũ") },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = RealtimeGreen,
-                                    cursorColor = Color.Gray
-                                )
-                            )
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            OutlinedTextField(
-                                value = changePasswordState.newPassword,
-                                onValueChange = { profileViewModel.onNewPasswordChange(it) },
-                                label = { Text("Mật Khẩu Mới") },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = RealtimeGreen,
-                                    cursorColor = Color.Gray
-                                )
-                            )
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            OutlinedTextField(
-                                value = changePasswordState.confirmNewPassword,
-                                onValueChange = { profileViewModel.onConfirmNewPasswordChange(it) },
-                                label = { Text("Xác Nhận Mật Khẩu Mới") },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = RealtimeGreen,
-                                    cursorColor = Color.Gray
-                                )
-                            )
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Row {
-                                OutlinedButton(
-                                    onClick = {
-                                        uiScope.launch { changePasswordSheetState.hide() }
-                                            .invokeOnCompletion {
-                                                if (!changePasswordSheetState.isVisible){
-                                                    showChangePasswordSheet = false
-                                                }
-                                            }
-                                    },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(10.dp)
-                                ) {
-                                    Text(
-                                        text = "Hủy",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp,
-                                    )
-                                }
-
-                                Button(
-                                    onClick = {
-                                        uiScope.launch { changePasswordSheetState.hide() }
-                                            .invokeOnCompletion {
-                                                if (!changePasswordSheetState.isVisible){
-                                                    showChangePasswordSheet = false
-                                                }
-                                            }
-                                        profileViewModel.showChangePasswordConfirmDialog()
-                                    },
-                                    enabled = changePasswordState.isChangePasswordEnable,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(10.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = RealtimeGreen,
-                                        contentColor = Color.White,
-                                        disabledContainerColor = RealtimeGreen.copy(alpha = 0.5f),
-                                        disabledContentColor = Color.White.copy(alpha = 0.7f)
-                                    ),
-                                    elevation = ButtonDefaults.buttonElevation(
-                                        defaultElevation = 8.dp,
-                                        pressedElevation = 4.dp
-                                    )
-                                ) {
-                                    Text(
-                                        text = "Lưu",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                when (dialogState) {
-                    is ProfileViewModel.ProfileEvent.UpdateProfileConfirm -> {
-                        ConfirmationDialog(
-                            title = "Thông Báo",
-                            message = "Xác nhận cập nhật thông tin?",
-                            dismissText = "Hủy",
-                            confirmText = "Xác Nhận",
-                            isDangerConfirm = false,
-                            onDismiss = { dialogState = null },
-                            onConfirm = {
-                                dialogState = null
-                                profileViewModel.updateProfile()
-                            }
-                        )
-                    }
-
-                    is ProfileViewModel.ProfileEvent.UpdateProfileSuccess -> {
-                        NotificationDialog(
-                            title = "Thành Công",
-                            message = "Cập nhật thông tin thành công!",
-                            isSuccess = true,
-                            onDismiss = { dialogState = null }
-                        )
-                    }
-
-                    is ProfileViewModel.ProfileEvent.ChangePasswordConfirm -> {
-                        ConfirmationDialog(
-                            title = "Thông Báo",
-                            message = "Bạn có chắc chắn muốn đổi mật khẩu?",
-                            dismissText = "Hủy",
-                            confirmText = "Xác Nhận",
-                            isDangerConfirm = true,
-                            onDismiss = { dialogState = null },
-                            onConfirm = {
-                                dialogState = null
-                                profileViewModel.changePassword()
-                            }
-                        )
-                    }
-
-                    is ProfileViewModel.ProfileEvent.ChangePasswordSuccess -> {
-                        NotificationDialog(
-                            title = "Thành Công",
-                            message = "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.",
-                            isSuccess = true,
-                            onDismiss = {
-                                dialogState = null
-                                profileViewModel.logout(false)
-                            }
-                        )
-                    }
-
-                    is ProfileViewModel.ProfileEvent.LogoutConfirm -> {
-                        ConfirmationDialog(
-                            title = "Cảnh Báo",
-                            message = "Bạn có chắc chắn muốn đăng xuất?",
-                            dismissText = "Hủy",
-                            confirmText = "Đăng Xuất",
-                            isDangerConfirm = true,
-                            onDismiss = { dialogState = null },
-                            onConfirm = {
-                                dialogState = null
-                                profileViewModel.logout(true)
-                            }
-                        )
-                    }
-
-                    is ProfileViewModel.ProfileEvent.LogoutSuccess -> {
-                        NotificationDialog(
-                            title = "Thành Công",
-                            message = "Đăng xuất thành công!",
-                            isSuccess = true,
-                            onDismiss = {
-                                dialogState = null
-                                navController.navigate(Screen.Login.route) {
-                                    popUpTo(0) {
-                                        inclusive = true
+                Row {
+                    OutlinedButton(
+                        onClick = {
+                            uiScope.launch { changePasswordSheetState.hide() }
+                                .invokeOnCompletion {
+                                    if (!changePasswordSheetState.isVisible) {
+                                        showChangePasswordSheet = false
                                     }
-                                    launchSingleTop = true
                                 }
-                            }
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(10.dp)
+                    ) {
+                        Text(
+                            text = "Hủy",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
                         )
                     }
 
-                    is ProfileViewModel.ProfileEvent.NavigateToLogin -> {
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo(0) {
-                                inclusive = true
-                            }
-                            launchSingleTop = true
-                        }
-                    }
-
-                    is ProfileViewModel.ProfileEvent.Failure -> {
-                        NotificationDialog(
-                            title = "Lỗi",
-                            message = (dialogState as ProfileViewModel.ProfileEvent.Failure).message,
-                            isSuccess = false,
-                            onDismiss = { dialogState = null }
+                    Button(
+                        onClick = {
+                            uiScope.launch { changePasswordSheetState.hide() }
+                                .invokeOnCompletion {
+                                    if (!changePasswordSheetState.isVisible) {
+                                        showChangePasswordSheet = false
+                                    }
+                                }
+                            profileViewModel.showChangePasswordConfirmDialog()
+                        },
+                        enabled = changePasswordState.isChangePasswordEnable,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = RealtimeGreen,
+                            contentColor = Color.White,
+                            disabledContainerColor = RealtimeGreen.copy(alpha = 0.5f),
+                            disabledContentColor = Color.White.copy(alpha = 0.7f)
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 8.dp,
+                            pressedElevation = 4.dp
+                        )
+                    ) {
+                        Text(
+                            text = "Lưu",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
                         )
                     }
-
-                    else -> {}
                 }
             }
         }
+    }
+
+    when (dialogState) {
+        is ProfileViewModel.ProfileEvent.UpdateProfileConfirm -> {
+            ConfirmationDialog(
+                title = "Thông Báo",
+                message = "Xác nhận cập nhật thông tin?",
+                dismissText = "Hủy",
+                confirmText = "Xác Nhận",
+                isDangerConfirm = false,
+                onDismiss = { dialogState = null },
+                onConfirm = {
+                    dialogState = null
+                    profileViewModel.updateProfile()
+                }
+            )
+        }
+
+        is ProfileViewModel.ProfileEvent.UpdateProfileSuccess -> {
+            NotificationDialog(
+                title = "Thành Công",
+                message = "Cập nhật thông tin thành công!",
+                isSuccess = true,
+                onDismiss = { dialogState = null }
+            )
+        }
+
+        is ProfileViewModel.ProfileEvent.ChangePasswordConfirm -> {
+            ConfirmationDialog(
+                title = "Thông Báo",
+                message = "Bạn có chắc chắn muốn đổi mật khẩu?",
+                dismissText = "Hủy",
+                confirmText = "Xác Nhận",
+                isDangerConfirm = true,
+                onDismiss = { dialogState = null },
+                onConfirm = {
+                    dialogState = null
+                    profileViewModel.changePassword()
+                }
+            )
+        }
+
+        is ProfileViewModel.ProfileEvent.ChangePasswordSuccess -> {
+            NotificationDialog(
+                title = "Thành Công",
+                message = "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.",
+                isSuccess = true,
+                onDismiss = {
+                    dialogState = null
+                    profileViewModel.logout(false)
+                }
+            )
+        }
+
+        is ProfileViewModel.ProfileEvent.LogoutConfirm -> {
+            ConfirmationDialog(
+                title = "Cảnh Báo",
+                message = "Bạn có chắc chắn muốn đăng xuất?",
+                dismissText = "Hủy",
+                confirmText = "Đăng Xuất",
+                isDangerConfirm = true,
+                onDismiss = { dialogState = null },
+                onConfirm = {
+                    dialogState = null
+                    profileViewModel.logout(true)
+                }
+            )
+        }
+
+        is ProfileViewModel.ProfileEvent.LogoutSuccess -> {
+            NotificationDialog(
+                title = "Thành Công",
+                message = "Đăng xuất thành công!",
+                isSuccess = true,
+                onDismiss = {
+                    dialogState = null
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+
+        is ProfileViewModel.ProfileEvent.NavigateToLogin -> {
+            navController.navigate(Screen.Login.route) {
+                popUpTo(0) {
+                    inclusive = true
+                }
+                launchSingleTop = true
+            }
+        }
+
+        is ProfileViewModel.ProfileEvent.Failure -> {
+            NotificationDialog(
+                title = "Lỗi",
+                message = (dialogState as ProfileViewModel.ProfileEvent.Failure).message,
+                isSuccess = false,
+                onDismiss = { dialogState = null }
+            )
+        }
+
+        else -> {}
     }
 }
 
@@ -606,7 +624,9 @@ fun ProfileScreen() {
         }
         Spacer(modifier = Modifier.height(30.dp))
         Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp)
         ) {
             ProfileInfoItem("Tên Đăng Nhập:", "An_K4")
             Spacer(modifier = Modifier.height(10.dp))
