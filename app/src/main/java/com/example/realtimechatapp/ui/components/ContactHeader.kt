@@ -76,19 +76,19 @@ fun ContactHeader(
             )
         }
 
-        IconButton(onClick = { onVideoCallClick() }) {
-            Icon(
-                imageVector = Icons.Outlined.Videocam,
-                contentDescription = "video call"
-            )
-        }
-
-        IconButton(onClick = { onVoiceCallClick() }) {
-            Icon(
-                imageVector = Icons.Outlined.Call,
-                contentDescription = "voice call"
-            )
-        }
+//        IconButton(onClick = { onVideoCallClick() }) {
+//            Icon(
+//                imageVector = Icons.Outlined.Videocam,
+//                contentDescription = "video call"
+//            )
+//        }
+//
+//        IconButton(onClick = { onVoiceCallClick() }) {
+//            Icon(
+//                imageVector = Icons.Outlined.Call,
+//                contentDescription = "voice call"
+//            )
+//        }
     }
 }
 

@@ -1,5 +1,6 @@
 package com.example.realtimechatapp.ui.navigation
 
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -73,7 +74,10 @@ fun AppNavigation() {
             if (showMainBars) {
                 BottomNavBar(navController, currentRoute ?: "")
             }
-        }
+        },
+        modifier = Modifier.imePadding()
+        // imePadding() here so the keyboard pushes the layout up correctly (especially for message input)
+        // adjustResize doesn't work with edge-to-edge (1 day to find that)
     ) { innerPadding ->
         NavHost(
             navController = navController,

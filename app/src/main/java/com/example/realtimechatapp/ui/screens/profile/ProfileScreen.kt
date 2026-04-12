@@ -227,7 +227,7 @@ fun ProfileScreen(
                             onClick = { profileViewModel.showLogoutConfirmDialog() },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 5.dp),
+                                .padding(bottom = 5.dp),
                             enabled = true,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Red,

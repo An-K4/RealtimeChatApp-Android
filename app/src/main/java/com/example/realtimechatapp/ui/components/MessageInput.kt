@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.realtimechatapp.ui.theme.RealtimeGreen
 import com.example.realtimechatapp.ui.theme.RealtimeRed
 
@@ -42,12 +43,14 @@ fun MessageInput(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp, horizontal = 10.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 5.dp, horizontal = 10.dp)
     ) {
         Box(
             modifier = Modifier
                 .weight(1f)
-                .border(1.dp, Color.Gray, RoundedCornerShape(20.dp))
+                .border(2.dp, Color.Gray, RoundedCornerShape(20.dp))
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -56,7 +59,7 @@ fun MessageInput(
                     value = messageText?:"",
                     onValueChange = { onMessageTextChange(it) },
                     modifier = Modifier.weight(1f),
-                    placeholder = { Text("Soạn tin nhắn...") },
+                    placeholder = { Text(text = "Soạn tin nhắn...", fontSize = 16.sp) },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
@@ -123,7 +126,7 @@ fun MessageInput(){
         Box(
             modifier = Modifier
                 .weight(1f)
-                .border(1.dp, Color.Gray, RoundedCornerShape(20.dp))
+                .border(2.dp, Color.Gray, RoundedCornerShape(20.dp))
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically

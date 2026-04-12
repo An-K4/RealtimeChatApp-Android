@@ -27,7 +27,7 @@
         </activity>
     </application>
 
-    <!-- phục vụ chọn ảnh từ thư viện -->
+    <!-- pick image from gallery -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PICK" />
