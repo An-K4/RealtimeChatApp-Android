@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.model.Member
 import com.example.realtimechatapp.domain.model.Message
-import com.example.realtimechatapp.domain.usecase.GetCurrentUserIdUseCase
+import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import com.example.realtimechatapp.domain.usecase.groups.GetGroupInfoUseCase
 import com.example.realtimechatapp.domain.usecase.groups.GetGroupMessageUseCase
 import com.example.realtimechatapp.ui.navigation.Screen

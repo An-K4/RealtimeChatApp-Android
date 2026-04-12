@@ -6,10 +6,13 @@ import com.example.realtimechatapp.data.local.dao.MessageContactDao
 import com.example.realtimechatapp.data.local.dao.MessageDao
 import com.example.realtimechatapp.data.local.dao.UserDao
 import com.example.realtimechatapp.data.local.entity.ContactEntity
+import com.example.realtimechatapp.data.local.entity.MessageEntity
 import com.example.realtimechatapp.data.local.entity.toMessageContact
 import com.example.realtimechatapp.data.local.entity.toUser
 import com.example.realtimechatapp.data.local.pojo.toMessage
 import com.example.realtimechatapp.data.remote.api.MessageApi
+import com.example.realtimechatapp.data.remote.dto.MessageDto
+import com.example.realtimechatapp.data.remote.dto.MessageSeenDto
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.model.MessageContact
 import com.example.realtimechatapp.domain.model.SendMessageParam
@@ -73,6 +76,16 @@ class MessageRepositoryImpl @Inject constructor(
                 )
                 Timber.d("Đã cập nhật tin nhắn mới đến ở contact: $contactId")
                 Timber.d("Tin nhắn mói chèn: ${messageDto.content}")
+            }
+        }
+
+        scope.launch {
+            socketRepository.observeMessageSeen().collect { messageSeenDto ->
+                val viewerId = messageSeenDto.viewerId
+                val senderId = currentUserManager.getCurrentUserId()
+
+                viewerId?.let { markMessageAsSeen(senderId, viewerId) }
+                Timber.d("User $viewerId đã xem tin nhắn")
             }
         }
     }
@@ -154,5 +167,29 @@ class MessageRepositoryImpl @Inject constructor(
     override suspend fun sendMessage(message: SendMessageParam) {
         Timber.d("Impl gọi socket nghe rõ trả lời")
         socketRepository.sendMessage(message)
+    }
+
+    override suspend fun seenMessage(friendId: String) {
+        val currentUserId = currentUserManager.getCurrentUserId()
+
+        markMessageAsSeen(friendId, currentUserId)
+        messageContactDao.resetUnreadCount(friendId)
+        socketRepository.seenMessage(MessageSeenDto(friendId, currentUserId))
+    }
+
+    override suspend fun markMessageAsSeen(senderId: String, receiverId: String) {
+        val messages = messageDao.getMessagesToMarkSeen(senderId, receiverId)
+        val markedMessages = mutableListOf<MessageEntity>()
+
+        for (msg in messages){
+            val currentSeenBy = msg.seenBy?.toMutableList()
+
+            if (currentSeenBy?.contains(receiverId) == false){
+                currentSeenBy.add(receiverId)
+                markedMessages.add(msg.copy(seenBy = currentSeenBy))
+            }
+        }
+
+        if (messages.isNotEmpty()) messageDao.updateMessages(markedMessages)
     }
 }

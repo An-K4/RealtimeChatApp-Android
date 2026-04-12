@@ -54,6 +54,15 @@ fun DetailMessageScreen(
 
     LaunchedEffect(detailMessageState.messages.size){
         if (detailMessageState.messages.isNotEmpty()) {
+            val hasUnseenMessages = detailMessageState.messages.any { message ->
+                message.senderId == detailMessageState.friendId
+                        && message.seenUserIds?.contains(detailMessageState.currentUserId) == true
+            }
+
+            if (hasUnseenMessages){
+                detailMessageViewModel.markMessageAsSeen()
+            }
+
             listState.animateScrollToItem(0)
         }
     }
@@ -102,7 +111,7 @@ fun DetailMessageScreen(
                                 time = item.createdAt,
                                 isSeen = item.seenUserIds?.isNotEmpty() == true,
                                 isGroup = false,
-                                fromCurrentUser = item.senderId != detailMessageState.friendId
+                                fromCurrentUser = item.senderId == detailMessageState.currentUserId
                             )
                         }
                     }

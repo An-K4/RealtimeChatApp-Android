@@ -1,6 +1,7 @@
 package com.example.realtimechatapp.domain.repository
 
 import com.example.realtimechatapp.data.remote.dto.MessageDto
+import com.example.realtimechatapp.data.remote.dto.MessageSeenDto
 import com.example.realtimechatapp.domain.model.SendMessageParam
 import kotlinx.coroutines.flow.Flow
 
@@ -11,9 +12,11 @@ interface SocketRepository {
 
     fun observeMessages(): Flow<MessageDto>
     fun observeMessageContacts(): Flow<MessageDto>
+    fun observeMessageSeen(): Flow<MessageSeenDto>
     fun observeConnectionState(): Flow<SocketConnectionState>
 
     suspend fun sendMessage(message: SendMessageParam)
+    suspend fun seenMessage(messageSeen: MessageSeenDto)
 }
 
 sealed class SocketConnectionState {

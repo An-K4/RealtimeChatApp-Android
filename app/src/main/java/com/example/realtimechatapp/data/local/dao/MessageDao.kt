@@ -21,6 +21,9 @@ interface MessageDao {
     @Update
     suspend fun updateMessage(message: MessageEntity)
 
+    @Update
+    suspend fun updateMessages(messages: List<MessageEntity>)
+
     @Transaction
     @Query(
         """
@@ -64,13 +67,8 @@ interface MessageDao {
         friendId: String
     ): Flow<List<MessageWithDetails>>
 
-    @Query(
-        "UPDATE messages " +
-        "SET seen_by = json_insert(seen_by, '\$', :userId)" +
-        "WHERE (receiver_id = :userId OR group_id = :groupId)" +
-        "AND json_extract(seen_by, '\$') NOT LIKE '%' || :userId || '%'"
-    )
-    suspend fun markMessageAsSeen(userId: String, groupId: String? = null)
+    @Query("SELECT * FROM messages WHERE sender_id = :senderId AND receiver_id = :receiverId")
+    suspend fun getMessagesToMarkSeen(senderId: String, receiverId: String): List<MessageEntity>
 
     @Query("""
         SELECT COUNT(*) FROM messages

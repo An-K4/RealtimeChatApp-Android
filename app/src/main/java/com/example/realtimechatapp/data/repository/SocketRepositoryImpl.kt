@@ -3,7 +3,9 @@ package com.example.realtimechatapp.data.repository
 import com.example.realtimechatapp.data.local.manager.TokenManager
 import com.example.realtimechatapp.data.remote.SocketEvents
 import com.example.realtimechatapp.data.remote.dto.MessageDto
+import com.example.realtimechatapp.data.remote.dto.MessageSeenDto
 import com.example.realtimechatapp.domain.model.SendMessageParam
+import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.repository.SocketConnectionState
 import com.example.realtimechatapp.domain.repository.SocketRepository
 import com.google.gson.Gson
@@ -21,6 +23,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import timber.log.Timber
 import javax.inject.Inject
@@ -37,6 +40,9 @@ class SocketRepositoryImpl @Inject constructor(
     override fun observeMessages(): Flow<MessageDto> = _messagesFlow.asSharedFlow()
     override fun observeMessageContacts(): Flow<MessageDto> = _messagesFlow.asSharedFlow()
 
+    private val _messageSeenFlow = MutableSharedFlow<MessageSeenDto>()
+    override fun observeMessageSeen(): Flow<MessageSeenDto> = _messageSeenFlow.asSharedFlow()
+
     private val _socketConnectionState = MutableStateFlow<SocketConnectionState>(
         SocketConnectionState.Disconnected
     )
@@ -48,6 +54,7 @@ class SocketRepositoryImpl @Inject constructor(
             return
         }
 
+        // hilt can't get token asynchronously in @Provides
         val token = tokenManager.token.first()
         if (token?.isEmpty() == true) return
 
@@ -109,7 +116,25 @@ class SocketRepositoryImpl @Inject constructor(
                         Timber.d("Đã bắn tin nhắn vào flow: $messageDto")
                     }
                 } catch (e: Exception) {
-                    Timber.d("Parse JSON thất bại: ${e.message}")
+                    Timber.e("Parse JSON thất bại: ${e.message}")
+                }
+            }
+        }
+
+        socket?.on(SocketEvents.SEEN_MESSAGE){ args ->
+            if (args.isNotEmpty()){
+                val rawJsonData = args[0].toString()
+                Timber.d("Raw json: $rawJsonData")
+
+                try {
+                    val messageSeenDto = gson.fromJson(rawJsonData, MessageSeenDto::class.java)
+
+                    scope.launch {
+                        _messageSeenFlow.emit(messageSeenDto)
+                        Timber.d("Đã bắn dữ liệu đã đọc vào flow: $messageSeenDto")
+                    }
+                } catch (e: Exception){
+                    Timber.e("Parse JSON thất bại: ${e.message}")
                 }
             }
         }
@@ -146,5 +171,12 @@ class SocketRepositoryImpl @Inject constructor(
                 }
             }
         })
+    }
+
+    override suspend fun seenMessage(messageSeen: MessageSeenDto) {
+        val jsonString = gson.toJson(messageSeen)
+        val jsonObject = JSONObject(jsonString)
+
+        socket?.emit(SocketEvents.SEEN_MESSAGE, jsonObject)
     }
 }
