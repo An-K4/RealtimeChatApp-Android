@@ -101,10 +101,12 @@ fun ProfileScreen(
         }
     )
 
-    LaunchedEffect(lifeCycleOwner.lifecycle) {
-        lifeCycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            profileViewModel.profileEvent.collect { event ->
-                dialogState = event
+    LaunchedEffect(Unit) {
+        lifeCycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            lifeCycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                profileViewModel.profileEvent.collect { event ->
+                    dialogState = event
+                }
             }
         }
     }

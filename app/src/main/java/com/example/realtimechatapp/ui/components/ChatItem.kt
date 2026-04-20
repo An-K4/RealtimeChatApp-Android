@@ -42,6 +42,7 @@ fun ChatItem(
     name: String,
     unreadCount: Int,
     lastMessage: LastMessage,
+    isOnline: Boolean = false,
     onItemClicked: () -> Unit
 ) {
     val previewLastMessage = if (lastMessage.isMine) {
@@ -53,6 +54,7 @@ fun ChatItem(
             lastMessage.content
         }
     }
+    val onlineColor = if (isOnline) Color.Red else Color.Gray
 
     Row(
         modifier = Modifier
@@ -82,7 +84,7 @@ fun ChatItem(
                     .size(15.dp)
                     .clip(CircleShape)
                     .border(1.dp, Color.Gray, CircleShape)
-                    .background(Color.Red, CircleShape)
+                    .background(onlineColor, CircleShape)
             ) {}
         }
 

@@ -20,8 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.ui.components.ChatItem
 import com.example.realtimechatapp.ui.navigation.Screen
@@ -32,20 +34,23 @@ import com.example.realtimechatapp.ui.components.NotificationDialog
 fun MessageScreen(
     navController: NavController,
     messageViewModel: MessageViewModel = hiltViewModel()
-){
+) {
     val messageState by messageViewModel.messageState.collectAsStateWithLifecycle()
     var dialogState by remember { mutableStateOf<MessageViewModel.MessageEvent?>(null) }
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
 
-    LaunchedEffect(lifecycleOwner.lifecycle) {
-        messageViewModel.messageEvent.collect{ event ->
-            when(event){
-                is MessageViewModel.MessageEvent.Unauthenticated, MessageViewModel.MessageEvent.Authenticated -> {
-                    dialogState = event
-                }
-                is MessageViewModel.MessageEvent.Failure -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+    LaunchedEffect(Unit) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            messageViewModel.messageEvent.collect { event ->
+                when (event) {
+                    is MessageViewModel.MessageEvent.Unauthenticated, MessageViewModel.MessageEvent.Authenticated -> {
+                        dialogState = event
+                    }
+
+                    is MessageViewModel.MessageEvent.Failure -> {
+                        Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
@@ -53,11 +58,11 @@ fun MessageScreen(
 
     Box(
         modifier = Modifier.fillMaxSize()
-    ){
-        if (messageState.isLoading){
+    ) {
+        if (messageState.isLoading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
-            if (messageState.users.isEmpty()){
+            if (messageState.users.isEmpty()) {
                 BeginScreen(isGroup = false, inDetailScreen = false)
             } else {
                 LazyColumn(
@@ -67,8 +72,8 @@ fun MessageScreen(
                 ) {
                     items(
                         items = messageState.users,
-                        key = { user -> user.id}
-                    ){ user ->
+                        key = { user -> user.id }
+                    ) { user ->
                         ChatItem(
                             isGroup = false,
                             avatar = user.avatar,
@@ -84,7 +89,7 @@ fun MessageScreen(
             }
         }
 
-        if (dialogState is MessageViewModel.MessageEvent.Unauthenticated){
+        if (dialogState is MessageViewModel.MessageEvent.Unauthenticated) {
             NotificationDialog(
                 title = "Lỗi",
                 message = "Phiên đăng nhập hết hạn, vui lòng đăng nhập lại!",

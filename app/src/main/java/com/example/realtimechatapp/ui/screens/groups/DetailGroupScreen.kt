@@ -21,8 +21,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.ui.components.BeginScreen
 import com.example.realtimechatapp.ui.components.ContactHeader
@@ -33,19 +35,26 @@ import com.example.realtimechatapp.ui.components.MessageRenderItem
 fun DetailGroupScreen(
     navController: NavController,
     detailGroupViewModel: DetailGroupViewModel = hiltViewModel()
-){
+) {
     val detailGroupState by detailGroupViewModel.detailGroupState.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
 
-    LaunchedEffect(lifecycleOwner.lifecycle) {
-        detailGroupViewModel.detailGroupEvent.collect { event ->
-            when(event){
-                is DetailGroupViewModel.DetailGroupEvent.Success -> {
-                    Toast.makeText(context, "Lấy tin nhắn nhóm từ db thành công", Toast.LENGTH_SHORT).show()
-                }
-                is DetailGroupViewModel.DetailGroupEvent.Failure -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+    LaunchedEffect(Unit) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            detailGroupViewModel.detailGroupEvent.collect { event ->
+                when (event) {
+                    is DetailGroupViewModel.DetailGroupEvent.Success -> {
+                        Toast.makeText(
+                            context,
+                            "Lấy tin nhắn nhóm từ db thành công",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                    is DetailGroupViewModel.DetailGroupEvent.Failure -> {
+                        Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
@@ -68,11 +77,11 @@ fun DetailGroupScreen(
                 .fillMaxWidth()
                 .weight(1f),
             contentAlignment = Alignment.Center
-        ){
-            if (detailGroupState.isLoading){
+        ) {
+            if (detailGroupState.isLoading) {
                 CircularProgressIndicator()
             } else {
-                if (detailGroupState.groupMessages.isEmpty()){
+                if (detailGroupState.groupMessages.isEmpty()) {
                     BeginScreen(isGroup = true, inDetailScreen = true)
                 } else {
                     LazyColumn(
@@ -87,11 +96,11 @@ fun DetailGroupScreen(
                         items(
                             items = detailGroupState.groupMessages,
                             key = { groupMessage -> groupMessage.id }
-                        ){ groupMessage ->
+                        ) { groupMessage ->
                             MessageRenderItem(
                                 senderAvatar = groupMessage.senderAvatar,
                                 senderName = groupMessage.senderName,
-                                message = groupMessage.content?:"",
+                                message = groupMessage.content ?: "",
                                 time = groupMessage.createdAt,
                                 isSeen = groupMessage.seenUserIds != null,
                                 isGroup = true,
@@ -104,7 +113,7 @@ fun DetailGroupScreen(
         }
 
         MessageInput(
-            messageText = detailGroupState.messageInput?:"",
+            messageText = detailGroupState.messageInput ?: "",
             onMessageTextChange = { detailGroupViewModel.onGroupMessageInputChange(it) },
             onCameraClick = {},
             onGalleryClick = {},

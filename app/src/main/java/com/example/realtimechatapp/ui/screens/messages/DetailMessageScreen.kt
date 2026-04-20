@@ -21,8 +21,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.ui.components.BeginScreen
 import com.example.realtimechatapp.ui.components.ContactHeader
@@ -39,14 +41,16 @@ fun DetailMessageScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
 
-    LaunchedEffect(lifecycleOwner.lifecycle) {
-        detailMessageViewModel.detailMessageEvent.collect{ event ->
-            when(event){
-                is DetailMessageViewModel.DetailMessageEvent.GetMessageSuccess -> {
-                    Toast.makeText(context, "Lấy tin nhắn từ db thành công", Toast.LENGTH_SHORT).show()
-                }
-                is DetailMessageViewModel.DetailMessageEvent.Failure -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+    LaunchedEffect(Unit) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED){
+            detailMessageViewModel.detailMessageEvent.collect{ event ->
+                when(event){
+                    is DetailMessageViewModel.DetailMessageEvent.GetMessageSuccess -> {
+                        Toast.makeText(context, "Lấy tin nhắn từ db thành công", Toast.LENGTH_SHORT).show()
+                    }
+                    is DetailMessageViewModel.DetailMessageEvent.Failure -> {
+                        Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }

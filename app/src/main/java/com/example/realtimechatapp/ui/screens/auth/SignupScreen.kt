@@ -31,7 +31,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.ui.components.AvatarPicker
 import com.example.realtimechatapp.ui.components.CustomClickableText
@@ -46,6 +49,7 @@ fun SignupScreen(
 ) {
     val signupState by authViewModel.signupState.collectAsStateWithLifecycle()
     var dialogState by remember { mutableStateOf<AuthViewModel.AuthEvent?>(null) }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -57,13 +61,15 @@ fun SignupScreen(
     )
 
     LaunchedEffect(Unit) {
-        authViewModel.authEvent.collect { event ->
-            when(event){
-                is AuthViewModel.AuthEvent.AuthSuccess -> {
-                    dialogState = event
-                }
-                is AuthViewModel.AuthEvent.Failure -> {
-                    dialogState = event
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED){
+            authViewModel.authEvent.collect { event ->
+                when(event){
+                    is AuthViewModel.AuthEvent.AuthSuccess -> {
+                        dialogState = event
+                    }
+                    is AuthViewModel.AuthEvent.Failure -> {
+                        dialogState = event
+                    }
                 }
             }
         }
