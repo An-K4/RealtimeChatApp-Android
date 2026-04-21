@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.domain.model.LastMessage
+import com.example.realtimechatapp.ui.theme.RealtimeGreen
 
 @Composable
 fun ChatItem(
@@ -43,6 +44,7 @@ fun ChatItem(
     unreadCount: Int,
     lastMessage: LastMessage,
     isOnline: Boolean = false,
+    isTyping: Boolean = false,
     onItemClicked: () -> Unit
 ) {
     val previewLastMessage = if (lastMessage.isMine) {
@@ -80,10 +82,10 @@ fun ChatItem(
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .offset(x = 20.dp, y = 20.dp)
-                    .size(15.dp)
+                    .offset(x = 22.dp, y = 22.dp)
+                    .size(18.dp)
                     .clip(CircleShape)
-                    .border(1.dp, Color.Gray, CircleShape)
+                    .border(2.dp, Color.Gray, CircleShape)
                     .background(onlineColor, CircleShape)
             ) {}
         }
@@ -103,12 +105,23 @@ fun ChatItem(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Text(
-                text = previewLastMessage,
-                fontSize = 14.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+
+            if (isTyping){
+                Text(
+                    text = if (isGroup) "Ai đó đang soạn tin..." else "Đang soạn tin...",
+                    fontSize = 14.sp,
+                    color = RealtimeGreen,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            } else {
+                Text(
+                    text = previewLastMessage,
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
 
         Column(
