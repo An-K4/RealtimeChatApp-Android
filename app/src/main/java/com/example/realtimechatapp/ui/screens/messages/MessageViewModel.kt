@@ -8,20 +8,22 @@ import com.example.realtimechatapp.domain.model.MessageContact
 import com.example.realtimechatapp.domain.usecase.messages.GetMessageContactUseCase
 import com.example.realtimechatapp.domain.usecase.socket.ConnectSocketUseCase
 import com.example.realtimechatapp.domain.usecase.socket.ObserveMessageContactUseCase
+import com.example.realtimechatapp.domain.usecase.socket.ObserveOnlineUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
 class MessageViewModel @Inject constructor(
     private val getMessageContactUseCase: GetMessageContactUseCase,
     private val observeMessageContactUseCase: ObserveMessageContactUseCase,
+    private val observeOnlineUserUseCase: ObserveOnlineUserUseCase,
     private val connectSocketUseCase: ConnectSocketUseCase,
     private val tokenManager: TokenManager
 ) : ViewModel() {
@@ -36,8 +38,23 @@ class MessageViewModel @Inject constructor(
         data class Failure(val message: String): MessageEvent()
     }
 
-    private val _messageState = MutableStateFlow(MessageState())
-    val messageState = _messageState.asStateFlow()
+    private val _isLoading = MutableStateFlow(false)
+    val messageState = combine(
+        observeMessageContactUseCase(),
+        observeOnlineUserUseCase(),
+        _isLoading
+    ){ messageContacts, onlineUserIds, isLoading ->
+        MessageState(
+            isLoading = isLoading && messageContacts.isEmpty(),
+            users = messageContacts.map { contact ->
+                contact.copy(isOnline = onlineUserIds.contains(contact.id))
+            }
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = MessageState(isLoading = true)
+    )
 
     private val _messageEvent = Channel<MessageEvent>()
     val messageEvent = _messageEvent.receiveAsFlow()
@@ -46,7 +63,6 @@ class MessageViewModel @Inject constructor(
         checkToken()
         connectSocket()
         getUsers() // auto load
-        observeMessageContacts()
     }
 
     fun checkToken(){
@@ -67,35 +83,15 @@ class MessageViewModel @Inject constructor(
 
     fun getUsers() {
         viewModelScope.launch {
-            _messageState.update { it.copy(isLoading = true) }
+            _isLoading.value = true
 
             getMessageContactUseCase().onSuccess {
-                _messageState.update {
-                    it.copy(
-                        isLoading = false
-                    )
-                }
+                // do nothing, delegate to observe fun
             }.onFailure { exception ->
-                _messageState.update {
-                    it.copy(
-                        isLoading = false
-                    )
-                }
                 _messageEvent.send(MessageEvent.Failure(exception.getErrorMessage()))
             }
-        }
-    }
 
-    fun observeMessageContacts(){
-        viewModelScope.launch {
-            observeMessageContactUseCase().collect { updatedContactList ->
-                val content = updatedContactList.map { it.lastMessage }
-
-                _messageState.update {
-                    Timber.d("Observe được gọi, cập nhật lại danh sách: $content")
-                    it.copy(users = updatedContactList)
-                }
-            }
+            _isLoading.value = false
         }
     }
 }
