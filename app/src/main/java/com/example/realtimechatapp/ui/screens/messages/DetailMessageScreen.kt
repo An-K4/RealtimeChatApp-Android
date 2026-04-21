@@ -30,6 +30,7 @@ import com.example.realtimechatapp.ui.components.BeginScreen
 import com.example.realtimechatapp.ui.components.ContactHeader
 import com.example.realtimechatapp.ui.components.MessageInput
 import com.example.realtimechatapp.ui.components.MessageRenderItem
+import timber.log.Timber
 
 @Composable
 fun DetailMessageScreen(
@@ -60,10 +61,11 @@ fun DetailMessageScreen(
         if (detailMessageState.messages.isNotEmpty()) {
             val hasUnseenMessages = detailMessageState.messages.any { message ->
                 message.senderId == detailMessageState.friendId
-                        && message.seenUserIds?.contains(detailMessageState.currentUserId) == true
+                        && message.seenUserIds?.contains(detailMessageState.currentUserId) != true
             }
 
             if (hasUnseenMessages){
+                Timber.d("Có tin nhắn chưa đọc, gọi mark message as seen.")
                 detailMessageViewModel.markMessageAsSeen()
             }
 
