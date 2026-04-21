@@ -5,7 +5,6 @@ import com.example.realtimechatapp.data.remote.SocketEvents
 import com.example.realtimechatapp.data.remote.dto.MessageDto
 import com.example.realtimechatapp.data.remote.dto.MessageSeenDto
 import com.example.realtimechatapp.domain.model.SendMessageParam
-import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.repository.SocketConnectionState
 import com.example.realtimechatapp.domain.repository.SocketRepository
 import com.google.gson.Gson
@@ -21,9 +20,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import org.json.JSONObject
 import timber.log.Timber
 import javax.inject.Inject
@@ -42,6 +41,9 @@ class SocketRepositoryImpl @Inject constructor(
 
     private val _messageSeenFlow = MutableSharedFlow<MessageSeenDto>()
     override fun observeMessageSeen(): Flow<MessageSeenDto> = _messageSeenFlow.asSharedFlow()
+
+    private val _onlineUserIds = MutableStateFlow<Set<String>>(emptySet())
+    override fun observeOnlineUserIds(): Flow<Set<String>> = _onlineUserIds.asStateFlow()
 
     private val _socketConnectionState = MutableStateFlow<SocketConnectionState>(
         SocketConnectionState.Disconnected
@@ -68,12 +70,14 @@ class SocketRepositoryImpl @Inject constructor(
 
         setupSocketConnectionListener()
         setupMessageListener()
+        setupOnlineUserIdsListener()
 
         socket?.connect()
     }
 
     override suspend fun disconnect() {
         Timber.d("Ngắt kết nối socket...")
+        _onlineUserIds.value = emptySet()
         socket?.let { socket ->
             socket.disconnect()
             socket.off()
@@ -91,6 +95,7 @@ class SocketRepositoryImpl @Inject constructor(
         }
 
         socket?.on(Socket.EVENT_DISCONNECT){
+            _onlineUserIds.value = emptySet()
             Timber.e(Socket.EVENT_DISCONNECT)
             _socketConnectionState.value = SocketConnectionState.Disconnected
         }
@@ -145,6 +150,32 @@ class SocketRepositoryImpl @Inject constructor(
                     Timber.e("Parse JSON thất bại: ${e.message}")
                 }
             }
+        }
+    }
+
+    private fun setupOnlineUserIdsListener() {
+        socket?.on(SocketEvents.NOTIFY_ONLINE_LIST){ args ->
+            val data = args[0] as JSONArray
+            val ids = mutableSetOf<String>()
+
+            for (i in 0 until data.length()) {
+                ids.add(data.getString(i))
+            }
+            _onlineUserIds.value = ids
+        }
+
+        socket?.on(SocketEvents.NOTIFY_USER_ONLINE){ args ->
+            val data = args[0] as JSONObject
+            val id = data.getString("id")
+
+            _onlineUserIds.update { it + id }
+        }
+
+        socket?.on(SocketEvents.NOTIFY_USER_OFFLINE){ args ->
+            val data = args[0] as JSONObject
+            val id = data.getString("id")
+
+            _onlineUserIds.update { it - id }
         }
     }
 

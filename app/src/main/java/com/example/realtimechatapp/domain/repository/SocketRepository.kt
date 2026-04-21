@@ -14,6 +14,7 @@ interface SocketRepository {
     fun observeMessageContacts(): Flow<MessageDto>
     fun observeMessageSeen(): Flow<MessageSeenDto>
     fun observeConnectionState(): Flow<SocketConnectionState>
+    fun observeOnlineUserIds(): Flow<Set<String>>
 
     suspend fun sendMessage(message: SendMessageParam)
     suspend fun seenMessage(messageSeen: MessageSeenDto)
