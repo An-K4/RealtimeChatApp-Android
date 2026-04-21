@@ -7,5 +7,6 @@ data class MessageContact(
     val unreadCount: Int,
     val lastMessage: LastMessage,
     val lastMessageTime: String,
-    val isOnline: Boolean = false
+    val isOnline: Boolean = false,
+    val isTyping: Boolean = false
 )

@@ -15,9 +15,12 @@ interface SocketRepository {
     fun observeMessageSeen(): Flow<MessageSeenDto>
     fun observeConnectionState(): Flow<SocketConnectionState>
     fun observeOnlineUserIds(): Flow<Set<String>>
+    fun observeTypingStatus(): Flow<Set<String>>
 
     suspend fun sendMessage(message: SendMessageParam)
     suspend fun seenMessage(messageSeen: MessageSeenDto)
+    suspend fun emitTypingStart(receiverId: String)
+    suspend fun emitTypingStop(receiverId: String)
 }
 
 sealed class SocketConnectionState {

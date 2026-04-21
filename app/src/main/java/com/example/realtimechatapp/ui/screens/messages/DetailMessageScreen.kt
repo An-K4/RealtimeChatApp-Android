@@ -8,10 +8,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -19,7 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -30,25 +36,28 @@ import com.example.realtimechatapp.ui.components.BeginScreen
 import com.example.realtimechatapp.ui.components.ContactHeader
 import com.example.realtimechatapp.ui.components.MessageInput
 import com.example.realtimechatapp.ui.components.MessageRenderItem
+import com.example.realtimechatapp.ui.theme.RealtimeGreen
 import timber.log.Timber
 
 @Composable
 fun DetailMessageScreen(
     navController: NavController,
     detailMessageViewModel: DetailMessageViewModel = hiltViewModel()
-){
+) {
     val detailMessageState by detailMessageViewModel.detailMessageState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED){
-            detailMessageViewModel.detailMessageEvent.collect{ event ->
-                when(event){
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            detailMessageViewModel.detailMessageEvent.collect { event ->
+                when (event) {
                     is DetailMessageViewModel.DetailMessageEvent.GetMessageSuccess -> {
-                        Toast.makeText(context, "Lấy tin nhắn từ db thành công", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Lấy tin nhắn từ db thành công", Toast.LENGTH_SHORT)
+                            .show()
                     }
+
                     is DetailMessageViewModel.DetailMessageEvent.Failure -> {
                         Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                     }
@@ -57,14 +66,14 @@ fun DetailMessageScreen(
         }
     }
 
-    LaunchedEffect(detailMessageState.messages.size){
+    LaunchedEffect(detailMessageState.messages.size) {
         if (detailMessageState.messages.isNotEmpty()) {
             val hasUnseenMessages = detailMessageState.messages.any { message ->
                 message.senderId == detailMessageState.friendId
                         && message.seenUserIds?.contains(detailMessageState.currentUserId) != true
             }
 
-            if (hasUnseenMessages){
+            if (hasUnseenMessages) {
                 Timber.d("Có tin nhắn chưa đọc, gọi mark message as seen.")
                 detailMessageViewModel.markMessageAsSeen()
             }
@@ -75,7 +84,7 @@ fun DetailMessageScreen(
 
     Column(
         modifier = Modifier.fillMaxSize()
-    ){
+    ) {
         // in development
         ContactHeader(
             avatarContactPreview = detailMessageState.friendAvatar,
@@ -90,34 +99,58 @@ fun DetailMessageScreen(
                 .fillMaxWidth()
                 .weight(1f),
             contentAlignment = Alignment.Center
-        ){
-            if (detailMessageState.isLoading){
+        ) {
+            if (detailMessageState.isLoading) {
                 CircularProgressIndicator()
             } else {
-                if (detailMessageState.messages.isEmpty()){
+                if (detailMessageState.messages.isEmpty()) {
                     BeginScreen(isGroup = false, inDetailScreen = true)
                 } else {
-                    LazyColumn(
-                        state = listState,
-                        reverseLayout = true,
-                        contentPadding = PaddingValues(10.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    Column(
                         modifier = Modifier
                             .matchParentSize()
                             .background(color = Color.Gray)
                     ) {
-                        items(
-                            items = detailMessageState.messages,
-                            key = { message -> message.id }
-                        ){ item ->
-                            MessageRenderItem(
-                                senderAvatar = item.senderAvatar,
-                                senderName = item.senderName,
-                                message = item.content?:"",
-                                time = item.createdAt,
-                                isSeen = item.seenUserIds?.isNotEmpty() == true,
-                                isGroup = false,
-                                fromCurrentUser = item.senderId == detailMessageState.currentUserId
+                        LazyColumn(
+                            state = listState,
+                            reverseLayout = true,
+                            contentPadding = PaddingValues(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            items(
+                                items = detailMessageState.messages,
+                                key = { message -> message.id }
+                            ) { item ->
+                                MessageRenderItem(
+                                    senderAvatar = item.senderAvatar,
+                                    senderName = item.senderName,
+                                    message = item.content ?: "",
+                                    time = item.createdAt,
+                                    isSeen = item.seenUserIds?.isNotEmpty() == true,
+                                    isGroup = false,
+                                    fromCurrentUser = item.senderId == detailMessageState.currentUserId
+                                )
+                            }
+                        }
+
+                        if (detailMessageState.friendTypingStatus) {
+                            Text(
+                                text = "${detailMessageState.friendName} đang soạn tin...",
+                                fontSize = 12.sp,
+                                textAlign = TextAlign.Start,
+                                color = RealtimeGreen,
+                                modifier = Modifier
+                                    .background(
+                                        color = Color.Black.copy(0.5f),
+                                        shape = RoundedCornerShape(
+                                            topStart = 0.dp,
+                                            topEnd = 10.dp,
+                                            bottomStart = 0.dp,
+                                            bottomEnd = 0.dp
+                                        )
+                                    )
+                                    .padding(horizontal = 5.dp)
                             )
                         }
                     }
@@ -126,7 +159,7 @@ fun DetailMessageScreen(
         }
 
         MessageInput(
-            messageText = detailMessageState.messageInput?:"",
+            messageText = detailMessageState.messageInput ?: "",
             onMessageTextChange = { detailMessageViewModel.onMessageInputChange(it) },
             onCameraClick = {},
             onGalleryClick = {},

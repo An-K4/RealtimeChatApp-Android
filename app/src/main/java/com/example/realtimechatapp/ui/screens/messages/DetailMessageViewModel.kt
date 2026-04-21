@@ -8,14 +8,19 @@ import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.model.User
 import com.example.realtimechatapp.domain.usecase.messages.GetHeaderInfoUseCase
 import com.example.realtimechatapp.domain.usecase.messages.GetMessageUseCase
+import com.example.realtimechatapp.domain.usecase.socket.EmitTypingStartUseCase
+import com.example.realtimechatapp.domain.usecase.socket.EmitTypingStopUseCase
 import com.example.realtimechatapp.domain.usecase.socket.ObserveMessageUseCase
 import com.example.realtimechatapp.domain.usecase.socket.ObserveOnlineUserUseCase
+import com.example.realtimechatapp.domain.usecase.socket.ObserveTypingUseCase
 import com.example.realtimechatapp.domain.usecase.socket.SeenMessageUseCase
 import com.example.realtimechatapp.domain.usecase.socket.SendMessageUseCase
 import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import com.example.realtimechatapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
@@ -35,14 +40,18 @@ class DetailMessageViewModel @Inject constructor(
     private val getHeaderInfoUseCase: GetHeaderInfoUseCase,
     private val observeMessageUseCase: ObserveMessageUseCase,
     private val observeOnlineUserUseCase: ObserveOnlineUserUseCase,
+    private val observeTypingUseCase: ObserveTypingUseCase,
     private val sendMessageUseCase: SendMessageUseCase,
-    private val seenMessageUseCase: SeenMessageUseCase
+    private val seenMessageUseCase: SeenMessageUseCase,
+    private val emitTypingStartUseCase: EmitTypingStartUseCase,
+    private val emitTypingStopUseCase: EmitTypingStopUseCase
 ) : ViewModel() {
     data class DetailMessageState(
         val currentUserId: String = "",
         val friendId: String = "",
         val friendName: String? = null,
         val friendStatus: String? = null,
+        val friendTypingStatus: Boolean = false,
         val friendAvatar: String? = null,
         val messages: List<Message> = emptyList(),
         val messageInput: String? = null,
@@ -54,32 +63,76 @@ class DetailMessageViewModel @Inject constructor(
         data class Failure(val message: String) : DetailMessageEvent()
     }
 
-    private val currentUserId = flow {
-        emit(getCurrentUserIdUseCase())
-    }
-    private val friendId: String = checkNotNull(
-        savedStateHandle[Screen.DetailMessage.ARG_FRIEND_ID]
+    private data class DetailMessageContext(
+        val currentUserId: String,
+        val friendUser: User?,
     )
+
+    private data class SocketData(
+        val messages: List<Message>,
+        val onlineUserIds: Set<String>,
+        val typingUserIds: Set<String>
+    )
+
+    private data class InputAndLoadingState(
+        val messageInput: String,
+        val isLoading: Boolean
+    )
+
+    private val currentUserId = flow { emit(getCurrentUserIdUseCase()) }
+    private val friendId: String =
+        checkNotNull(savedStateHandle[Screen.DetailMessage.ARG_FRIEND_ID])
     private val _messageInput = MutableStateFlow("")
     private val _isLoading = MutableStateFlow(true)
     private val _headerInfo = MutableStateFlow<User?>(null)
+    private val detailMessageContextFlow =
+        combine(currentUserId, _headerInfo) { currentUserId, headerInfo ->
+            DetailMessageContext(
+                currentUserId = currentUserId,
+                friendUser = headerInfo
+            )
+        }
 
-    val detailMessageState = combine(
-        currentUserId,
-        _headerInfo,
+    private val socketDataFlow = combine(
         observeMessageUseCase(friendId),
         observeOnlineUserUseCase(),
-        _messageInput
-    ){ currentUserId, friendUser, messages, onlineUserIds, messageInput ->
-        DetailMessageState(
-            currentUserId = currentUserId,
-            friendId = friendId,
-            friendName = friendUser?.fullName,
-            friendStatus = if (onlineUserIds.contains(friendId)) "Đang hoạt động" else "Ngoại tuyến",
-            friendAvatar = friendUser?.avatar,
+        observeTypingUseCase()
+    ) { messages, onlineUserIds, typingUserIds ->
+        SocketData(
             messages = messages,
+            onlineUserIds = onlineUserIds,
+            typingUserIds = typingUserIds
+        )
+    }
+
+    private val inputAndLoadingStateFlow = combine(
+        _messageInput,
+        _isLoading
+    ) { messageInput, isLoading ->
+        InputAndLoadingState(
             messageInput = messageInput,
-            isLoading = _isLoading.value && messages.isEmpty()
+            isLoading = isLoading
+        )
+    }
+
+    val detailMessageState = combine(
+        detailMessageContextFlow,
+        socketDataFlow,
+        inputAndLoadingStateFlow
+    ) { detailMessageContext, socketData, inputAndLoadingState ->
+        DetailMessageState(
+            currentUserId = detailMessageContext.currentUserId,
+            friendId = friendId,
+            friendName = detailMessageContext.friendUser?.fullName ?: "",
+            friendStatus = if (socketData.onlineUserIds.contains(friendId))
+                "Đang hoạt động"
+            else
+                "Ngoại tuyến",
+            friendTypingStatus = socketData.typingUserIds.contains(friendId),
+            friendAvatar = detailMessageContext.friendUser?.avatar ?: "",
+            messages = socketData.messages,
+            messageInput = inputAndLoadingState.messageInput,
+            isLoading = inputAndLoadingState.isLoading && socketData.messages.isEmpty()
         )
     }.catch { exception ->
         Timber.e("Lỗi luồng màn hình nhắn chi tiết: ${exception.getErrorMessage()}")
@@ -89,10 +142,6 @@ class DetailMessageViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = DetailMessageState(isLoading = true)
     )
-
-    fun onMessageInputChange(newValue: String) {
-        _messageInput.value = newValue
-    }
 
     private val _detailMessageEvent = Channel<DetailMessageEvent>()
     val detailMessageEvent = _detailMessageEvent.receiveAsFlow()
@@ -104,9 +153,8 @@ class DetailMessageViewModel @Inject constructor(
         markMessageAsSeen()
     }
 
-    fun getHeaderInfo() {
+    private fun getHeaderInfo() {
         viewModelScope.launch {
-
             val result = getHeaderInfoUseCase(friendId)
 
             result.onSuccess { user ->
@@ -118,7 +166,7 @@ class DetailMessageViewModel @Inject constructor(
         }
     }
 
-    fun getMessages() {
+    private fun getMessages() {
         viewModelScope.launch {
             _isLoading.value = true
             val result = getMessageUseCase(friendId)
@@ -134,6 +182,38 @@ class DetailMessageViewModel @Inject constructor(
         }
     }
 
+    fun markMessageAsSeen() {
+        viewModelScope.launch {
+            seenMessageUseCase(friendId)
+        }
+    }
+
+    private var typingJob: Job? = null
+    fun onMessageInputChange(newValue: String) {
+        _messageInput.value = newValue
+
+        if (newValue.isEmpty()) {
+            if (typingJob?.isActive == true) {
+                // clear job and return
+                typingJob?.cancel()
+                typingJob = null
+                viewModelScope.launch { emitTypingStopUseCase(friendId) }
+            }
+            return
+        } else {
+            if (typingJob?.isActive != true) {
+                viewModelScope.launch { emitTypingStartUseCase(friendId) }
+            }
+
+            // reset old timer
+            typingJob?.cancel()
+            typingJob = viewModelScope.launch {
+                delay(3000)
+                emitTypingStopUseCase(friendId)
+            }
+        }
+    }
+
     fun sendMessage() {
         val content = _messageInput.value.trim()
         if (content.isEmpty()) return
@@ -144,13 +224,11 @@ class DetailMessageViewModel @Inject constructor(
                 receiverId = friendId
             )
 
-            _messageInput.value = ""
-        }
-    }
+            typingJob?.cancel()
+            typingJob = null
+            viewModelScope.launch { emitTypingStopUseCase(friendId) }
 
-    fun markMessageAsSeen() {
-        viewModelScope.launch {
-            seenMessageUseCase(friendId)
+            _messageInput.value = ""
         }
     }
 }

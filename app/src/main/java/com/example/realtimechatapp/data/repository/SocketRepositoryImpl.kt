@@ -31,7 +31,7 @@ class SocketRepositoryImpl @Inject constructor(
     private val tokenManager: TokenManager,
     private val gson: Gson,
     private val baseUrl: String
-): SocketRepository {
+) : SocketRepository {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var socket: Socket? = null
 
@@ -42,16 +42,22 @@ class SocketRepositoryImpl @Inject constructor(
     private val _messageSeenFlow = MutableSharedFlow<MessageSeenDto>()
     override fun observeMessageSeen(): Flow<MessageSeenDto> = _messageSeenFlow.asSharedFlow()
 
+    // each id in set is unique
     private val _onlineUserIds = MutableStateFlow<Set<String>>(emptySet())
     override fun observeOnlineUserIds(): Flow<Set<String>> = _onlineUserIds.asStateFlow()
+
+    private val _typingUserIds = MutableStateFlow<Set<String>>(emptySet())
+    override fun observeTypingStatus(): Flow<Set<String>> = _typingUserIds.asStateFlow()
 
     private val _socketConnectionState = MutableStateFlow<SocketConnectionState>(
         SocketConnectionState.Disconnected
     )
-    override fun observeConnectionState(): Flow<SocketConnectionState> = _socketConnectionState.asStateFlow()
+
+    override fun observeConnectionState(): Flow<SocketConnectionState> =
+        _socketConnectionState.asStateFlow()
 
     override suspend fun connect() {
-        if (socket?.connected() == true){
+        if (socket?.connected() == true) {
             Timber.d("Socket đã kết nối trước đó")
             return
         }
@@ -71,6 +77,7 @@ class SocketRepositoryImpl @Inject constructor(
         setupSocketConnectionListener()
         setupMessageListener()
         setupOnlineUserIdsListener()
+        setupTypingUserIdsListener()
 
         socket?.connect()
     }
@@ -78,6 +85,8 @@ class SocketRepositoryImpl @Inject constructor(
     override suspend fun disconnect() {
         Timber.d("Ngắt kết nối socket...")
         _onlineUserIds.value = emptySet()
+        _typingUserIds.value = emptySet()
+
         socket?.let { socket ->
             socket.disconnect()
             socket.off()
@@ -88,22 +97,24 @@ class SocketRepositoryImpl @Inject constructor(
 
     override suspend fun isConnected(): Boolean = socket?.connected() ?: false
 
-    private fun setupSocketConnectionListener(){
-        socket?.on(Socket.EVENT_CONNECT){
+    private fun setupSocketConnectionListener() {
+        socket?.on(Socket.EVENT_CONNECT) {
             Timber.d(Socket.EVENT_CONNECT)
             _socketConnectionState.value = SocketConnectionState.Connected
         }
 
-        socket?.on(Socket.EVENT_DISCONNECT){
+        socket?.on(Socket.EVENT_DISCONNECT) {
             _onlineUserIds.value = emptySet()
+            _typingUserIds.value = emptySet()
+
             Timber.e(Socket.EVENT_DISCONNECT)
             _socketConnectionState.value = SocketConnectionState.Disconnected
         }
 
-        socket?.on(Socket.EVENT_CONNECT_ERROR){ args ->
+        socket?.on(Socket.EVENT_CONNECT_ERROR) { args ->
             val error = args.firstOrNull()?.toString() ?: "Unknown Error"
 
-            if (error.contains("401") || error.contains("unauthorized")){
+            if (error.contains("401") || error.contains("unauthorized")) {
                 scope.launch {
                     tokenManager.deleteToken()
                     socket?.disconnect()
@@ -115,9 +126,9 @@ class SocketRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun setupMessageListener(){
-        socket?.on(SocketEvents.RECEIVE_MESSAGE){ args ->
-            if (args.isNotEmpty()){
+    private fun setupMessageListener() {
+        socket?.on(SocketEvents.RECEIVE_MESSAGE) { args ->
+            if (args.isNotEmpty()) {
                 val rawJsonData = args[0].toString()
                 Timber.d("Raw json: $rawJsonData")
 
@@ -134,8 +145,8 @@ class SocketRepositoryImpl @Inject constructor(
             }
         }
 
-        socket?.on(SocketEvents.SEEN_MESSAGE){ args ->
-            if (args.isNotEmpty()){
+        socket?.on(SocketEvents.SEEN_MESSAGE) { args ->
+            if (args.isNotEmpty()) {
                 val rawJsonData = args[0].toString()
                 Timber.d("Raw json: $rawJsonData")
 
@@ -146,7 +157,7 @@ class SocketRepositoryImpl @Inject constructor(
                         _messageSeenFlow.emit(messageSeenDto)
                         Timber.d("Đã bắn dữ liệu đã đọc vào flow: $messageSeenDto")
                     }
-                } catch (e: Exception){
+                } catch (e: Exception) {
                     Timber.e("Parse JSON thất bại: ${e.message}")
                 }
             }
@@ -154,7 +165,7 @@ class SocketRepositoryImpl @Inject constructor(
     }
 
     private fun setupOnlineUserIdsListener() {
-        socket?.on(SocketEvents.NOTIFY_ONLINE_LIST){ args ->
+        socket?.on(SocketEvents.NOTIFY_ONLINE_LIST) { args ->
             val data = args[0] as JSONArray
             val ids = mutableSetOf<String>()
 
@@ -164,18 +175,34 @@ class SocketRepositoryImpl @Inject constructor(
             _onlineUserIds.value = ids
         }
 
-        socket?.on(SocketEvents.NOTIFY_USER_ONLINE){ args ->
+        socket?.on(SocketEvents.NOTIFY_USER_ONLINE) { args ->
             val data = args[0] as JSONObject
             val id = data.getString("id")
 
             _onlineUserIds.update { it + id }
         }
 
-        socket?.on(SocketEvents.NOTIFY_USER_OFFLINE){ args ->
+        socket?.on(SocketEvents.NOTIFY_USER_OFFLINE) { args ->
             val data = args[0] as JSONObject
             val id = data.getString("id")
 
             _onlineUserIds.update { it - id }
+        }
+    }
+
+    private fun setupTypingUserIdsListener() {
+        socket?.on(SocketEvents.TYPING_START) { args ->
+            val data = args[0] as JSONObject
+            val id = data.getString("senderId")
+
+            _typingUserIds.update { it + id }
+        }
+
+        socket?.on(SocketEvents.TYPING_STOP) { args ->
+            val data = args[0] as JSONObject
+            val id = data.getString("senderId")
+
+            _typingUserIds.update { it - id }
         }
     }
 
@@ -190,8 +217,8 @@ class SocketRepositoryImpl @Inject constructor(
         val jsonString = gson.toJson(message)
         val jsonObject = JSONObject(jsonString)
 
-        socket?.emit(SocketEvents.SEND_MESSAGE, jsonObject, Ack{ args ->
-            if (args.isNotEmpty()){
+        socket?.emit(SocketEvents.SEND_MESSAGE, jsonObject, Ack { args ->
+            if (args.isNotEmpty()) {
                 val response = args[0] as JSONObject
                 val isSuccess = response.getBoolean("success")
 
@@ -217,5 +244,19 @@ class SocketRepositoryImpl @Inject constructor(
         val jsonObject = JSONObject(jsonString)
 
         socket?.emit(SocketEvents.SEEN_MESSAGE, jsonObject)
+    }
+
+    override suspend fun emitTypingStart(receiverId: String) {
+        val jsonObject = JSONObject().apply { put("receiverId", receiverId) }
+        socket?.emit(SocketEvents.TYPING_START, jsonObject)
+    }
+
+    override suspend fun emitTypingStop(receiverId: String) {
+        // map conversion (shorter, but creates a middle-man map)
+        // val data = JSONObject(mapOf("receiverId" to receiverId))
+
+        // direct put (standard)
+        val jsonObject = JSONObject().apply { put("receiverId", receiverId) }
+        socket?.emit(SocketEvents.TYPING_STOP, jsonObject)
     }
 }

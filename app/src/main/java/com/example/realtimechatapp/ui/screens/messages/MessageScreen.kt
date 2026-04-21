@@ -81,6 +81,7 @@ fun MessageScreen(
                             unreadCount = user.unreadCount,
                             lastMessage = user.lastMessage,
                             isOnline = user.isOnline,
+                            isTyping = user.isTyping,
                             onItemClicked = {
                                 navController.navigate(Screen.DetailMessage.createRoute(user.id))
                             }

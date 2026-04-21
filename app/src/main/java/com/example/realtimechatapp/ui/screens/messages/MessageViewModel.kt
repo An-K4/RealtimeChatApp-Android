@@ -9,6 +9,7 @@ import com.example.realtimechatapp.domain.usecase.messages.GetMessageContactUseC
 import com.example.realtimechatapp.domain.usecase.socket.ConnectSocketUseCase
 import com.example.realtimechatapp.domain.usecase.socket.ObserveMessageContactUseCase
 import com.example.realtimechatapp.domain.usecase.socket.ObserveOnlineUserUseCase
+import com.example.realtimechatapp.domain.usecase.socket.ObserveTypingUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +25,7 @@ class MessageViewModel @Inject constructor(
     private val getMessageContactUseCase: GetMessageContactUseCase,
     private val observeMessageContactUseCase: ObserveMessageContactUseCase,
     private val observeOnlineUserUseCase: ObserveOnlineUserUseCase,
+    private val observeTypingUseCase: ObserveTypingUseCase,
     private val connectSocketUseCase: ConnectSocketUseCase,
     private val tokenManager: TokenManager
 ) : ViewModel() {
@@ -42,12 +44,16 @@ class MessageViewModel @Inject constructor(
     val messageState = combine(
         observeMessageContactUseCase(),
         observeOnlineUserUseCase(),
+        observeTypingUseCase(),
         _isLoading
-    ){ messageContacts, onlineUserIds, isLoading ->
+    ){ messageContacts, onlineUserIds, typingUserIds, isLoading ->
         MessageState(
             isLoading = isLoading && messageContacts.isEmpty(),
             users = messageContacts.map { contact ->
-                contact.copy(isOnline = onlineUserIds.contains(contact.id))
+                contact.copy(
+                    isOnline = onlineUserIds.contains(contact.id),
+                    isTyping = typingUserIds.contains(contact.id)
+                )
             }
         )
     }.stateIn(
