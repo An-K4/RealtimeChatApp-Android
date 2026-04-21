@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -49,24 +51,26 @@ fun SignupScreen(
 ) {
     val signupState by authViewModel.signupState.collectAsStateWithLifecycle()
     var dialogState by remember { mutableStateOf<AuthViewModel.AuthEvent?>(null) }
+    val scrollState = rememberScrollState()
     val lifecycleOwner = LocalLifecycleOwner.current
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
-            if (uri != null){
+            if (uri != null) {
                 authViewModel.onSignupAvatarChange(uri)
             }
         }
     )
 
     LaunchedEffect(Unit) {
-        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED){
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             authViewModel.authEvent.collect { event ->
-                when(event){
+                when (event) {
                     is AuthViewModel.AuthEvent.AuthSuccess -> {
                         dialogState = event
                     }
+
                     is AuthViewModel.AuthEvent.Failure -> {
                         dialogState = event
                     }
@@ -75,164 +79,162 @@ fun SignupScreen(
         }
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ){
-        Column(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        AvatarPicker(
+            currentAvatar = signupState.avatar,
+            onAvatarPickerClick = {
+                photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            }
+        )
+
+        Spacer(modifier = Modifier.size(20.dp))
+
+        OutlinedTextField(
+            value = signupState.username,
+            onValueChange = { authViewModel.onSignupUsernameChange(it) },
+            label = { Text("Tên đăng nhập") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = RealtimeGreen,
+                cursorColor = Color.Gray
+            )
+        )
+
+        Spacer(modifier = Modifier.size(16.dp))
+
+        OutlinedTextField(
+            value = signupState.password,
+            onValueChange = { authViewModel.onSignupPasswordChange(it) },
+            label = { Text("Mật khẩu") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = RealtimeGreen,
+                cursorColor = Color.Gray
+            )
+        )
+
+        Spacer(modifier = Modifier.size(16.dp))
+
+        OutlinedTextField(
+            value = signupState.passwordRetype,
+            onValueChange = { authViewModel.onSignupPasswordRetypeChange(it) },
+            label = { Text("Nhập lại mật khẩu") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = RealtimeGreen,
+                cursorColor = Color.Gray
+            )
+        )
+
+        Spacer(modifier = Modifier.size(16.dp))
+
+        OutlinedTextField(
+            value = signupState.fullName,
+            onValueChange = { authViewModel.onSignupFullNameChange(it) },
+            label = { Text("Họ và tên") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = RealtimeGreen,
+                cursorColor = Color.Gray
+            )
+        )
+
+        Spacer(modifier = Modifier.size(16.dp))
+
+        OutlinedTextField(
+            value = signupState.email,
+            onValueChange = { authViewModel.onSignupEmailChange(it) },
+            label = { Text("Email") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = RealtimeGreen,
+                cursorColor = Color.Gray
+            )
+        )
+
+        Spacer(modifier = Modifier.size(20.dp))
+
+        Button(
+            onClick = { authViewModel.signup() },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .padding(10.dp),
+            enabled = !signupState.isLoading,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = RealtimeGreen,
+                contentColor = Color.White
+            ),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = 8.dp,
+                pressedElevation = 4.dp
+            )
         ) {
-            AvatarPicker(
-                currentAvatar = signupState.avatar,
-                onAvatarPickerClick = {
-                    photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                }
-            )
-
-            Spacer(modifier = Modifier.size(20.dp))
-
-            OutlinedTextField(
-                value = signupState.username,
-                onValueChange = { authViewModel.onSignupUsernameChange(it) },
-                label = { Text("Tên đăng nhập") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = RealtimeGreen,
-                    cursorColor = Color.Gray
+            if (signupState.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
-            )
+            } else {
+                Text("Đăng ký")
+            }
+        }
 
-            Spacer(modifier = Modifier.size(16.dp))
+        Spacer(modifier = Modifier.size(16.dp))
 
-            OutlinedTextField(
-                value = signupState.password,
-                onValueChange = { authViewModel.onSignupPasswordChange(it) },
-                label = { Text("Mật khẩu") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = RealtimeGreen,
-                    cursorColor = Color.Gray
-                )
-            )
-
-            Spacer(modifier = Modifier.size(16.dp))
-
-            OutlinedTextField(
-                value = signupState.passwordRetype,
-                onValueChange = { authViewModel.onSignupPasswordRetypeChange(it) },
-                label = { Text("Nhập lại mật khẩu") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = RealtimeGreen,
-                    cursorColor = Color.Gray
-                )
-            )
-
-            Spacer(modifier = Modifier.size(16.dp))
-
-            OutlinedTextField(
-                value = signupState.fullName,
-                onValueChange = { authViewModel.onSignupFullNameChange(it) },
-                label = { Text("Họ và tên") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = RealtimeGreen,
-                    cursorColor = Color.Gray
-                )
-            )
-
-            Spacer(modifier = Modifier.size(16.dp))
-
-            OutlinedTextField(
-                value = signupState.email,
-                onValueChange = { authViewModel.onSignupEmailChange(it) },
-                label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = RealtimeGreen,
-                    cursorColor = Color.Gray
-                )
-            )
-
-            Spacer(modifier = Modifier.size(20.dp))
-
-            Button(
-                onClick = { authViewModel.signup() },
-                modifier = Modifier.fillMaxWidth().padding(10.dp),
-                enabled = !signupState.isLoading,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = RealtimeGreen,
-                    contentColor = Color.White
-                ),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 8.dp,
-                    pressedElevation = 4.dp
-                )
-            ) {
-                if (signupState.isLoading){
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                } else {
-                    Text("Đăng ký")
+        CustomClickableText(
+            "Bạn đã có tài khoản? ",
+            "Đăng nhập",
+            "login",
+            "",
+            "",
+            onTextClicked = {
+                navController.navigate(Screen.Login.route) {
+                    popUpTo(Screen.Signup.route) { inclusive = true }
                 }
             }
+        )
+    }
 
-            Spacer(modifier = Modifier.size(16.dp))
-
-            CustomClickableText(
-                "Bạn đã có tài khoản? ",
-                "Đăng nhập",
-                "login",
-                "",
-                "",
-                onTextClicked = {
-                    navController.navigate(Screen.Login.route){
-                        popUpTo(Screen.Signup.route){ inclusive = true }
-                    }
+    if (dialogState is AuthViewModel.AuthEvent.AuthSuccess) {
+        NotificationDialog(
+            title = "Thành Công",
+            message = "Đăng ký thành công, chuyển hướng về trang đăng nhập.",
+            isSuccess = true,
+            onDismiss = {
+                dialogState = null
+                navController.navigate(Screen.Login.route) {
+                    popUpTo(Screen.Signup.route) { inclusive = true }
                 }
-            )
-        }
+            }
+        )
+    }
 
-        if(dialogState is AuthViewModel.AuthEvent.AuthSuccess){
-            NotificationDialog(
-                title = "Thành Công",
-                message = "Đăng ký thành công, chuyển hướng về trang đăng nhập.",
-                isSuccess = true,
-                onDismiss = {
-                    dialogState = null
-                    navController.navigate(Screen.Login.route){
-                        popUpTo(Screen.Signup.route){ inclusive = true }
-                    }
-                }
-            )
-        }
-
-        if(dialogState is AuthViewModel.AuthEvent.Failure){
-            val msg = (dialogState as AuthViewModel.AuthEvent.Failure).message
-            NotificationDialog(
-                title = "Lỗi Đăng Nhập",
-                message = msg,
-                isSuccess = false,
-                onDismiss = { dialogState = null }
-            )
-        }
+    if (dialogState is AuthViewModel.AuthEvent.Failure) {
+        val msg = (dialogState as AuthViewModel.AuthEvent.Failure).message
+        NotificationDialog(
+            title = "Lỗi Đăng Nhập",
+            message = msg,
+            isSuccess = false,
+            onDismiss = { dialogState = null }
+        )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun SignupUI(){
+fun SignupUI() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -319,7 +321,7 @@ fun SignupUI(){
             Spacer(modifier = Modifier.size(20.dp))
 
             Button(
-                onClick = {  },
+                onClick = { },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(10.dp),
