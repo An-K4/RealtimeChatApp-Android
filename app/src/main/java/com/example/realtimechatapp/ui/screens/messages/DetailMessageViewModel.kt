@@ -79,7 +79,9 @@ class DetailMessageViewModel @Inject constructor(
         val isLoading: Boolean
     )
 
-    private val currentUserId = flow { emit(getCurrentUserIdUseCase()) }
+    private val currentUserId = flow { emit(getCurrentUserIdUseCase()) }.catch { exception ->
+        Timber.e("Lỗi lấy id người dùng hiện tại: ${exception.getErrorMessage()}")
+    }
     private val friendId: String =
         checkNotNull(savedStateHandle[Screen.DetailMessage.ARG_FRIEND_ID])
     private val _messageInput = MutableStateFlow("")
@@ -94,9 +96,18 @@ class DetailMessageViewModel @Inject constructor(
         }
 
     private val socketDataFlow = combine(
-        observeMessageUseCase(friendId),
-        observeOnlineUserUseCase(),
-        observeTypingUseCase()
+        observeMessageUseCase(friendId).catch { exception ->
+            Timber.e("Lỗi luồng DB Message: ${exception.getErrorMessage()}")
+            emit(emptyList())
+        },
+        observeOnlineUserUseCase().catch { exception ->
+            Timber.e("Lỗi luồng user online: ${exception.getErrorMessage()}")
+            emit(emptySet())
+        },
+        observeTypingUseCase().catch { exception ->
+            Timber.e("Lỗi luồng user typing: ${exception.getErrorMessage()}")
+            emit(emptySet())
+        }
     ) { messages, onlineUserIds, typingUserIds ->
         SocketData(
             messages = messages,
@@ -105,6 +116,7 @@ class DetailMessageViewModel @Inject constructor(
         )
     }
 
+    // mutable state flows don't throw exception
     private val inputAndLoadingStateFlow = combine(
         _messageInput,
         _isLoading

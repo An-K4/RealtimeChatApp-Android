@@ -14,10 +14,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -42,9 +44,18 @@ class MessageViewModel @Inject constructor(
 
     private val _isLoading = MutableStateFlow(false)
     val messageState = combine(
-        observeMessageContactUseCase(),
-        observeOnlineUserUseCase(),
-        observeTypingUseCase(),
+        observeMessageContactUseCase().catch { exception ->
+            Timber.e("Lỗi luồng lấy danh sách người dùng: ${exception.getErrorMessage()}")
+            emit(emptyList())
+        },
+        observeOnlineUserUseCase().catch { exception ->
+            Timber.e("Lỗi luồng user online: ${exception.getErrorMessage()}")
+            emit(emptySet())
+        },
+        observeTypingUseCase().catch { exception ->
+            Timber.e("Lỗi luồng user typing: ${exception.getErrorMessage()}")
+            emit(emptySet())
+        },
         _isLoading
     ){ messageContacts, onlineUserIds, typingUserIds, isLoading ->
         MessageState(
@@ -56,6 +67,9 @@ class MessageViewModel @Inject constructor(
                 )
             }
         )
+    }.catch { exception ->
+        Timber.e("Lỗi luồng màn hình tin nhắn: ${exception.getErrorMessage()}")
+        _messageEvent.send(MessageEvent.Failure(exception.getErrorMessage()))
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
