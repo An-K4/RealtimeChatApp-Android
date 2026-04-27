@@ -1,0 +1,79 @@
+package com.example.realtimechatapp.ui.screens.more
+
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import com.example.realtimechatapp.ui.components.DropDownSettingItem
+import com.example.realtimechatapp.ui.components.ToggleSettingItem
+
+@Composable
+fun MoreScreen(
+    navController: NavController,
+    moreViewModel: MoreViewModel = hiltViewModel()
+){
+    LazyColumn(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        item { Spacer(modifier = Modifier.height(10.dp)) }
+
+        item {
+            DropDownSettingItem(
+                icon = Icons.Default.Language,
+                title = "Ngôn Ngữ",
+                options = listOf("Tiếng Việt", "English"),
+                selectedOption = "Tiếng Việt",
+                onOptionSelected = {}
+            )
+        }
+
+        item {
+            ToggleSettingItem(
+                icon = Icons.Default.DarkMode,
+                title = "Chế Độ Tối",
+                isChecked = false,
+                onCheckedChange = {}
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun Preview(){
+    LazyColumn(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        item {
+            DropDownSettingItem(
+                icon = Icons.Default.Language,
+                title = "Ngôn Ngữ",
+                options = listOf("Tiếng Việt", "English"),
+                selectedOption = "Tiếng Việt",
+                onOptionSelected = {
+
+                }
+            )
+        }
+
+        item {
+            ToggleSettingItem(
+                icon = Icons.Default.DarkMode,
+                title = "Chế Độ Tối",
+                isChecked = false,
+                onCheckedChange = {
+
+                }
+            )
+        }
+    }
+}

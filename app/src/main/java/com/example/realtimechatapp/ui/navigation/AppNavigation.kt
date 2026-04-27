@@ -21,6 +21,7 @@ import com.example.realtimechatapp.ui.screens.groups.DetailGroupScreen
 import com.example.realtimechatapp.ui.screens.groups.GroupScreen
 import com.example.realtimechatapp.ui.screens.messages.DetailMessageScreen
 import com.example.realtimechatapp.ui.screens.messages.MessageScreen
+import com.example.realtimechatapp.ui.screens.more.MoreScreen
 import com.example.realtimechatapp.ui.screens.profile.ProfileScreen
 
 @Composable
@@ -123,7 +124,7 @@ fun AppNavigation() {
             }
 
             composable(Screen.More.route) {
-                MessageScreen(navController)
+                MoreScreen(navController)
             }
         }
     }
