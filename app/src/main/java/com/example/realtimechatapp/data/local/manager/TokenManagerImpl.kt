@@ -4,28 +4,29 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.example.realtimechatapp.domain.repository.TokenManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
-class TokenManager @Inject constructor(
+class TokenManagerImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>
-) {
+): TokenManager {
     companion object {
         private val TOKEN_KEY = stringPreferencesKey("jwt_token")
     }
 
-    suspend fun saveToken(token: String){
+    override suspend fun saveToken(token: String){
         dataStore.edit { prefs ->
             prefs[TOKEN_KEY] = token
         }
     }
 
-    val token: Flow<String?> = dataStore.data.map { prefs ->
+    override val token: Flow<String?> = dataStore.data.map { prefs ->
         prefs[TOKEN_KEY]
     }
 
-    suspend fun deleteToken(){
+    override suspend fun deleteToken(){
         dataStore.edit { prefs ->
             prefs.remove(TOKEN_KEY)
         }
