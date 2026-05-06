@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.realtimechatapp.common.FileUtils
 import com.example.realtimechatapp.common.ImageUtils
 import com.example.realtimechatapp.common.getErrorMessage
-import com.example.realtimechatapp.data.local.manager.TokenManager
+import com.example.realtimechatapp.data.local.manager.TokenManagerImpl
 import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.usecase.auth.LoginUseCase
 import com.example.realtimechatapp.domain.usecase.auth.SignupUseCase
@@ -28,7 +28,7 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val signupUseCase: SignupUseCase,
-    private val tokenManager: TokenManager,
+    private val tokenManagerImpl: TokenManagerImpl,
     private val currentUserManager: CurrentUserManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
@@ -103,17 +103,17 @@ class AuthViewModel @Inject constructor(
             _isLoading.value = true
 
             try {
-                val token = tokenManager.token.first()
+                val token = tokenManagerImpl.token.first()
                 val currentUserId = currentUserManager.getCurrentUserId()
 
-                if (!token.isNullOrEmpty() && currentUserId.isNotEmpty()){
+                if (!token.isNullOrEmpty() && currentUserId.isNotEmpty()) {
                     _authEvent.send(AuthEvent.AuthSuccess)
                 } else {
                     _isLoading.value = false
                 }
-            } catch (e: Exception){
+            } catch (e: Exception) {
                 _isLoading.value = false
-                Timber.d(e.getErrorMessage())
+                Timber.d(e.getErrorMessage().asString(context))
             } finally {
                 _isLoading.value = false
             }
@@ -129,7 +129,7 @@ class AuthViewModel @Inject constructor(
             result.onSuccess { user ->
                 _authEvent.send(AuthEvent.AuthSuccess)
             }.onFailure { exception ->
-                _authEvent.send(AuthEvent.Failure(exception.getErrorMessage()))
+                _authEvent.send(AuthEvent.Failure(exception.getErrorMessage().asString(context)))
             }
         }
     }
@@ -138,32 +138,26 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             var compressAvatar: File? = null
 
-            if (_signupState.value.password != _signupState.value.passwordRetype) {
-                _authEvent.send(AuthEvent.Failure("Mật khẩu xác nhận không khớp"))
-            } else {
-                _signupState.update { it.copy(isLoading = true) }
+            _signupState.update { it.copy(isLoading = true) }
 
-                _signupState.value.avatar?.let { uri ->
-                    Timber.d("Avatar tải lên: %s", uri)
-                    val file = FileUtils.getFileFromUri(context, uri)
-                    file?.let {
-                        Timber.d("Lấy file từ uri thành công, bắt đầu nén: %s", file.absolutePath)
-                        compressAvatar = ImageUtils.compressImageFile(it)
-                    }
+            _signupState.value.avatar?.let { uri ->
+                Timber.d("Avatar tải lên: %s", uri)
+                val file = FileUtils.getFileFromUri(context, uri)
+                file?.let {
+                    Timber.d("Lấy file từ uri thành công, bắt đầu nén: %s", file.absolutePath)
+                    compressAvatar = ImageUtils.compressImageFile(it)
                 }
-
-                val result = with(_signupState.value) {
-                    signupUseCase(compressAvatar, username, password, fullName, email)
-                }
-
-                result.onSuccess { message ->
-                    _authEvent.send(AuthEvent.AuthSuccess)
-                }.onFailure { exception ->
-                    _authEvent.send(AuthEvent.Failure(exception.getErrorMessage()))
-                }
-
-                _signupState.update { it.copy(isLoading = false) }
             }
+
+            with(_signupState.value) {
+                signupUseCase(compressAvatar, username, password, passwordRetype, fullName, email)
+            }.onSuccess {
+                _authEvent.send(AuthEvent.AuthSuccess)
+            }.onFailure { exception ->
+                _authEvent.send(AuthEvent.Failure(exception.getErrorMessage().asString(context)))
+            }
+
+            _signupState.update { it.copy(isLoading = false) }
         }
     }
 }

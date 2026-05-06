@@ -1,5 +1,6 @@
 package com.example.realtimechatapp.ui.screens.groups
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,6 +12,7 @@ import com.example.realtimechatapp.domain.usecase.groups.GetGroupInfoUseCase
 import com.example.realtimechatapp.domain.usecase.groups.GetGroupMessageUseCase
 import com.example.realtimechatapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,7 +27,8 @@ class DetailGroupViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase,
     private val getGroupMessageUseCase: GetGroupMessageUseCase,
-    private val getGroupInfoUseCase: GetGroupInfoUseCase
+    private val getGroupInfoUseCase: GetGroupInfoUseCase,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
     data class DetailGroupState(
         val currentUserId: String = "",
@@ -83,7 +86,7 @@ class DetailGroupViewModel @Inject constructor(
                 _detailGroupState.update { it.copy(groupMessages = groupMessages, isLoading = false) }
                 Timber.d(groupMessages.toString())
             }.onFailure { exception ->
-                _detailGroupEvent.send(DetailGroupEvent.Failure(exception.getErrorMessage()))
+                _detailGroupEvent.send(DetailGroupEvent.Failure(exception.getErrorMessage().asString(context)))
                 _detailGroupState.update { it.copy(isLoading = false) }
             }
         }
@@ -105,7 +108,7 @@ class DetailGroupViewModel @Inject constructor(
                     )
                 }
             }.onFailure { exception ->
-                _detailGroupEvent.send(DetailGroupEvent.Failure(exception.getErrorMessage()))
+                _detailGroupEvent.send(DetailGroupEvent.Failure(exception.getErrorMessage().asString(context)))
             }
         }
     }

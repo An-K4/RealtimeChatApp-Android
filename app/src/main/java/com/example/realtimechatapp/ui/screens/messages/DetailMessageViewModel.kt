@@ -1,8 +1,11 @@
 package com.example.realtimechatapp.ui.screens.messages
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.realtimechatapp.R
+import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.model.User
@@ -18,6 +21,7 @@ import com.example.realtimechatapp.domain.usecase.socket.SendMessageUseCase
 import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import com.example.realtimechatapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -44,7 +48,8 @@ class DetailMessageViewModel @Inject constructor(
     private val sendMessageUseCase: SendMessageUseCase,
     private val seenMessageUseCase: SeenMessageUseCase,
     private val emitTypingStartUseCase: EmitTypingStartUseCase,
-    private val emitTypingStopUseCase: EmitTypingStopUseCase
+    private val emitTypingStopUseCase: EmitTypingStopUseCase,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
     data class DetailMessageState(
         val currentUserId: String = "",
@@ -80,7 +85,7 @@ class DetailMessageViewModel @Inject constructor(
     )
 
     private val currentUserId = flow { emit(getCurrentUserIdUseCase()) }.catch { exception ->
-        Timber.e("Lỗi lấy id người dùng hiện tại: ${exception.getErrorMessage()}")
+        Timber.e(exception, "Lỗi lấy id người dùng hiện tại")
     }
     private val friendId: String =
         checkNotNull(savedStateHandle[Screen.DetailMessage.ARG_FRIEND_ID])
@@ -97,15 +102,15 @@ class DetailMessageViewModel @Inject constructor(
 
     private val socketDataFlow = combine(
         observeMessageUseCase(friendId).catch { exception ->
-            Timber.e("Lỗi luồng DB Message: ${exception.getErrorMessage()}")
+            Timber.e(exception, "Lỗi luồng DB Message")
             emit(emptyList())
         },
         observeOnlineUserUseCase().catch { exception ->
-            Timber.e("Lỗi luồng user online: ${exception.getErrorMessage()}")
+            Timber.e(exception, "Lỗi luồng user online")
             emit(emptySet())
         },
         observeTypingUseCase().catch { exception ->
-            Timber.e("Lỗi luồng user typing: ${exception.getErrorMessage()}")
+            Timber.e(exception, "Lỗi luồng user typing")
             emit(emptySet())
         }
     ) { messages, onlineUserIds, typingUserIds ->
@@ -137,9 +142,9 @@ class DetailMessageViewModel @Inject constructor(
             friendId = friendId,
             friendName = detailMessageContext.friendUser?.fullName ?: "",
             friendStatus = if (socketData.onlineUserIds.contains(friendId))
-                "Đang hoạt động"
+                UiText.StringResource(R.string.online).asString(context)
             else
-                "Ngoại tuyến",
+                UiText.StringResource(R.string.offline).asString(context),
             friendTypingStatus = socketData.typingUserIds.contains(friendId),
             friendAvatar = detailMessageContext.friendUser?.avatar ?: "",
             messages = socketData.messages,
@@ -147,8 +152,8 @@ class DetailMessageViewModel @Inject constructor(
             isLoading = inputAndLoadingState.isLoading && socketData.messages.isEmpty()
         )
     }.catch { exception ->
-        Timber.e("Lỗi luồng màn hình nhắn chi tiết: ${exception.getErrorMessage()}")
-        _detailMessageEvent.send(DetailMessageEvent.Failure(exception.getErrorMessage()))
+        Timber.e(exception, "Lỗi luồng màn hình nhắn chi tiết")
+        _detailMessageEvent.send(DetailMessageEvent.Failure(exception.getErrorMessage().asString(context)))
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -171,9 +176,9 @@ class DetailMessageViewModel @Inject constructor(
 
             result.onSuccess { user ->
                 _headerInfo.value = user
-                Timber.d("Thông tin người dùng: ${user.toString()}")
+                Timber.d("Thông tin người dùng: $user")
             }.onFailure { e ->
-                _detailMessageEvent.send(DetailMessageEvent.Failure(e.getErrorMessage()))
+                _detailMessageEvent.send(DetailMessageEvent.Failure(e.getErrorMessage().asString(context)))
             }
         }
     }
@@ -187,7 +192,7 @@ class DetailMessageViewModel @Inject constructor(
                 // _detailMessageEvent.send(DetailMessageEvent.GetMessageSuccess)
                 Timber.d("Lấy tin nhắn thành công")
             }.onFailure { e ->
-                _detailMessageEvent.send(DetailMessageEvent.Failure(e.getErrorMessage()))
+                _detailMessageEvent.send(DetailMessageEvent.Failure(e.getErrorMessage().asString(context)))
             }
 
             _isLoading.value = false

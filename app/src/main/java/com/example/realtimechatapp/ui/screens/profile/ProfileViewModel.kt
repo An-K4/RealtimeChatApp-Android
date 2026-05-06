@@ -4,8 +4,9 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.FileUtils
-import com.example.realtimechatapp.common.ImageUtils
+import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.usecase.auth.LogoutUseCase
 import com.example.realtimechatapp.domain.usecase.socket.DisconnectSocketUseCase
@@ -60,11 +61,11 @@ class ProfileViewModel @Inject constructor(
     )
 
     sealed class ProfileEvent {
-        object UpdateProfileConfirm: ProfileEvent()
+        object UpdateProfileConfirm : ProfileEvent()
         object UpdateProfileSuccess : ProfileEvent()
-        object ChangePasswordConfirm: ProfileEvent()
+        object ChangePasswordConfirm : ProfileEvent()
         object ChangePasswordSuccess : ProfileEvent()
-        object LogoutConfirm: ProfileEvent()
+        object LogoutConfirm : ProfileEvent()
         object LogoutSuccess : ProfileEvent()
         object NavigateToLogin : ProfileEvent()
         data class Failure(val message: String) : ProfileEvent()
@@ -95,27 +96,27 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun onUpdateFullNameChange(newValue: String) {
-        _updateProfileState.update { it.copy( fullName = newValue) }
+        _updateProfileState.update { it.copy(fullName = newValue) }
         checkUpdateEnable()
     }
 
     fun onUpdateEmailChange(newValue: String) {
-        _updateProfileState.update { it.copy( email = newValue) }
+        _updateProfileState.update { it.copy(email = newValue) }
         checkUpdateEnable()
     }
 
     fun onOldPasswordChange(newValue: String) {
-        _changePasswordState.update { it.copy( oldPassword = newValue ) }
+        _changePasswordState.update { it.copy(oldPassword = newValue) }
         checkChangePasswordEnable()
     }
 
     fun onNewPasswordChange(newValue: String) {
-        _changePasswordState.update { it.copy( newPassword = newValue ) }
+        _changePasswordState.update { it.copy(newPassword = newValue) }
         checkChangePasswordEnable()
     }
 
     fun onConfirmNewPasswordChange(newValue: String) {
-        _changePasswordState.update { it.copy( confirmNewPassword = newValue ) }
+        _changePasswordState.update { it.copy(confirmNewPassword = newValue) }
         checkChangePasswordEnable()
     }
 
@@ -130,23 +131,21 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun checkUpdateEnable(){
+    fun checkUpdateEnable() {
         val original = _profileState.value
         val update = _updateProfileState.value
 
         val isNotEmpty = update.fullName.isNotBlank() && update.email.isNotBlank()
-        val isChanged = (update.fullName != original.fullName)
-                || (update.email != original.email)
-                || (update.avatar != original.avatar)
+        val isChanged =
+            (update.fullName != original.fullName) || (update.email != original.email) || (update.avatar != original.avatar)
 
         _updateProfileState.update { it.copy(isUpdateEnable = isNotEmpty && isChanged) }
     }
 
-    fun checkChangePasswordEnable(){
+    fun checkChangePasswordEnable() {
         val currentValue = _changePasswordState.value
-        val isNotEmpty = currentValue.oldPassword.isNotBlank()
-                && currentValue.newPassword.isNotBlank()
-                && currentValue.confirmNewPassword.isNotBlank()
+        val isNotEmpty =
+            currentValue.oldPassword.isNotBlank() && currentValue.newPassword.isNotBlank() && currentValue.confirmNewPassword.isNotBlank()
 
         _changePasswordState.update { it.copy(isChangePasswordEnable = isNotEmpty) }
     }
@@ -169,13 +168,17 @@ class ProfileViewModel @Inject constructor(
                     )
                 }
             }.onFailure { exception ->
-                _profileEvent.send(ProfileEvent.Failure(exception.getErrorMessage()))
+                _profileEvent.send(
+                    ProfileEvent.Failure(
+                        exception.getErrorMessage().asString(context)
+                    )
+                )
                 _profileState.update { it.copy(isLoading = false) }
             }
         }
     }
 
-    fun showUpdateProfileConfirmDialog(){
+    fun showUpdateProfileConfirmDialog() {
         viewModelScope.launch {
             _profileEvent.send(ProfileEvent.UpdateProfileConfirm)
         }
@@ -185,81 +188,83 @@ class ProfileViewModel @Inject constructor(
         val original = _profileState.value
         val current = _updateProfileState.value
         val isAvatarChanged = original.avatar != current.avatar
-        val isInfoChanged = original.fullName != current.fullName
-                || original.email != current.email
+        val isInfoChanged = original.fullName != current.fullName || original.email != current.email
 
         viewModelScope.launch {
             try {
                 _updateProfileState.update { it.copy(isUpdating = true) }
 
-                when{
+                when {
                     isAvatarChanged && isInfoChanged -> {
-                        val avatar = _updateProfileState.value.avatar as? Uri ?: run{
-                            _profileEvent.send(ProfileEvent.Failure("Avatar không hợp lệ."))
+                        val avatar = _updateProfileState.value.avatar as? Uri ?: run {
+                            _profileEvent.send(
+                                ProfileEvent.Failure(
+                                    UiText.StringResource(R.string.invalid_avatar).asString(context)
+                                )
+                            )
                             return@launch
                         }
-                        val file = FileUtils.getFileFromUri(context, avatar)
-                        val compressedAvatar = file?.let { ImageUtils.compressImageFile(file) }
+                        val avatarFile = FileUtils.getFileFromUri(context, avatar)
 
-                        if (compressedAvatar == null){
-                            _profileEvent.send(ProfileEvent.Failure("Xử lý ảnh không thành công."))
-                            return@launch
-                        }
-
-                        val avatarDeferred = async { updateAvatarUseCase(compressedAvatar) }
-                        val infoDeferred = async { updateProfileUseCase(current.fullName, current.email) }
+                        val avatarDeferred = async { updateAvatarUseCase(avatarFile) }
+                        val infoDeferred =
+                            async { updateProfileUseCase(current.fullName, current.email) }
 
                         val updateAvatarResult = avatarDeferred.await()
                         val updateInfoResult = infoDeferred.await()
 
-                        if (updateInfoResult.isSuccess && updateAvatarResult.isSuccess){
+                        if (updateInfoResult.isSuccess && updateAvatarResult.isSuccess) {
                             val updatedInfo = updateInfoResult.getOrNull()
 
                             _profileState.update {
                                 it.copy(
                                     avatar = updateAvatarResult.getOrNull(),
-                                    fullName = updatedInfo?.fullName?:original.fullName,
-                                    email = updatedInfo?.email?:original.email
+                                    fullName = updatedInfo?.fullName ?: original.fullName,
+                                    email = updatedInfo?.email ?: original.email
                                 )
                             }
 
                             _profileEvent.send(ProfileEvent.UpdateProfileSuccess)
                         } else {
                             val errors = mutableListOf<String>()
-                            updateInfoResult.exceptionOrNull()?.let { errors.add("Profile: ${it.getErrorMessage()}") }
-                            updateAvatarResult.exceptionOrNull()?.let { errors.add("Avatar: ${it.getErrorMessage()}") }
+                            updateInfoResult.exceptionOrNull()
+                                ?.let { errors.add("Profile: ${it.getErrorMessage()}") }
+                            updateAvatarResult.exceptionOrNull()
+                                ?.let { errors.add("Avatar: ${it.getErrorMessage()}") }
                             _profileEvent.send(ProfileEvent.Failure(errors.joinToString("\n")))
                         }
                     }
+
                     isAvatarChanged -> {
                         val avatar = _updateProfileState.value.avatar as? Uri ?: run {
-                            _profileEvent.send(ProfileEvent.Failure("Avatar không hợp lệ."))
+                            _profileEvent.send(
+                                ProfileEvent.Failure(
+                                    UiText.StringResource(R.string.invalid_avatar).asString(context)
+                                )
+                            )
                             return@launch
                         }
-                        val file = FileUtils.getFileFromUri(context, avatar)
-                        val compressedAvatar = file?.let { ImageUtils.compressImageFile(file) }
+                        val avatarFile = FileUtils.getFileFromUri(context, avatar)
 
-                        if (compressedAvatar == null){
-                            _profileEvent.send(ProfileEvent.Failure("Xử lý ảnh không thành công."))
-                            return@launch
-                        }
-
-                        val updateAvatarResult = updateAvatarUseCase(compressedAvatar)
-                        if (updateAvatarResult.isSuccess){
+                        val updateAvatarResult = updateAvatarUseCase(avatarFile)
+                        if (updateAvatarResult.isSuccess) {
                             _profileState.update { it.copy(avatar = updateAvatarResult.getOrNull()) }
                             _profileEvent.send(ProfileEvent.UpdateProfileSuccess)
                         } else {
                             _profileEvent.send(
                                 ProfileEvent.Failure(
-                                    updateAvatarResult.exceptionOrNull()?.getErrorMessage()
-                                        ?: "Có lỗi gì đó đã xảy ra."
+                                    updateAvatarResult.exceptionOrNull()
+                                        ?.getErrorMessage()
+                                        ?.asString(context)
+                                        ?: context.getString(R.string.unknown_error)
                                 )
                             )
                         }
                     }
+
                     isInfoChanged -> {
                         val updateInfoResult = updateProfileUseCase(current.fullName, current.email)
-                        if (updateInfoResult.isSuccess){
+                        if (updateInfoResult.isSuccess) {
                             val updatedUser = updateInfoResult.getOrNull()
 
                             _profileState.update {
@@ -272,8 +277,10 @@ class ProfileViewModel @Inject constructor(
                         } else {
                             _profileEvent.send(
                                 ProfileEvent.Failure(
-                                    updateInfoResult.exceptionOrNull()?.getErrorMessage()
-                                        ?: "Có lỗi gì đó đã xảy ra."
+                                    updateInfoResult.exceptionOrNull()
+                                        ?.getErrorMessage()
+                                        ?.asString(context)
+                                        ?: context.getString(R.string.unknown_error)
                                 )
                             )
                         }
@@ -287,13 +294,13 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun showChangePasswordConfirmDialog(){
+    fun showChangePasswordConfirmDialog() {
         viewModelScope.launch {
             _profileEvent.send(ProfileEvent.ChangePasswordConfirm)
         }
     }
 
-    fun changePassword(){
+    fun changePassword() {
         val oldPassword = _changePasswordState.value.oldPassword
         val newPassword = _changePasswordState.value.newPassword
         val confirmNewPassword = _changePasswordState.value.confirmNewPassword
@@ -301,21 +308,15 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _changePasswordState.update { it.copy(isChanging = true) }
 
-            if (newPassword != confirmNewPassword){
-                _profileEvent.send(ProfileEvent.Failure("Mật khẩu xác nhận không trùng khớp với mật khẩu mới."))
-                return@launch
-            }
-
-            val result = changePasswordUseCase(oldPassword, newPassword)
-            result.onSuccess {
+            changePasswordUseCase(oldPassword, newPassword, confirmNewPassword).onSuccess {
                 _profileEvent.send(ProfileEvent.ChangePasswordSuccess)
             }.onFailure {
-                _profileEvent.send(ProfileEvent.Failure(it.getErrorMessage()))
+                _profileEvent.send(ProfileEvent.Failure(it.getErrorMessage().asString(context)))
             }
         }
     }
 
-    fun showLogoutConfirmDialog(){
+    fun showLogoutConfirmDialog() {
         viewModelScope.launch {
             _profileEvent.send(ProfileEvent.LogoutConfirm)
         }
@@ -324,16 +325,18 @@ class ProfileViewModel @Inject constructor(
     fun logout(showLogoutSuccessDialog: Boolean) {
         viewModelScope.launch {
             disconnectSocketUseCase()
-            val result = logoutUseCase()
-
-            result.onSuccess {
-                if (showLogoutSuccessDialog){
+            logoutUseCase().onSuccess {
+                if (showLogoutSuccessDialog) {
                     _profileEvent.send(ProfileEvent.LogoutSuccess)
                 } else {
                     _profileEvent.send(ProfileEvent.NavigateToLogin)
                 }
             }.onFailure { exception ->
-                _profileEvent.send(ProfileEvent.Failure(exception.getErrorMessage()))
+                _profileEvent.send(
+                    ProfileEvent.Failure(
+                        exception.getErrorMessage().asString(context)
+                    )
+                )
             }
         }
     }
