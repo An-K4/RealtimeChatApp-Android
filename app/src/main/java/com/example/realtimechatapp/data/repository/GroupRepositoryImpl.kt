@@ -19,6 +19,7 @@ import com.example.realtimechatapp.domain.repository.GroupRepository
 import com.example.realtimechatapp.domain.repository.NetworkChecker
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 class GroupRepositoryImpl @Inject constructor(
     private val groupApi: GroupApi,
@@ -42,6 +43,8 @@ class GroupRepositoryImpl @Inject constructor(
             Timber.d(groups.toString())
             Result.success(groups)
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
             Timber.e(e, "Lỗi lấy danh sách nhóm")
 
             if (cachedGroups.isNotEmpty()) {
@@ -87,6 +90,8 @@ class GroupRepositoryImpl @Inject constructor(
                 }
             Result.success(groupMessages)
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
             Timber.e(e, "Lỗi lấy tin nhắn nhóm")
 
             if (cachedGroupMessages.isNotEmpty()) {
@@ -125,6 +130,8 @@ class GroupRepositoryImpl @Inject constructor(
                 Result.failure(DatabaseException.RecordNotFoundException)
             }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
             Timber.e(e, "Lỗi lấy thông tin nhóm")
 
             if (cachedGroupInfo != null) {

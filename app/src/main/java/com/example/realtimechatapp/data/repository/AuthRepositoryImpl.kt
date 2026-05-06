@@ -19,6 +19,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 class AuthRepositoryImpl @Inject constructor(
     private val authApi: AuthApi,
@@ -40,7 +41,7 @@ class AuthRepositoryImpl @Inject constructor(
             // clear all old data
             // clearAllTables() is not a suspend function, so it will block the current thread
             // It needs a separate withContext(Dispatchers.IO) instead of being wrapped in safeDbCall
-            withContext(Dispatchers.IO) { localDatabase.clearAllTables() }
+            safeDbCall { localDatabase.clearAllTables() }
             Timber.d("Đã xóa toàn bộ dữ liệu")
 
             val user = response.user.toUser()
@@ -49,7 +50,7 @@ class AuthRepositoryImpl @Inject constructor(
             safeDbCall { userDao.insertUser(response.user.toUserEntity()) }
             Result.success(user)
         } catch (e: Exception) {
-            // if (e is CancellationException) throw e
+            if (e is CancellationException) throw e
 
             Timber.e(e, "Đăng nhập lỗi")
             Result.failure(e)
@@ -66,6 +67,8 @@ class AuthRepositoryImpl @Inject constructor(
             Timber.d("Tải lên thành công, url là %s", url)
             Result.success(url)
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
             Timber.e(e, "Tải lên lỗi")
             Result.failure(e)
         }
@@ -85,6 +88,8 @@ class AuthRepositoryImpl @Inject constructor(
 
             Result.success(Unit)
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
             Timber.e(e, "Đăng ký lỗi")
             Result.failure(e)
         }
@@ -96,10 +101,12 @@ class AuthRepositoryImpl @Inject constructor(
 
             tokenManager.deleteToken()
             currentUserManager.switchUser("")
-            withContext(Dispatchers.IO) { localDatabase.clearAllTables() }
+            safeDbCall { localDatabase.clearAllTables() }
             Timber.d("Đã xóa toàn bộ dữ liệu")
             Result.success(Unit)
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
             Timber.e(e, "Đăng xuất lỗi")
             Result.failure(e)
         }
@@ -127,6 +134,8 @@ class AuthRepositoryImpl @Inject constructor(
                 Result.success(userResponse.toUser())
             }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
             Timber.e(e, "Lấy thông tin cá nhân lỗi")
 
             if (cachedUser != null) {

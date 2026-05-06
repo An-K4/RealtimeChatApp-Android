@@ -14,6 +14,7 @@ import com.example.realtimechatapp.domain.repository.UserRepository
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 class UserRepositoryImpl @Inject constructor(
     private val userApi: UserApi,
@@ -33,6 +34,8 @@ class UserRepositoryImpl @Inject constructor(
             safeDbCall { userDao.updateUser(response.user.toUserEntity()) }
             Result.success(response.user.toUser())
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
             Timber.e(e, "Cập nhật thông tin thất bại")
             Result.failure(e)
         }
@@ -47,6 +50,8 @@ class UserRepositoryImpl @Inject constructor(
             safeDbCall { userDao.updateAvatar(url, userId) }
             Result.success(url)
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
             Timber.e(e, "Cập nhật thông avatar thất bại")
             Result.failure(e)
         }
@@ -62,6 +67,8 @@ class UserRepositoryImpl @Inject constructor(
             }
             Result.success(Unit)
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
             Timber.e(e, "Đổi mật khẩu thất bại")
             Result.failure(e)
         }
