@@ -2,13 +2,14 @@ package com.example.realtimechatapp.common
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
 
 object ImageUtils {
 
     // compress img
-    fun compressImageFile(file: File) : File{
+    fun compressImageFile(file: File): File? {
         return try {
             // get img from file
             val bitmap = BitmapFactory.decodeFile(file.path)
@@ -21,9 +22,9 @@ object ImageUtils {
             outputStream.close()
 
             file
-        } catch (e: Exception){
-            e.printStackTrace()
-            file
+        } catch (e: Exception) {
+            Timber.e(e, "Lỗi khi nén ảnh")
+            null
         }
     }
 }
