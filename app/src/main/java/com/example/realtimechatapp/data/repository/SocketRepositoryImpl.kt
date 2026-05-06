@@ -1,12 +1,12 @@
 package com.example.realtimechatapp.data.repository
 
-import com.example.realtimechatapp.data.local.manager.TokenManager
-import com.example.realtimechatapp.data.remote.SocketEvents
+import com.example.realtimechatapp.domain.repository.SocketEvents
 import com.example.realtimechatapp.data.remote.dto.MessageDto
 import com.example.realtimechatapp.data.remote.dto.MessageSeenDto
 import com.example.realtimechatapp.domain.model.SendMessageParam
 import com.example.realtimechatapp.domain.repository.SocketConnectionState
 import com.example.realtimechatapp.domain.repository.SocketRepository
+import com.example.realtimechatapp.domain.repository.TokenManager
 import com.google.gson.Gson
 import io.socket.client.Ack
 import io.socket.client.IO

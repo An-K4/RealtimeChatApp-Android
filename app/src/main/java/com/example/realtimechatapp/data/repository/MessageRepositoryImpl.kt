@@ -1,18 +1,18 @@
 package com.example.realtimechatapp.data.repository
 
-import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.common.isoToLong
 import com.example.realtimechatapp.data.local.dao.MessageContactDao
 import com.example.realtimechatapp.data.local.dao.MessageDao
 import com.example.realtimechatapp.data.local.dao.UserDao
-import com.example.realtimechatapp.data.local.entity.ContactEntity
 import com.example.realtimechatapp.data.local.entity.MessageEntity
 import com.example.realtimechatapp.data.local.entity.toMessageContact
 import com.example.realtimechatapp.data.local.entity.toUser
 import com.example.realtimechatapp.data.local.pojo.toMessage
 import com.example.realtimechatapp.data.remote.api.MessageApi
-import com.example.realtimechatapp.data.remote.dto.MessageDto
 import com.example.realtimechatapp.data.remote.dto.MessageSeenDto
+import com.example.realtimechatapp.data.remote.safeApiCall
+import com.example.realtimechatapp.data.local.safeDbCall
+import com.example.realtimechatapp.domain.exception.DatabaseException
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.model.MessageContact
 import com.example.realtimechatapp.domain.model.SendMessageParam
@@ -29,7 +29,6 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -42,6 +41,7 @@ class MessageRepositoryImpl @Inject constructor(
     private val networkChecker: NetworkChecker,
     private val currentUserManager: CurrentUserManager
 ) : MessageRepository {
+    // supervisor job protect coroutine when its child coroutine crash
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     init {
@@ -54,7 +54,7 @@ class MessageRepositoryImpl @Inject constructor(
                 } else {
                     messageDto.toMessageEntity()
                 }
-                messageDao.insertMessage(messageEntity)
+                safeDbCall { messageDao.insertMessage(messageEntity) }
                 Timber.d("Đã chèn tin nhắn vào db: ${messageDto.toMessageEntity()}")
             }
         }
@@ -65,15 +65,17 @@ class MessageRepositoryImpl @Inject constructor(
                 val contactId = messageDto.getMessageContactId(currentUserId)
                 val isMine = messageDto.senderId.id == currentUserId
 
-                messageContactDao.upsertMessageContact(
-                    contactId = contactId,
-                    isMine = isMine,
-                    lastMessage = messageDto.content,
-                    lastSenderName = messageDto.senderId.fullName,
-                    lastTimeStamp = messageDto.createdAt.isoToLong(),
-                    contactName = if (isMine) messageDto.receiverId?.fullName else messageDto.senderId.fullName,
-                    contactAvatar = if (isMine) messageDto.receiverId?.avatar else messageDto.senderId.avatar
-                )
+                safeDbCall {
+                    messageContactDao.upsertMessageContact(
+                        contactId = contactId,
+                        isMine = isMine,
+                        lastMessage = messageDto.content,
+                        lastSenderName = messageDto.senderId.fullName,
+                        lastTimeStamp = messageDto.createdAt.isoToLong(),
+                        contactName = if (isMine) messageDto.receiverId?.fullName else messageDto.senderId.fullName,
+                        contactAvatar = if (isMine) messageDto.receiverId?.avatar else messageDto.senderId.avatar
+                    )
+                }
                 Timber.d("Đã cập nhật tin nhắn mới đến ở contact: $contactId")
                 Timber.d("Tin nhắn mói chèn: ${messageDto.content}")
             }
@@ -90,55 +92,42 @@ class MessageRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getMessageContacts(): Result<Unit> =
-        withContext(Dispatchers.IO) {
-            return@withContext try {
-                if (networkChecker.isNetworkAvailable()) {
-                    val response = messageApi.getUsers()
-                    val users = response.users.map { it.toUserEntity() }
-                    val messageContacts = response.users.map { it.toMessageContactEntity() }
+    override suspend fun getMessageContacts(): Result<Unit> {
+            return try {
+                val response = safeApiCall(networkChecker) { messageApi.getUsers() }
+                val users = response.users.map { it.toUserEntity() }
+                val messageContacts = response.users.map { it.toMessageContactEntity() }
 
-                    Timber.d(users.toString())
+                Timber.d(users.toString())
+                safeDbCall {
                     userDao.insertAllUsers(users)
                     messageContactDao.insertAllContact(messageContacts)
-                    Result.success(Unit)
-                } else {
-                    Timber.d("Mất kết nối, lấy trong cache")
-                    Result.failure(Exception("Mất kết nối tới máy chủ"))
                 }
+                Result.success(Unit)
             } catch (e: Exception) {
-                e.printStackTrace()
+                Timber.e(e, "Lỗi lấy danh sách tin nhắn")
                 Result.failure(e)
             }
         }
 
-    override suspend fun getMessage(friendId: String): Result<Unit> = withContext(
-        Dispatchers.IO
-    ) {
-        return@withContext try {
-            if (networkChecker.isNetworkAvailable()) {
-                val response = messageApi.getMessage(friendId)
-                val responseMessages = response.messages.map { it.toMessageEntity() }
-
-                messageDao.insertAllMessage(responseMessages)
-
-                Timber.d(responseMessages.toString())
-                Result.success(Unit)
-            } else {
-                Timber.d("Mất kết nối")
-                Result.failure(Exception("Mất kết nối tới máy chủ"))
-            }
+    override suspend fun getMessage(friendId: String): Result<Unit> {
+        return try {
+            val response = safeApiCall(networkChecker) { messageApi.getMessage(friendId) }
+            val responseMessages = response.messages.map { it.toMessageEntity() }
+            safeDbCall { messageDao.insertAllMessage(responseMessages) }
+            Timber.d(responseMessages.toString())
+            Result.success(Unit)
         } catch (e: Exception) {
-            e.printStackTrace()
+            Timber.e(e, "Lỗi lấy tin nhắn của %s", friendId)
             Result.failure(e)
         }
     }
 
     override suspend fun getHeaderInfo(friendId: String): Result<User> {
         return try {
-            val userInfo = userDao.getUserById(friendId)
+            val userInfo = safeDbCall { userDao.getUserById(friendId) }
             if (userInfo == null) {
-                Result.failure(Exception("Không tìm thấy thông tin người dùng"))
+                Result.failure(DatabaseException.RecordNotFoundException)
             } else {
                 Result.success(userInfo.toUser())
             }
@@ -165,31 +154,37 @@ class MessageRepositoryImpl @Inject constructor(
     }
 
     override suspend fun sendMessage(message: SendMessageParam) {
-        Timber.d("Impl gọi socket nghe rõ trả lời")
         socketRepository.sendMessage(message)
     }
 
     override suspend fun seenMessage(friendId: String) {
-        val currentUserId = currentUserManager.getCurrentUserId()
+        try {
+            val currentUserId = currentUserManager.getCurrentUserId()
 
-        markMessageAsSeen(friendId, currentUserId)
-        messageContactDao.resetUnreadCount(friendId)
-        socketRepository.seenMessage(MessageSeenDto(friendId, currentUserId))
+            markMessageAsSeen(friendId, currentUserId)
+            safeDbCall { messageContactDao.resetUnreadCount(friendId) }
+            socketRepository.seenMessage(MessageSeenDto(friendId, currentUserId))
+        } catch (e: Exception) {
+            Timber.e(e, "Lỗi trong quá trình xem tin nhắn")
+        }
     }
 
     override suspend fun markMessageAsSeen(senderId: String, receiverId: String) {
-        val messages = messageDao.getMessagesToMarkSeen(senderId, receiverId)
+        val messages = safeDbCall { messageDao.getMessagesToMarkSeen(senderId, receiverId) }
         val markedMessages = mutableListOf<MessageEntity>()
 
-        for (msg in messages){
-            val currentSeenBy = msg.seenBy?.toMutableList()
+        for (msg in messages) {
+            // without mutableListOf(), if block is always ignored, because currentSeenBy can be null
+            val currentSeenBy = msg.seenBy?.toMutableList() // ?: mutableListOf()
 
-            if (currentSeenBy?.contains(receiverId) == false){
-                currentSeenBy.add(receiverId)
+            // or use currentSeenBy?.contains(receiverId) != true to fix this bug
+            // instead of currentSeenBy?.contains(receiverId) == false
+            if (currentSeenBy?.contains(receiverId) != true) {
+                currentSeenBy?.add(receiverId)
                 markedMessages.add(msg.copy(seenBy = currentSeenBy))
             }
         }
 
-        if (messages.isNotEmpty()) messageDao.updateMessages(markedMessages)
+        if (messages.isNotEmpty()) safeDbCall { messageDao.updateMessages(markedMessages) }
     }
 }

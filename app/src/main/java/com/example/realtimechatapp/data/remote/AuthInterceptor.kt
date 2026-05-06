@@ -1,13 +1,13 @@
 package com.example.realtimechatapp.data.remote
 
-import com.example.realtimechatapp.data.local.manager.TokenManager
+import com.example.realtimechatapp.data.local.manager.TokenManagerImpl
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 import javax.inject.Inject
 
-class AuthInterceptor @Inject constructor(private val tokenManager: TokenManager): Interceptor {
+class AuthInterceptor @Inject constructor(private val tokenManager: TokenManagerImpl): Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
         val token = runBlocking {

@@ -18,10 +18,10 @@ class NetworkCheckerImpl @Inject constructor(
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
 
         return when {
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) -> true
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true   // wifi
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true   // mobile data: 3g, 4g,..
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true   // wired: ethernet/LAN
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) -> true    // virtual private network
             else -> false
         }
     }
