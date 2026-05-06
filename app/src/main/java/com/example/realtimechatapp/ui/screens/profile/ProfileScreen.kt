@@ -62,6 +62,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
+import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.ui.components.AvatarPicker
 import com.example.realtimechatapp.ui.components.ConfirmationDialog
 import com.example.realtimechatapp.ui.components.NotificationDialog
@@ -158,9 +159,18 @@ fun ProfileScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 10.dp)
                 ) {
-                    ProfileInfoItem("Tên Đăng Nhập:", profileState.username)
-                    ProfileInfoItem("Email:", profileState.email)
-                    ProfileInfoItem("Ngày tham gia:", profileState.createdAt)
+                    ProfileInfoItem(
+                        UiText.StringResource(R.string.username_colon).asString(),
+                        profileState.username
+                    )
+                    ProfileInfoItem(
+                        UiText.StringResource(R.string.email_colon).asString(),
+                        profileState.email
+                    )
+                    ProfileInfoItem(
+                        UiText.StringResource(R.string.participate_day_colon).asString(),
+                        profileState.createdAt
+                    )
                 }
                 Spacer(modifier = Modifier.height(30.dp))
 
@@ -196,7 +206,8 @@ fun ProfileScreen(
                                     modifier = Modifier.padding(end = 10.dp)
                                 )
                                 Text(
-                                    text = "Cập Nhật Thông Tin",
+                                    text = UiText.StringResource(R.string.update_profile)
+                                        .asString(),
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp,
                                 )
@@ -220,7 +231,7 @@ fun ProfileScreen(
                                 modifier = Modifier.padding(end = 10.dp)
                             )
                             Text(
-                                text = "Đổi Mật Khẩu",
+                                text = UiText.StringResource(R.string.change_password).asString(),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp,
                             )
@@ -246,7 +257,7 @@ fun ProfileScreen(
                                 modifier = Modifier.padding(end = 10.dp)
                             )
                             Text(
-                                text = "Đăng Xuất",
+                                text = UiText.StringResource(R.string.log_out).asString(),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp,
                             )
@@ -291,7 +302,7 @@ fun ProfileScreen(
                 OutlinedTextField(
                     value = updateProfileState.fullName,
                     onValueChange = { profileViewModel.onUpdateFullNameChange(it) },
-                    label = { Text("Họ Tên") },
+                    label = { Text(UiText.StringResource(R.string.fullname).asString()) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
@@ -305,7 +316,7 @@ fun ProfileScreen(
                 OutlinedTextField(
                     value = updateProfileState.email,
                     onValueChange = { profileViewModel.onUpdateEmailChange(it) },
-                    label = { Text("Email") },
+                    label = { Text(UiText.StringResource(R.string.email).asString()) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
@@ -330,7 +341,7 @@ fun ProfileScreen(
                             .padding(10.dp)
                     ) {
                         Text(
-                            text = "Hủy",
+                            text = UiText.StringResource(R.string.cancel).asString(),
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
                         )
@@ -361,7 +372,7 @@ fun ProfileScreen(
                         )
                     ) {
                         Text(
-                            text = "Lưu",
+                            text = UiText.StringResource(R.string.save).asString(),
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
                         )
@@ -393,7 +404,7 @@ fun ProfileScreen(
                 OutlinedTextField(
                     value = changePasswordState.oldPassword,
                     onValueChange = { profileViewModel.onOldPasswordChange(it) },
-                    label = { Text("Mật Khẩu Cũ") },
+                    label = { Text(UiText.StringResource(R.string.old_password).asString()) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
@@ -407,7 +418,7 @@ fun ProfileScreen(
                 OutlinedTextField(
                     value = changePasswordState.newPassword,
                     onValueChange = { profileViewModel.onNewPasswordChange(it) },
-                    label = { Text("Mật Khẩu Mới") },
+                    label = { Text(UiText.StringResource(R.string.new_password).asString()) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
@@ -421,7 +432,11 @@ fun ProfileScreen(
                 OutlinedTextField(
                     value = changePasswordState.confirmNewPassword,
                     onValueChange = { profileViewModel.onConfirmNewPasswordChange(it) },
-                    label = { Text("Xác Nhận Mật Khẩu Mới") },
+                    label = {
+                        Text(
+                            UiText.StringResource(R.string.confirm_new_password).asString()
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
@@ -447,7 +462,7 @@ fun ProfileScreen(
                             .padding(10.dp)
                     ) {
                         Text(
-                            text = "Hủy",
+                            text = UiText.StringResource(R.string.cancel).asString(),
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
                         )
@@ -479,7 +494,7 @@ fun ProfileScreen(
                         )
                     ) {
                         Text(
-                            text = "Lưu",
+                            text = UiText.StringResource(R.string.save).asString(),
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
                         )
@@ -492,10 +507,10 @@ fun ProfileScreen(
     when (dialogState) {
         is ProfileViewModel.ProfileEvent.UpdateProfileConfirm -> {
             ConfirmationDialog(
-                title = "Thông Báo",
-                message = "Xác nhận cập nhật thông tin?",
-                dismissText = "Hủy",
-                confirmText = "Xác Nhận",
+                title = UiText.StringResource(R.string.notification).asString(),
+                message = UiText.StringResource(R.string.update_profile_confirm_warning).asString(),
+                dismissText = UiText.StringResource(R.string.cancel).asString(),
+                confirmText = UiText.StringResource(R.string.confirm).asString(),
                 isDangerConfirm = false,
                 onDismiss = { dialogState = null },
                 onConfirm = {
@@ -507,8 +522,9 @@ fun ProfileScreen(
 
         is ProfileViewModel.ProfileEvent.UpdateProfileSuccess -> {
             NotificationDialog(
-                title = "Thành Công",
-                message = "Cập nhật thông tin thành công!",
+                title = UiText.StringResource(R.string.success).asString(),
+                message = UiText.StringResource(R.string.update_profile_success_notification)
+                    .asString(),
                 isSuccess = true,
                 onDismiss = { dialogState = null }
             )
@@ -516,10 +532,11 @@ fun ProfileScreen(
 
         is ProfileViewModel.ProfileEvent.ChangePasswordConfirm -> {
             ConfirmationDialog(
-                title = "Thông Báo",
-                message = "Bạn có chắc chắn muốn đổi mật khẩu?",
-                dismissText = "Hủy",
-                confirmText = "Xác Nhận",
+                title = UiText.StringResource(R.string.notification).asString(),
+                message = UiText.StringResource(R.string.change_password_confirm_warning)
+                    .asString(),
+                dismissText = UiText.StringResource(R.string.cancel).asString(),
+                confirmText = UiText.StringResource(R.string.confirm).asString(),
                 isDangerConfirm = true,
                 onDismiss = { dialogState = null },
                 onConfirm = {
@@ -531,8 +548,9 @@ fun ProfileScreen(
 
         is ProfileViewModel.ProfileEvent.ChangePasswordSuccess -> {
             NotificationDialog(
-                title = "Thành Công",
-                message = "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.",
+                title = UiText.StringResource(R.string.success).asString(),
+                message = UiText.StringResource(R.string.change_password_success_notification)
+                    .asString(),
                 isSuccess = true,
                 onDismiss = {
                     dialogState = null
@@ -543,10 +561,10 @@ fun ProfileScreen(
 
         is ProfileViewModel.ProfileEvent.LogoutConfirm -> {
             ConfirmationDialog(
-                title = "Cảnh Báo",
-                message = "Bạn có chắc chắn muốn đăng xuất?",
-                dismissText = "Hủy",
-                confirmText = "Đăng Xuất",
+                title = UiText.StringResource(R.string.warning).asString(),
+                message = UiText.StringResource(R.string.logout_confirm_warning).asString(),
+                dismissText = UiText.StringResource(R.string.cancel).asString(),
+                confirmText = UiText.StringResource(R.string.log_out).asString(),
                 isDangerConfirm = true,
                 onDismiss = { dialogState = null },
                 onConfirm = {
@@ -558,8 +576,8 @@ fun ProfileScreen(
 
         is ProfileViewModel.ProfileEvent.LogoutSuccess -> {
             NotificationDialog(
-                title = "Thành Công",
-                message = "Đăng xuất thành công!",
+                title = UiText.StringResource(R.string.success).asString(),
+                message = UiText.StringResource(R.string.logged_out_successfully).asString(),
                 isSuccess = true,
                 onDismiss = {
                     dialogState = null
@@ -584,7 +602,7 @@ fun ProfileScreen(
 
         is ProfileViewModel.ProfileEvent.Failure -> {
             NotificationDialog(
-                title = "Lỗi",
+                title = UiText.StringResource(R.string.error).asString(),
                 message = (dialogState as ProfileViewModel.ProfileEvent.Failure).message,
                 isSuccess = false,
                 onDismiss = { dialogState = null }

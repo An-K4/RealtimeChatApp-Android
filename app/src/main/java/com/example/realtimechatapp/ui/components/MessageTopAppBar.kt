@@ -11,7 +11,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -39,7 +38,7 @@ fun MessageTopAppBar(
             IconButton(onClick = { onBackClick() }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back"
+                    contentDescription = "back"
                 )
             }
         },
@@ -47,7 +46,7 @@ fun MessageTopAppBar(
             IconButton(onClick = { onMoreClick() }) {
                 Icon(
                     imageVector = Icons.Filled.MoreVert,
-                    contentDescription = "More"
+                    contentDescription = "more"
                 )
             }
         }

@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.example.realtimechatapp.R
+import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.ui.theme.Chewy
 import com.example.realtimechatapp.ui.theme.RealtimeGreen
 
@@ -28,7 +29,7 @@ fun MainTopAppBar(
     TopAppBar(
         title = {
             Text(
-                text = stringResource(R.string.app_name),
+                text = UiText.StringResource(R.string.app_name).asString(),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Black,
                 fontFamily = Chewy,
@@ -41,7 +42,7 @@ fun MainTopAppBar(
             IconButton(onClick = { onSearchClick() }) {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = "Search"
+                    contentDescription = "search"
                 )
             }
         },

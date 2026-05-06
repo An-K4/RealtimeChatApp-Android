@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
+import timber.log.Timber
 
 @Composable
 fun ContactHeader(
@@ -74,6 +75,8 @@ fun ContactHeader(
                 text = contactAdditionalInfo,
                 fontSize = 12.sp
             )
+
+            Timber.d(contactAdditionalInfo)
         }
 
 //        IconButton(onClick = { onVideoCallClick() }) {

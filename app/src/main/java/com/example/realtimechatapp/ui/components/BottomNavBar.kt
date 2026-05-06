@@ -31,10 +31,10 @@ fun BottomNavBar(
                 icon = {
                     Icon(
                         painter = painterResource(item.icon!!),
-                        contentDescription = item.title
+                        contentDescription = item.title?.asString()
                     )
                 },
-                label = { Text(item.title!!) },
+                label = { Text(item.title!!.asString()) },
                 colors = NavigationBarItemColors(
                     selectedIconColor = Color.Black,
                     selectedTextColor = Color.White,
@@ -77,7 +77,7 @@ fun BottomNavBar() {
                 icon = {
                     Icon(
                         painter = painterResource(item.icon!!),
-                        contentDescription = item.title
+                        contentDescription = item.title?.asString()
                     )
                 },
                 colors = NavigationBarItemColors(
@@ -89,7 +89,7 @@ fun BottomNavBar() {
                     disabledIconColor = Color.Gray,
                     disabledTextColor = Color.Gray
                 ),
-                label = { Text(item.title!!) },
+                label = { Text(item.title!!.asString()) },
                 selected = item.route == Screen.Messages.route,
                 onClick = {}
             )

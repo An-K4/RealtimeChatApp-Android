@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
+import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.ui.theme.RealtimeGreen
 
 @SuppressLint("ConfigurationScreenWidthHeight")
@@ -93,7 +94,7 @@ fun MessageRenderItem(
         Column {
             if (isGroup && !fromCurrentUser){
                 Text(
-                    text = senderName ?: "Clover Chatty User",
+                    text = senderName ?: UiText.StringResource(R.string.clover_chatty_user).asString(),
                     fontSize = 14.sp,
                     color = Color.White,
                     modifier = Modifier.padding(bottom = 2.dp)

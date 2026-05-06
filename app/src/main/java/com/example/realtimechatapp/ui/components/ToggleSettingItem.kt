@@ -38,7 +38,7 @@ fun ToggleSettingItem(){
     Box(modifier = Modifier.fillMaxWidth()){
         MoreScreenItem(
             icon = Icons.Default.DarkMode,
-            title = "Giao diện",
+            title = "Chế độ tối",
             onClick = {},
             trailingContent = {
                 Switch(

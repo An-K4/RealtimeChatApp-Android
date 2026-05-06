@@ -21,7 +21,6 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -116,7 +115,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = loginState.username,
                 onValueChange = { authViewModel.onLoginUsernameChange(it) },
-                label = { Text("Tên đăng nhập") },
+                label = { Text(stringResource(R.string.username)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
@@ -130,7 +129,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = loginState.password,
                 onValueChange = { authViewModel.onLoginPasswordChange(it) },
-                label = { Text("Mật khẩu") },
+                label = { Text(stringResource(R.string.password)) },
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
@@ -163,7 +162,7 @@ fun LoginScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else Text(
-                    text = "Đăng nhập",
+                    text = stringResource(R.string.log_in),
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                 )
@@ -172,8 +171,8 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             CustomClickableText(
-                "Bạn chưa có tài khoản? ",
-                "Đăng ký",
+                stringResource(R.string.hint_new_account),
+                stringResource(R.string.sign_up),
                 "signup",
                 "",
                 "",
@@ -189,7 +188,7 @@ fun LoginScreen(
     if (dialogState is AuthViewModel.AuthEvent.Failure) {
         val msg = (dialogState as AuthViewModel.AuthEvent.Failure).message
         NotificationDialog(
-            title = "Lỗi Đăng Nhập",
+            title = stringResource(R.string.login_error),
             message = msg,
             isSuccess = false,
             onDismiss = { dialogState = null }

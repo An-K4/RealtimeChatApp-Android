@@ -34,12 +34,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 
 @Composable
-fun DropDownSettingItem(
+fun <T> DropDownSettingItem(
     icon: ImageVector,
     title: String,
-    options: List<String>,
-    selectedOption: String,
-    onOptionSelected: (String) -> Unit
+    options: List<T>,
+    selectedOption: T,
+    displayText: (T) -> String,
+    onOptionSelected: (T) -> Unit
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     var rowSize by remember { mutableStateOf(Size.Zero) }
@@ -67,7 +68,7 @@ fun DropDownSettingItem(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = selectedOption,
+                        text = displayText(selectedOption),
                         color = Color.Black,
                         fontWeight = FontWeight.Bold
                     )
@@ -88,7 +89,7 @@ fun DropDownSettingItem(
                 ) {
                     options.forEach { option ->
                         DropdownMenuItem(
-                            text = { Text(text = option) },
+                            text = { Text(text = displayText(option)) },
                             onClick = {
                                 onOptionSelected(option)
                                 isExpanded = false

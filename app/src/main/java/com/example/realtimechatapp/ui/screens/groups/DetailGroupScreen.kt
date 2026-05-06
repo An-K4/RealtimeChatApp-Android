@@ -26,6 +26,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
+import com.example.realtimechatapp.R
 import com.example.realtimechatapp.ui.components.BeginScreen
 import com.example.realtimechatapp.ui.components.ContactHeader
 import com.example.realtimechatapp.ui.components.MessageInput
@@ -47,7 +48,7 @@ fun DetailGroupScreen(
                     is DetailGroupViewModel.DetailGroupEvent.Success -> {
                         Toast.makeText(
                             context,
-                            "Lấy tin nhắn nhóm từ db thành công",
+                            R.string.get_group_messages_success_notification,
                             Toast.LENGTH_SHORT
                         ).show()
                     }

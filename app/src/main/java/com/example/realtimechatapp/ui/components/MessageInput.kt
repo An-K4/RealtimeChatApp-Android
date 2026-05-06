@@ -29,6 +29,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.realtimechatapp.R
+import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.ui.theme.RealtimeGreen
 import com.example.realtimechatapp.ui.theme.RealtimeRed
 
@@ -39,7 +41,7 @@ fun MessageInput(
     onCameraClick: () -> Unit,
     onGalleryClick: () -> Unit,
     onSendClick: () -> Unit
-){
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
@@ -56,10 +58,15 @@ fun MessageInput(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextField(
-                    value = messageText?:"",
+                    value = messageText ?: "",
                     onValueChange = { onMessageTextChange(it) },
                     modifier = Modifier.weight(1f),
-                    placeholder = { Text(text = "Soạn tin nhắn...", fontSize = 16.sp) },
+                    placeholder = {
+                        Text(
+                            text = UiText.StringResource(R.string.type_a_message).asString(),
+                            fontSize = 16.sp
+                        )
+                    },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
@@ -101,8 +108,8 @@ fun MessageInput(
             modifier = Modifier
                 .size(48.dp)
                 .background(RealtimeGreen, CircleShape)
-                .clickable{ onSendClick() }
-        ){
+                .clickable { onSendClick() }
+        ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Default.Send,
                 contentDescription = "send",
@@ -117,11 +124,13 @@ fun MessageInput(
 
 @Preview(showBackground = true)
 @Composable
-fun MessageInput(){
+fun MessageInput() {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp, horizontal = 10.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 5.dp, horizontal = 10.dp)
     ) {
         Box(
             modifier = Modifier
@@ -177,8 +186,8 @@ fun MessageInput(){
             modifier = Modifier
                 .size(48.dp)
                 .background(RealtimeGreen.copy(0.85f), CircleShape)
-                .clickable{}
-        ){
+                .clickable {}
+        ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Default.Send,
                 contentDescription = "send",

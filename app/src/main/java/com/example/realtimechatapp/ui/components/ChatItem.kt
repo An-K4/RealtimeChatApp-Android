@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
+import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.domain.model.LastMessage
 import com.example.realtimechatapp.ui.theme.RealtimeGreen
 
@@ -48,9 +49,9 @@ fun ChatItem(
     onItemClicked: () -> Unit
 ) {
     val previewLastMessage = if (lastMessage.isMine) {
-        "Bạn: ${lastMessage.content}"
+        UiText.StringResource(R.string.you_with_arg, lastMessage.content).asString()
     } else {
-        if (isGroup){
+        if (isGroup) {
             "${lastMessage.senderName}: ${lastMessage.content}"
         } else {
             lastMessage.content
@@ -62,7 +63,7 @@ fun ChatItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 5.dp, horizontal = 10.dp)
-            .clickable{ onItemClicked() }
+            .clickable { onItemClicked() }
     )
     {
         Box(
@@ -71,7 +72,7 @@ fun ChatItem(
         ) {
             AsyncImage(
                 model = avatar ?: R.drawable.default_avatar,
-                contentDescription = "Small Preview Avatar",
+                contentDescription = "small preview avatar",
                 modifier = Modifier
                     .matchParentSize()
                     .clip(CircleShape)
@@ -106,9 +107,13 @@ fun ChatItem(
                 overflow = TextOverflow.Ellipsis
             )
 
-            if (isTyping){
+            if (isTyping) {
                 Text(
-                    text = if (isGroup) "Ai đó đang soạn tin..." else "Đang soạn tin...",
+                    text = if (isGroup) {
+                        UiText.StringResource(R.string.someone_is_typing).asString()
+                    } else {
+                        UiText.StringResource(R.string.typing).asString()
+                    },
                     fontSize = 14.sp,
                     color = RealtimeGreen,
                     maxLines = 1,
@@ -139,7 +144,7 @@ fun ChatItem(
                             containerColor = Color.Red,
                             contentColor = Color.White
                         ) {
-                            if (unreadCount < 10){
+                            if (unreadCount < 10) {
                                 Text(unreadCount.toString())
                             } else {
                                 Text("9+")
@@ -147,7 +152,7 @@ fun ChatItem(
                         }
                     }
                 ) {
-                    Icon(Icons.Default.Notifications, contentDescription = "Thông báo")
+                    Icon(Icons.Default.Notifications, contentDescription = "notifications")
                 }
             }
         }

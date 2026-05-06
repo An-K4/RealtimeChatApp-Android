@@ -12,6 +12,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.realtimechatapp.R
+import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.ui.components.BottomNavBar
 import com.example.realtimechatapp.ui.components.MainTopAppBar
 import com.example.realtimechatapp.ui.components.MessageTopAppBar
@@ -55,8 +57,8 @@ fun AppNavigation() {
                 showMessageTopAppBar -> {
                     // add pair to specific more screen in the future
                     val title = when(currentRoute){
-                        Screen.DetailGroup.route -> "Nhóm"
-                        else -> "Tin Nhắn"
+                        Screen.DetailGroup.route -> UiText.StringResource(R.string.groups).asString()
+                        else -> UiText.StringResource(R.string.messages).asString()
                     }
 
                     MessageTopAppBar(

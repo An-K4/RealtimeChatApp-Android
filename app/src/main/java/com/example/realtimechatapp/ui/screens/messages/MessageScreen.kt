@@ -25,6 +25,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
+import com.example.realtimechatapp.R
+import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.ui.components.ChatItem
 import com.example.realtimechatapp.ui.navigation.Screen
 import com.example.realtimechatapp.ui.components.BeginScreen
@@ -93,8 +95,8 @@ fun MessageScreen(
 
         if (dialogState is MessageViewModel.MessageEvent.Unauthenticated) {
             NotificationDialog(
-                title = "Lỗi",
-                message = "Phiên đăng nhập hết hạn, vui lòng đăng nhập lại!",
+                title = UiText.StringResource(R.string.error).asString(),
+                message = UiText.StringResource(R.string.login_session_expired_notification).asString(),
                 isSuccess = false,
                 onDismiss = {
                     navController.navigate(Screen.Login.route) {

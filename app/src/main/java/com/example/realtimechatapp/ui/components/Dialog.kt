@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.realtimechatapp.R
+import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.ui.theme.Green
 import com.example.realtimechatapp.ui.theme.RealtimeGreen
 import com.example.realtimechatapp.ui.theme.Red
@@ -96,7 +98,7 @@ fun NotificationDialog(
                     shape = RoundedCornerShape(50),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("OK", color = Color.White)
+                    Text(UiText.StringResource(R.string.ok).asString(), color = Color.White)
                 }
             }
         }

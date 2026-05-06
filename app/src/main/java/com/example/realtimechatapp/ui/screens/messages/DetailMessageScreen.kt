@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -32,6 +31,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
+import com.example.realtimechatapp.R
+import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.ui.components.BeginScreen
 import com.example.realtimechatapp.ui.components.ContactHeader
 import com.example.realtimechatapp.ui.components.MessageInput
@@ -54,8 +55,11 @@ fun DetailMessageScreen(
             detailMessageViewModel.detailMessageEvent.collect { event ->
                 when (event) {
                     is DetailMessageViewModel.DetailMessageEvent.GetMessageSuccess -> {
-                        Toast.makeText(context, "Lấy tin nhắn từ db thành công", Toast.LENGTH_SHORT)
-                            .show()
+                        Toast.makeText(
+                            context,
+                            R.string.get_messages_success_notification,
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
 
                     is DetailMessageViewModel.DetailMessageEvent.Failure -> {
@@ -136,7 +140,7 @@ fun DetailMessageScreen(
 
                         if (detailMessageState.friendTypingStatus) {
                             Text(
-                                text = "${detailMessageState.friendName} đang soạn tin...",
+                                text = UiText.StringResource(R.string.sb_is_typing, detailMessageState.friendName).asString(),
                                 fontSize = 12.sp,
                                 textAlign = TextAlign.Start,
                                 color = RealtimeGreen,

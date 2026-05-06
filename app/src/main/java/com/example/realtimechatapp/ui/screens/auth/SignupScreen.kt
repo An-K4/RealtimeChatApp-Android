@@ -22,7 +22,6 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -38,6 +38,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
+import com.example.realtimechatapp.R
 import com.example.realtimechatapp.ui.components.AvatarPicker
 import com.example.realtimechatapp.ui.components.CustomClickableText
 import com.example.realtimechatapp.ui.components.NotificationDialog
@@ -99,7 +100,7 @@ fun SignupScreen(
         OutlinedTextField(
             value = signupState.username,
             onValueChange = { authViewModel.onSignupUsernameChange(it) },
-            label = { Text("Tên đăng nhập") },
+            label = { Text(stringResource(R.string.username)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
@@ -113,7 +114,7 @@ fun SignupScreen(
         OutlinedTextField(
             value = signupState.password,
             onValueChange = { authViewModel.onSignupPasswordChange(it) },
-            label = { Text("Mật khẩu") },
+            label = { Text(stringResource(R.string.password)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
@@ -127,7 +128,7 @@ fun SignupScreen(
         OutlinedTextField(
             value = signupState.passwordRetype,
             onValueChange = { authViewModel.onSignupPasswordRetypeChange(it) },
-            label = { Text("Nhập lại mật khẩu") },
+            label = { Text(stringResource(R.string.password_retype)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
@@ -141,7 +142,7 @@ fun SignupScreen(
         OutlinedTextField(
             value = signupState.fullName,
             onValueChange = { authViewModel.onSignupFullNameChange(it) },
-            label = { Text("Họ và tên") },
+            label = { Text(stringResource(R.string.fullname)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
@@ -155,7 +156,7 @@ fun SignupScreen(
         OutlinedTextField(
             value = signupState.email,
             onValueChange = { authViewModel.onSignupEmailChange(it) },
-            label = { Text("Email") },
+            label = { Text(stringResource(R.string.email)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
@@ -187,15 +188,15 @@ fun SignupScreen(
                     color = MaterialTheme.colorScheme.onPrimary
                 )
             } else {
-                Text("Đăng ký")
+                Text(stringResource(R.string.sign_up))
             }
         }
 
         Spacer(modifier = Modifier.size(16.dp))
 
         CustomClickableText(
-            "Bạn đã có tài khoản? ",
-            "Đăng nhập",
+            stringResource(R.string.hint_old_account),
+            stringResource(R.string.log_in),
             "login",
             "",
             "",
@@ -209,8 +210,8 @@ fun SignupScreen(
 
     if (dialogState is AuthViewModel.AuthEvent.AuthSuccess) {
         NotificationDialog(
-            title = "Thành Công",
-            message = "Đăng ký thành công, chuyển hướng về trang đăng nhập.",
+            title = stringResource(R.string.success),
+            message = stringResource(R.string.log_in_success_notification),
             isSuccess = true,
             onDismiss = {
                 dialogState = null
@@ -224,7 +225,7 @@ fun SignupScreen(
     if (dialogState is AuthViewModel.AuthEvent.Failure) {
         val msg = (dialogState as AuthViewModel.AuthEvent.Failure).message
         NotificationDialog(
-            title = "Lỗi Đăng Nhập",
+            title = stringResource(R.string.login_error),
             message = msg,
             isSuccess = false,
             onDismiss = { dialogState = null }

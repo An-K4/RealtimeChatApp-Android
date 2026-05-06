@@ -8,11 +8,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.realtimechatapp.R
+import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.ui.components.DropDownSettingItem
 import com.example.realtimechatapp.ui.components.ToggleSettingItem
 
@@ -21,6 +25,9 @@ fun MoreScreen(
     navController: NavController,
     moreViewModel: MoreViewModel = hiltViewModel()
 ){
+    val moreScreenState by moreViewModel.moreScreenState.collectAsState()
+    val selectedLanguage by moreViewModel.currentLanguage.collectAsState()
+
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -29,19 +36,24 @@ fun MoreScreen(
         item {
             DropDownSettingItem(
                 icon = Icons.Default.Language,
-                title = "Ngôn Ngữ",
-                options = listOf("Tiếng Việt", "English"),
-                selectedOption = "Tiếng Việt",
-                onOptionSelected = {}
+                title = UiText.StringResource(R.string.language).asString(),
+                options = moreScreenState.supportedLanguages,
+                selectedOption = selectedLanguage,
+                displayText = { it.displayName },
+                onOptionSelected = {
+                    moreViewModel.changeLanguage(it)
+                }
             )
         }
 
         item {
             ToggleSettingItem(
                 icon = Icons.Default.DarkMode,
-                title = "Chế Độ Tối",
+                title = UiText.StringResource(R.string.dark_mode).asString(),
                 isChecked = false,
-                onCheckedChange = {}
+                onCheckedChange = {
+
+                }
             )
         }
     }
@@ -59,6 +71,7 @@ fun Preview(){
                 title = "Ngôn Ngữ",
                 options = listOf("Tiếng Việt", "English"),
                 selectedOption = "Tiếng Việt",
+                displayText = { it },
                 onOptionSelected = {
 
                 }
