@@ -12,6 +12,7 @@ import com.example.realtimechatapp.data.remote.api.MessageApi
 import com.example.realtimechatapp.data.remote.dto.MessageSeenDto
 import com.example.realtimechatapp.data.remote.safeApiCall
 import com.example.realtimechatapp.data.local.safeDbCall
+import com.example.realtimechatapp.di.ApplicationScope
 import com.example.realtimechatapp.domain.exception.DatabaseException
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.model.MessageContact
@@ -22,8 +23,6 @@ import com.example.realtimechatapp.domain.repository.MessageRepository
 import com.example.realtimechatapp.domain.repository.NetworkChecker
 import com.example.realtimechatapp.domain.repository.SocketRepository
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -31,6 +30,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 class MessageRepositoryImpl @Inject constructor(
     private val messageApi: MessageApi,
@@ -39,13 +39,13 @@ class MessageRepositoryImpl @Inject constructor(
     private val socketRepository: SocketRepository,
     private val userDao: UserDao,
     private val networkChecker: NetworkChecker,
-    private val currentUserManager: CurrentUserManager
+    private val currentUserManager: CurrentUserManager,
+    @ApplicationScope private val applicationScope: CoroutineScope
 ) : MessageRepository {
     // supervisor job protect coroutine when its child coroutine crash
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     init {
-        scope.launch {
+        applicationScope.launch {
             socketRepository.observeMessages().collect { messageDto ->
                 val messageEntity = if (messageDto.receiverId == null) {
                     messageDto.toMessageEntity().copy(
@@ -59,7 +59,7 @@ class MessageRepositoryImpl @Inject constructor(
             }
         }
 
-        scope.launch {
+        applicationScope.launch {
             socketRepository.observeMessageContacts().collect { messageDto ->
                 val currentUserId = currentUserManager.getCurrentUserId()
                 val contactId = messageDto.getMessageContactId(currentUserId)
@@ -81,7 +81,7 @@ class MessageRepositoryImpl @Inject constructor(
             }
         }
 
-        scope.launch {
+        applicationScope.launch {
             socketRepository.observeMessageSeen().collect { messageSeenDto ->
                 val viewerId = messageSeenDto.viewerId
                 val senderId = currentUserManager.getCurrentUserId()
@@ -105,6 +105,8 @@ class MessageRepositoryImpl @Inject constructor(
                 }
                 Result.success(Unit)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
+
                 Timber.e(e, "Lỗi lấy danh sách tin nhắn")
                 Result.failure(e)
             }
@@ -118,6 +120,8 @@ class MessageRepositoryImpl @Inject constructor(
             Timber.d(responseMessages.toString())
             Result.success(Unit)
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
             Timber.e(e, "Lỗi lấy tin nhắn của %s", friendId)
             Result.failure(e)
         }
@@ -132,6 +136,8 @@ class MessageRepositoryImpl @Inject constructor(
                 Result.success(userInfo.toUser())
             }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
             Result.failure(e)
         }
     }
