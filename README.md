@@ -13,11 +13,11 @@ Clover Chatty là ứng dụng chat Android cho phép người dùng nhắn tin 
 ## 📸 Ảnh chụp màn hình
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/a7f0d2f8-b014-475b-ad73-103c73cb01a2" width="20%"/>
-  <img src="https://github.com/user-attachments/assets/1beaf1ed-4dc1-42a7-aaf8-65f001a5903e" width="20%"/>
-  <img src="https://github.com/user-attachments/assets/4345d5f5-c46e-470d-a32b-58fe039fe56b" width="20%"/>
-  <img src="https://github.com/user-attachments/assets/2af05643-96e1-4c5a-be5d-13ec8d172fa3" width="20%"/>
-  <img src="https://github.com/user-attachments/assets/490bad01-25a1-4b5b-9103-f7978f748377" width="20%"/>
+  <img src="https://github.com/user-attachments/assets/a7f0d2f8-b014-475b-ad73-103c73cb01a2" width="19%"/>
+  <img src="https://github.com/user-attachments/assets/1beaf1ed-4dc1-42a7-aaf8-65f001a5903e" width="19%"/>
+  <img src="https://github.com/user-attachments/assets/4345d5f5-c46e-470d-a32b-58fe039fe56b" width="19%"/>
+  <img src="https://github.com/user-attachments/assets/2af05643-96e1-4c5a-be5d-13ec8d172fa3" width="19%"/>
+  <img src="https://github.com/user-attachments/assets/490bad01-25a1-4b5b-9103-f7978f748377" width="19%"/>
 </p>
 
 ---
