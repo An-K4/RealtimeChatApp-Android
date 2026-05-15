@@ -1,5 +1,6 @@
 package com.example.realtimechatapp.ui.screens.auth
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,7 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -47,7 +47,7 @@ import com.example.realtimechatapp.ui.components.CustomClickableText
 import com.example.realtimechatapp.ui.components.NotificationDialog
 import com.example.realtimechatapp.ui.navigation.Screen
 import com.example.realtimechatapp.ui.theme.Chewy
-import com.example.realtimechatapp.ui.theme.RealtimeGreen
+import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 
 @Composable
 fun LoginScreen(
@@ -107,7 +107,7 @@ fun LoginScreen(
                 fontWeight = FontWeight.Black,
                 fontFamily = Chewy,
                 fontStyle = FontStyle.Italic,
-                color = RealtimeGreen
+                color = MaterialTheme.colorScheme.primary
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -119,8 +119,8 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = RealtimeGreen,
-                    cursorColor = Color.Gray
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    cursorColor = MaterialTheme.colorScheme.primary
                 )
             )
 
@@ -134,8 +134,8 @@ fun LoginScreen(
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = RealtimeGreen,
-                    cursorColor = Color.Gray
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    cursorColor = MaterialTheme.colorScheme.primary
                 )
             )
 
@@ -148,8 +148,8 @@ fun LoginScreen(
                     .padding(10.dp),
                 enabled = !loginState.isLoading,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = RealtimeGreen,
-                    contentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 elevation = ButtonDefaults.buttonElevation(
                     defaultElevation = 8.dp,
@@ -197,98 +197,101 @@ fun LoginScreen(
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun LoginUI() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+    RealtimeChatAppTheme {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            Image(
-                painter = painterResource(R.drawable.default_avatar),
-                contentDescription = stringResource(R.string.app_logo),
-                modifier = Modifier
-                    .size(200.dp)
-                    .padding(bottom = 16.dp)
-            )
-
-            Text(
-                text = stringResource(R.string.app_name),
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Black,
-                fontFamily = Chewy,
-                fontStyle = FontStyle.Italic,
-                color = RealtimeGreen
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            OutlinedTextField(
-                value = "",
-                onValueChange = { },
-                label = { Text("Tên đăng nhập") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = RealtimeGreen,
-                    cursorColor = Color.Gray
-                )
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = "",
-                onValueChange = { },
-                label = { Text("Mật khẩu") },
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = RealtimeGreen,
-                    cursorColor = Color.Gray
-                )
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = { },
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = RealtimeGreen,
-                    contentColor = Color.White
-                ),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 8.dp,
-                    pressedElevation = 4.dp
-                )
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
+                Image(
+                    painter = painterResource(R.drawable.default_avatar),
+                    contentDescription = stringResource(R.string.app_logo),
+                    modifier = Modifier
+                        .size(200.dp)
+                        .padding(bottom = 16.dp)
+                )
+
                 Text(
-                    text = "Đăng nhập",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
+                    text = stringResource(R.string.app_name),
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Black,
+                    fontFamily = Chewy,
+                    fontStyle = FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                OutlinedTextField(
+                    value = "",
+                    onValueChange = { },
+                    label = { Text("Tên đăng nhập") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = "",
+                    onValueChange = { },
+                    label = { Text("Mật khẩu") },
+                    modifier = Modifier.fillMaxWidth(),
+                    visualTransformation = PasswordVisualTransformation(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = { },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(
+                        defaultElevation = 8.dp,
+                        pressedElevation = 4.dp
+                    )
+                ) {
+                    Text(
+                        text = "Đăng nhập",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                CustomClickableText(
+                    "Bạn chưa có tài khoản? ",
+                    "Đăng ký",
+                    "signup",
+                    "",
+                    "",
+                    onTextClicked = {}
                 )
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            CustomClickableText(
-                "Bạn chưa có tài khoản? ",
-                "Đăng ký",
-                "signup",
-                "",
-                "",
-                onTextClicked = {}
-            )
         }
     }
 }

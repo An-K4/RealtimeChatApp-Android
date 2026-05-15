@@ -1,5 +1,6 @@
 package com.example.realtimechatapp.ui.screens.auth
 
+import android.content.res.Configuration
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -43,7 +43,7 @@ import com.example.realtimechatapp.ui.components.AvatarPicker
 import com.example.realtimechatapp.ui.components.CustomClickableText
 import com.example.realtimechatapp.ui.components.NotificationDialog
 import com.example.realtimechatapp.ui.navigation.Screen
-import com.example.realtimechatapp.ui.theme.RealtimeGreen
+import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 
 @Composable
 fun SignupScreen(
@@ -104,8 +104,8 @@ fun SignupScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = RealtimeGreen,
-                cursorColor = Color.Gray
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                cursorColor = MaterialTheme.colorScheme.primary
             )
         )
 
@@ -118,8 +118,8 @@ fun SignupScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = RealtimeGreen,
-                cursorColor = Color.Gray
+                MaterialTheme.colorScheme.primary,
+                MaterialTheme.colorScheme.primary
             )
         )
 
@@ -132,8 +132,8 @@ fun SignupScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = RealtimeGreen,
-                cursorColor = Color.Gray
+                MaterialTheme.colorScheme.primary,
+                MaterialTheme.colorScheme.primary
             )
         )
 
@@ -146,8 +146,8 @@ fun SignupScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = RealtimeGreen,
-                cursorColor = Color.Gray
+                MaterialTheme.colorScheme.primary,
+                MaterialTheme.colorScheme.primary
             )
         )
 
@@ -160,8 +160,8 @@ fun SignupScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = RealtimeGreen,
-                cursorColor = Color.Gray
+                MaterialTheme.colorScheme.primary,
+                MaterialTheme.colorScheme.primary
             )
         )
 
@@ -174,8 +174,8 @@ fun SignupScreen(
                 .padding(10.dp),
             enabled = !signupState.isLoading,
             colors = ButtonDefaults.buttonColors(
-                containerColor = RealtimeGreen,
-                contentColor = Color.White
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             ),
             elevation = ButtonDefaults.buttonElevation(
                 defaultElevation = 8.dp,
@@ -234,121 +234,124 @@ fun SignupScreen(
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun SignupUI() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+    RealtimeChatAppTheme {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            AvatarPicker(null, onAvatarPickerClick = {})
-
-            Spacer(modifier = Modifier.size(20.dp))
-
-            OutlinedTextField(
-                value = "",
-                onValueChange = { },
-                label = { Text("Tên đăng nhập") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = RealtimeGreen,
-                    cursorColor = Color.Gray
-                )
-            )
-
-            Spacer(modifier = Modifier.size(16.dp))
-
-            OutlinedTextField(
-                value = "",
-                onValueChange = { },
-                label = { Text("Mật khẩu") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = RealtimeGreen,
-                    cursorColor = Color.Gray
-                )
-            )
-
-            Spacer(modifier = Modifier.size(16.dp))
-
-            OutlinedTextField(
-                value = "",
-                onValueChange = { },
-                label = { Text("Nhập lại mật khẩu") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = RealtimeGreen,
-                    cursorColor = Color.Gray
-                )
-            )
-
-            Spacer(modifier = Modifier.size(16.dp))
-
-            OutlinedTextField(
-                value = "",
-                onValueChange = { },
-                label = { Text("Họ và tên") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = RealtimeGreen,
-                    cursorColor = Color.Gray
-                )
-            )
-
-            Spacer(modifier = Modifier.size(16.dp))
-
-            OutlinedTextField(
-                value = "",
-                onValueChange = { },
-                label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = RealtimeGreen,
-                    cursorColor = Color.Gray
-                )
-            )
-
-            Spacer(modifier = Modifier.size(20.dp))
-
-            Button(
-                onClick = { },
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(10.dp),
-                enabled = true,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = RealtimeGreen,
-                    contentColor = Color.White
-                ),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 8.dp,
-                    pressedElevation = 4.dp
-                )
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Text("Đăng ký")
+                AvatarPicker(null, onAvatarPickerClick = {})
+
+                Spacer(modifier = Modifier.size(20.dp))
+
+                OutlinedTextField(
+                    value = "",
+                    onValueChange = { },
+                    label = { Text("Tên đăng nhập") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+
+                Spacer(modifier = Modifier.size(16.dp))
+
+                OutlinedTextField(
+                    value = "",
+                    onValueChange = { },
+                    label = { Text("Mật khẩu") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+
+                Spacer(modifier = Modifier.size(16.dp))
+
+                OutlinedTextField(
+                    value = "",
+                    onValueChange = { },
+                    label = { Text("Nhập lại mật khẩu") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+
+                Spacer(modifier = Modifier.size(16.dp))
+
+                OutlinedTextField(
+                    value = "",
+                    onValueChange = { },
+                    label = { Text("Họ và tên") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+
+                Spacer(modifier = Modifier.size(16.dp))
+
+                OutlinedTextField(
+                    value = "",
+                    onValueChange = { },
+                    label = { Text("Email") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+
+                Spacer(modifier = Modifier.size(20.dp))
+
+                Button(
+                    onClick = { },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                    enabled = true,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(
+                        defaultElevation = 8.dp,
+                        pressedElevation = 4.dp
+                    )
+                ) {
+                    Text("Đăng ký")
+                }
+
+                Spacer(modifier = Modifier.size(16.dp))
+
+                CustomClickableText(
+                    "Bạn đã có tài khoản? ",
+                    "Đăng nhập",
+                    "login",
+                    "",
+                    "",
+                    onTextClicked = {}
+                )
             }
-
-            Spacer(modifier = Modifier.size(16.dp))
-
-            CustomClickableText(
-                "Bạn đã có tài khoản? ",
-                "Đăng nhập",
-                "login",
-                "",
-                "",
-                onTextClicked = {}
-            )
         }
     }
 }

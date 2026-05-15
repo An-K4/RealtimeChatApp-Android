@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -113,7 +114,7 @@ fun DetailMessageScreen(
                     Column(
                         modifier = Modifier
                             .matchParentSize()
-                            .background(color = Color.Gray)
+                            .background(color = MaterialTheme.colorScheme.surface)
                     ) {
                         LazyColumn(
                             state = listState,

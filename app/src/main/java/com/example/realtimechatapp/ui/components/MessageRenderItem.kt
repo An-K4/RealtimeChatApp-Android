@@ -1,6 +1,7 @@
 package com.example.realtimechatapp.ui.components
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -21,12 +22,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,7 +36,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
-import com.example.realtimechatapp.ui.theme.RealtimeGreen
+import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
@@ -84,7 +85,7 @@ fun MessageRenderItem(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .border(1.dp, color = Color.Gray, CircleShape),
+                    .border(1.dp, color = MaterialTheme.colorScheme.primaryContainer, CircleShape),
                 contentScale = ContentScale.Crop
             )
 
@@ -96,7 +97,7 @@ fun MessageRenderItem(
                 Text(
                     text = senderName ?: UiText.StringResource(R.string.clover_chatty_user).asString(),
                     fontSize = 14.sp,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.background,
                     modifier = Modifier.padding(bottom = 2.dp)
                 )
             }
@@ -112,7 +113,7 @@ fun MessageRenderItem(
                             align = if (fromCurrentUser) Alignment.End else Alignment.Start
                         )
                         .background(
-                            color = if (fromCurrentUser) RealtimeGreen else Color.White,
+                            color = if (fromCurrentUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.background,
                             shape = if (fromCurrentUser) currentUserShape else otherUserShape
                         )
                 ) {
@@ -123,7 +124,7 @@ fun MessageRenderItem(
                         Text(
                             text = message,
                             fontSize = 16.sp,
-                            color = if (fromCurrentUser) Color.White else Color.Black
+                            color = if (fromCurrentUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground
                         )
 
                         Spacer(modifier = Modifier.height(3.dp))
@@ -135,14 +136,14 @@ fun MessageRenderItem(
                             Text(
                                 time,
                                 fontSize = 10.sp,
-                                color = if (fromCurrentUser) Color.White else Color.Gray,
+                                color = if (fromCurrentUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground,
                                 modifier = Modifier.padding(end = 3.dp)
                             )
                             if (fromCurrentUser) {
                                 Icon(
                                     imageVector = if (isSeen) Icons.Default.DoneAll else Icons.Default.Done,
                                     contentDescription = "status",
-                                    tint = Color.White,
+                                    tint = MaterialTheme.colorScheme.onPrimary,
                                     modifier = Modifier.size(14.dp)
                                 )
                             }
@@ -154,83 +155,144 @@ fun MessageRenderItem(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0x00000000)
+@Preview(showBackground = true, backgroundColor = 0xFF838383)
+@Preview(showBackground = true, backgroundColor = 0xFF838383, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun MessageRenderItem() {
-    val currentUserShape = RoundedCornerShape(
-        topStart = 16.dp,
-        topEnd = 16.dp,
-        bottomStart = 16.dp,
-        bottomEnd = 0.dp
-    )
-
-    val otherUserShape = RoundedCornerShape(
-        topStart = 0.dp,
-        topEnd = 16.dp,
-        bottomStart = 16.dp,
-        bottomEnd = 16.dp
-    )
-
-    Row(
-        verticalAlignment = Alignment.Top
-    ) {
-        AsyncImage(
-            model = R.drawable.default_avatar,
-            contentDescription = "avatar",
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .border(1.dp, color = Color.Gray, CircleShape),
-            contentScale = ContentScale.Crop
+    RealtimeChatAppTheme {
+        val otherUserShape = RoundedCornerShape(
+            topStart = 0.dp,
+            topEnd = 16.dp,
+            bottomStart = 16.dp,
+            bottomEnd = 16.dp
         )
 
-        Spacer(modifier = Modifier.width(5.dp))
-
-        Column {
-            Text(
-                text = "Clover Chatty",
-                fontSize = 14.sp,
-                color = Color.White,
-                modifier = Modifier.padding(bottom = 5.dp)
+        Row(
+            verticalAlignment = Alignment.Top
+        ) {
+            AsyncImage(
+                model = R.drawable.default_avatar,
+                contentDescription = "avatar",
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
             )
 
-            Box(
-                modifier = Modifier
-                    .widthIn(40.dp)
-                    .background(
-                        color = Color.Gray,
-                        shape = otherUserShape
-                    )
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.End,
-                    modifier = Modifier.padding(10.dp)
+            Spacer(modifier = Modifier.width(5.dp))
+
+            Column {
+                Text(
+                    text = "Clover Chatty",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.background,
+                    modifier = Modifier.padding(bottom = 5.dp)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .widthIn(40.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.background,
+                            shape = otherUserShape
+                        )
                 ) {
-                    Text(
-                        text = "Xin chào Vũ Quốc An!",
-                        fontSize = 16.sp,
-                        color = Color.White
-                    )
-
-                    Spacer(modifier = Modifier.height(3.dp))
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.End
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.End,
+                        modifier = Modifier.padding(10.dp)
                     ) {
                         Text(
-                            "10:37",
-                            fontSize = 10.sp,
-                            color = Color.White,
-                            modifier = Modifier.padding(end = 3.dp)
+                            text = "Xin chào Vũ Quốc An!",
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onBackground
                         )
-                        Icon(
-                            imageVector = Icons.Default.DoneAll,
-                            contentDescription = "status",
-                            tint = Color.White,
-                            modifier = Modifier.size(14.dp)
+
+                        Spacer(modifier = Modifier.height(3.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            Text(
+                                "10:37",
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.padding(end = 3.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF838383)
+@Preview(showBackground = true, backgroundColor = 0xFF838383, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun MessageRenderItemMine() {
+    RealtimeChatAppTheme {
+        val currentUserShape = RoundedCornerShape(
+            topStart = 16.dp,
+            topEnd = 16.dp,
+            bottomStart = 16.dp,
+            bottomEnd = 0.dp
+        )
+
+        Row(
+            verticalAlignment = Alignment.Top
+        ) {
+            AsyncImage(
+                model = R.drawable.default_avatar,
+                contentDescription = "avatar",
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
+
+            Spacer(modifier = Modifier.width(5.dp))
+
+            Column {
+                Box(
+                    modifier = Modifier
+                        .widthIn(40.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = currentUserShape
                         )
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.End,
+                        modifier = Modifier.padding(10.dp)
+                    ) {
+                        Text(
+                            text = "Xin chào Vũ Quốc An!",
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+
+                        Spacer(modifier = Modifier.height(3.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            Text(
+                                "10:37",
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.padding(end = 3.dp)
+                            )
+                            Icon(
+                                imageVector = Icons.Default.DoneAll,
+                                contentDescription = "status",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
                     }
                 }
             }

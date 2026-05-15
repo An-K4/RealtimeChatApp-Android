@@ -1,13 +1,16 @@
 package com.example.realtimechatapp.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-import com.example.realtimechatapp.ui.theme.RealtimeGreen
+import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 
 @Composable
 fun CustomClickableText(
@@ -19,12 +22,22 @@ fun CustomClickableText(
     onTextClicked: () -> Unit
 ) {
     val annotatedText = buildAnnotatedString {
-        append(startText)
-
-        pushStringAnnotation(tag = clickableTextTag, annotation = clickableTextAnnotation?:clickableTextTag)
         withStyle(
             style = SpanStyle(
-                color = RealtimeGreen, // bright color
+                color = MaterialTheme.colorScheme.onBackground,
+                fontSize = 16.sp
+            )
+        ) {
+            append(startText)
+        }
+
+        pushStringAnnotation(
+            tag = clickableTextTag,
+            annotation = clickableTextAnnotation ?: clickableTextTag
+        )
+        withStyle(
+            style = SpanStyle(
+                color = MaterialTheme.colorScheme.primary, // bright color
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
             )
@@ -32,7 +45,14 @@ fun CustomClickableText(
             append(clickableText)
         }
 
-        append(endText)
+        withStyle(
+            style = SpanStyle(
+                color = MaterialTheme.colorScheme.onBackground,
+                fontSize = 16.sp
+            )
+        ) {
+            append(endText)
+        }
     }
 
     ClickableText(
@@ -44,4 +64,50 @@ fun CustomClickableText(
                 }
         }
     )
+}
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun CustomClickableText() {
+    RealtimeChatAppTheme {
+        val annotatedText = buildAnnotatedString {
+            withStyle(
+                style = SpanStyle(
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontSize = 16.sp
+                )
+            ) {
+                append("Bạn chưa có tài khoản? ")
+            }
+
+            pushStringAnnotation(tag = "đăng ký", annotation = "đăng ký")
+            withStyle(
+                style = SpanStyle(
+                    color = MaterialTheme.colorScheme.primary, // bright color
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            ) {
+                append("Đăng ký")
+            }
+
+            withStyle(
+                style = SpanStyle(
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontSize = 16.sp
+                )
+            ) {
+                append("")
+            }
+        }
+
+        ClickableText(
+            text = annotatedText,
+            onClick = { offset ->
+                annotatedText.getStringAnnotations("đăng ký", start = offset, end = offset)
+                    .firstOrNull()?.let {}
+            }
+        )
+    }
 }

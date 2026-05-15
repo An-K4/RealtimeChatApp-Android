@@ -1,5 +1,6 @@
 package com.example.realtimechatapp.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,9 +10,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 
 @Composable
 fun MoreScreenItem(
@@ -40,7 +42,8 @@ fun MoreScreenItem(
         Icon(
             imageVector = icon,
             contentDescription = "language configuration",
-            modifier = Modifier.size(32.dp)
+            modifier = Modifier.size(32.dp),
+            tint = MaterialTheme.colorScheme.onBackground
         )
 
         Spacer(modifier = Modifier.width(16.dp))
@@ -49,7 +52,8 @@ fun MoreScreenItem(
             text = title,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         if (trailingContent != null) {
@@ -58,40 +62,47 @@ fun MoreScreenItem(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                 contentDescription = "arrow forward",
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.onBackground
             )
         }
     }
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun MoreScreenItem() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { }
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Default.Language,
-            contentDescription = "language configuration",
-            modifier = Modifier.size(24.dp)
-        )
+    RealtimeChatAppTheme {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { }
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Language,
+                contentDescription = "language configuration",
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.onBackground
+            )
 
-        Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(16.dp))
 
-        Text(
-            text = "Ngôn ngữ",
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f)
-        )
+            Text(
+                text = "Ngôn ngữ",
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f),
+                color = MaterialTheme.colorScheme.onBackground
+            )
 
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-            contentDescription = "arrow forward",
-            modifier = Modifier.size(24.dp)
-        )
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                contentDescription = "arrow forward",
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.onBackground
+            )
+        }
     }
 }

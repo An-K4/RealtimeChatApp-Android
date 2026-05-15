@@ -1,5 +1,6 @@
 package com.example.realtimechatapp.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,12 +20,12 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,7 +36,7 @@ import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.domain.model.LastMessage
-import com.example.realtimechatapp.ui.theme.RealtimeGreen
+import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 
 @Composable
 fun ChatItem(
@@ -57,7 +58,8 @@ fun ChatItem(
             lastMessage.content
         }
     }
-    val onlineColor = if (isOnline) Color.Red else Color.Gray
+    val onlineColor =
+        if (isOnline) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primaryContainer
 
     Row(
         modifier = Modifier
@@ -76,7 +78,7 @@ fun ChatItem(
                 modifier = Modifier
                     .matchParentSize()
                     .clip(CircleShape)
-                    .border(2.dp, Color.Gray, CircleShape),
+                    .border(2.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape),
                 contentScale = ContentScale.Crop
             )
 
@@ -86,7 +88,7 @@ fun ChatItem(
                     .offset(x = 22.dp, y = 22.dp)
                     .size(18.dp)
                     .clip(CircleShape)
-                    .border(2.dp, Color.Gray, CircleShape)
+                    .border(2.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape)
                     .background(onlineColor, CircleShape)
             ) {}
         }
@@ -104,7 +106,8 @@ fun ChatItem(
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             if (isTyping) {
@@ -115,7 +118,7 @@ fun ChatItem(
                         UiText.StringResource(R.string.typing).asString()
                     },
                     fontSize = 14.sp,
-                    color = RealtimeGreen,
+                    color = MaterialTheme.colorScheme.primary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -124,7 +127,8 @@ fun ChatItem(
                     text = previewLastMessage,
                     fontSize = 14.sp,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
         }
@@ -135,14 +139,15 @@ fun ChatItem(
         ) {
             Text(
                 text = lastMessage.createdAt,
-                fontSize = 14.sp
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onBackground
             )
             if (unreadCount > 0) {
                 BadgedBox(
                     badge = {
                         Badge(
-                            containerColor = Color.Red,
-                            contentColor = Color.White
+                            containerColor = MaterialTheme.colorScheme.secondary,
+                            contentColor = MaterialTheme.colorScheme.onSecondary
                         ) {
                             if (unreadCount < 10) {
                                 Text(unreadCount.toString())
@@ -150,9 +155,14 @@ fun ChatItem(
                                 Text("9+")
                             }
                         }
-                    }
+                    },
+                    modifier = Modifier.background(MaterialTheme.colorScheme.background)
                 ) {
-                    Icon(Icons.Default.Notifications, contentDescription = "notifications")
+                    Icon(
+                        Icons.Default.Notifications,
+                        contentDescription = "notifications",
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
                 }
             }
         }
@@ -160,83 +170,93 @@ fun ChatItem(
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun ChatItem() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp, horizontal = 12.dp)
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(50.dp)
+    RealtimeChatAppTheme {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp, horizontal = 12.dp)
         ) {
-            AsyncImage(
-                model = R.drawable.default_avatar,
-                contentDescription = "Small Preview Avatar",
-                modifier = Modifier
-                    .matchParentSize()
-                    .clip(CircleShape)
-                    .border(2.dp, Color.Gray, CircleShape)
-            )
-
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .offset(x = 17.dp, y = 17.dp)
-                    .size(15.dp)
-                    .clip(CircleShape)
-                    .border(1.dp, Color.Gray, CircleShape)
-                    .background(Color.Red, CircleShape)
-            ) {}
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        Column(
-            horizontalAlignment = Alignment.Start,
-            modifier = Modifier
-                .padding(5.dp)
-                .weight(1f)
-        ) {
-            Text(
-                text = "Vũ Quốc An",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.height(5.dp))
-            Text(
-                text = "Đây là bản xem trước.",
-                fontSize = 14.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-
-        Column(
-            horizontalAlignment = Alignment.End,
-            modifier = Modifier
-                .padding(5.dp)
-                .fillMaxWidth(0.35f)
-        ) {
-            Text(
-                text = "10:37",
-                fontSize = 14.sp
-            )
-            Spacer(modifier = Modifier.height(5.dp))
-            BadgedBox(
-                badge = {
-                    Badge(
-                        containerColor = Color.Red,
-                        contentColor = Color.White
-                    ) {
-                        Text("1")
-                    }
-                }
+                modifier = Modifier.size(50.dp)
             ) {
-                Icon(Icons.Default.Notifications, contentDescription = "Thông báo")
+                AsyncImage(
+                    model = R.drawable.default_avatar,
+                    contentDescription = "Small Preview Avatar",
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clip(CircleShape)
+                        .border(2.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                )
+
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .offset(x = 17.dp, y = 17.dp)
+                        .size(15.dp)
+                        .clip(CircleShape)
+                        .border(2.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape)
+                        .background(MaterialTheme.colorScheme.secondary, CircleShape)
+                ) {}
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Column(
+                horizontalAlignment = Alignment.Start,
+                modifier = Modifier
+                    .padding(5.dp)
+                    .weight(1f)
+            ) {
+                Text(
+                    text = "Vũ Quốc An",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Spacer(modifier = Modifier.height(5.dp))
+                Text(
+                    text = "Đây là bản xem trước.",
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
+
+            Column(
+                horizontalAlignment = Alignment.End,
+                modifier = Modifier
+                    .padding(5.dp)
+                    .fillMaxWidth(0.35f)
+            ) {
+                Text(
+                    text = "10:37",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Spacer(modifier = Modifier.height(5.dp))
+                BadgedBox(
+                    badge = {
+                        Badge(
+                            containerColor = MaterialTheme.colorScheme.secondary,
+                            contentColor = MaterialTheme.colorScheme.onSecondary
+                        ) {
+                            Text("1")
+                        }
+                    }
+                ) {
+                    Icon(
+                        Icons.Default.Notifications,
+                        contentDescription = "Thông báo",
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
+                }
             }
         }
     }

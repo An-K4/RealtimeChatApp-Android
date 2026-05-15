@@ -5,11 +5,11 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.sp
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.ui.theme.Chewy
-import com.example.realtimechatapp.ui.theme.RealtimeGreen
+import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,23 +35,25 @@ fun MainTopAppBar(
                 fontFamily = Chewy,
                 fontStyle = FontStyle.Italic,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onPrimary
             )
         },
         actions = {
             IconButton(onClick = { onSearchClick() }) {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = "search"
+                    contentDescription = "search",
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
         },
         colors = TopAppBarColors(
-            RealtimeGreen,
-            Color(0xFF8DBE8D),
-            Color.White,
-            Color.White,
-            Color.White
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.onPrimary,
+            MaterialTheme.colorScheme.onPrimary,
+            MaterialTheme.colorScheme.onPrimary
         )
     )
 }
@@ -60,32 +62,36 @@ fun MainTopAppBar(
 @Preview(showBackground = true)
 @Composable
 fun PreviewTopAppBar() {
-    TopAppBar(
-        title = {
-            Text(
-                text = stringResource(R.string.app_name),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Black,
-                fontFamily = Chewy,
-                fontStyle = FontStyle.Italic,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        actions = {
-            IconButton(onClick = {}) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search"
+    RealtimeChatAppTheme {
+        TopAppBar(
+            title = {
+                Text(
+                    text = stringResource(R.string.app_name),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Black,
+                    fontFamily = Chewy,
+                    fontStyle = FontStyle.Italic,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
-            }
-        },
-        colors = TopAppBarColors(
-            RealtimeGreen,
-            Color(0xFF8DBE8D),
-            Color.White,
-            Color.White,
-            Color.White
+            },
+            actions = {
+                IconButton(onClick = {}) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            },
+            colors = TopAppBarColors(
+                MaterialTheme.colorScheme.primary,
+                MaterialTheme.colorScheme.primary,
+                MaterialTheme.colorScheme.onPrimary,
+                MaterialTheme.colorScheme.onPrimary,
+                MaterialTheme.colorScheme.onPrimary
+            )
         )
-    )
+    }
 }

@@ -1,5 +1,6 @@
 package com.example.realtimechatapp.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.rounded.CameraAlt
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -31,8 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
-import com.example.realtimechatapp.ui.theme.RealtimeGreen
-import com.example.realtimechatapp.ui.theme.RealtimeRed
+import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 
 @Composable
 fun MessageInput(
@@ -52,7 +53,7 @@ fun MessageInput(
         Box(
             modifier = Modifier
                 .weight(1f)
-                .border(2.dp, Color.Gray, RoundedCornerShape(20.dp))
+                .border(2.dp, MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(20.dp))
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -83,7 +84,7 @@ fun MessageInput(
                     Icon(
                         imageVector = Icons.Rounded.CameraAlt,
                         contentDescription = "camera",
-                        tint = RealtimeRed,
+                        tint = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -95,7 +96,7 @@ fun MessageInput(
                     Icon(
                         imageVector = Icons.Rounded.Image,
                         contentDescription = "gallery",
-                        tint = RealtimeRed,
+                        tint = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -107,7 +108,7 @@ fun MessageInput(
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .background(RealtimeGreen, CircleShape)
+                .background(MaterialTheme.colorScheme.primary, CircleShape)
                 .clickable { onSendClick() }
         ) {
             Icon(
@@ -116,86 +117,89 @@ fun MessageInput(
                 modifier = Modifier
                     .size(24.dp)
                     .align(Alignment.Center),
-                tint = Color.White
+                tint = MaterialTheme.colorScheme.onPrimary
             )
         }
     }
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun MessageInput() {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 5.dp, horizontal = 10.dp)
-    ) {
-        Box(
+    RealtimeChatAppTheme {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
             modifier = Modifier
-                .weight(1f)
-                .border(2.dp, Color.Gray, RoundedCornerShape(20.dp))
+                .fillMaxWidth()
+                .padding(vertical = 5.dp, horizontal = 10.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .border(2.dp, color = MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(20.dp))
             ) {
-                TextField(
-                    value = "",
-                    onValueChange = {},
-                    modifier = Modifier.weight(1f),
-                    placeholder = { Text("Soạn tin nhắn...") },
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                    ),
-                    maxLines = 3
-                )
-
-                IconButton(
-                    onClick = {},
-                    modifier = Modifier.size(50.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Rounded.CameraAlt,
-                        contentDescription = "camera",
-                        tint = RealtimeRed,
-                        modifier = Modifier.size(28.dp)
+                    TextField(
+                        value = "",
+                        onValueChange = {},
+                        modifier = Modifier.weight(1f),
+                        placeholder = { Text("Soạn tin nhắn...") },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                        ),
+                        maxLines = 3
                     )
-                }
 
-                IconButton(
-                    onClick = {},
-                    modifier = Modifier.size(50.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Image,
-                        contentDescription = "gallery",
-                        tint = RealtimeRed,
-                        modifier = Modifier.size(28.dp)
-                    )
+                    IconButton(
+                        onClick = {},
+                        modifier = Modifier.size(50.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.CameraAlt,
+                            contentDescription = "camera",
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+
+                    IconButton(
+                        onClick = {},
+                        modifier = Modifier.size(50.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Image,
+                            contentDescription = "gallery",
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .background(RealtimeGreen.copy(0.85f), CircleShape)
-                .clickable {}
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Default.Send,
-                contentDescription = "send",
+            Box(
                 modifier = Modifier
-                    .size(24.dp)
-                    .align(Alignment.Center),
-                tint = Color.White
-            )
+                    .size(48.dp)
+                    .background(MaterialTheme.colorScheme.primary.copy(0.85f), CircleShape)
+                    .clickable {}
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Default.Send,
+                    contentDescription = "send",
+                    modifier = Modifier
+                        .size(24.dp)
+                        .align(Alignment.Center),
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+            }
         }
     }
 }
