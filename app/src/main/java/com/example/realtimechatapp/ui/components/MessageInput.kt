@@ -73,6 +73,7 @@ fun MessageInput(
                         unfocusedContainerColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
+                        focusedTextColor = MaterialTheme.colorScheme.onBackground
                     ),
                     maxLines = 3
                 )

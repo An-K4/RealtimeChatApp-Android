@@ -24,6 +24,12 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+// NEED TO DO:
+// - CREATE INTERFACE RESOURCE PROVIDER AND INJECT IT FOR LOG TIMBER WITHOUT USING AS STRING CONTEXT
+// - MOVE ALL LOGIC GET FILE FROM URI FROM VIEWMODEL TO REPOSITORY IMPL
+// - REMOVE ALL CONTEXT INJECTS FROM VIEWMODELS, MESSAGE IN FAILURE EVENT IS UITEXT
+// - USING AS STRING COMPOSABLE FUNCTION TO PARSE ALL UITEXT ERRORS TO STRINGS IN UI
+
 @HiltViewModel
 class MessageViewModel @Inject constructor(
     private val getMessageContactUseCase: GetMessageContactUseCase,
