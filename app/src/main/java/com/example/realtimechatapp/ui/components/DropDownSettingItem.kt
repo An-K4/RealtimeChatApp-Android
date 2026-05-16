@@ -92,7 +92,12 @@ fun <T> DropDownSettingItem(
                 ) {
                     options.forEach { option ->
                         DropdownMenuItem(
-                            text = { Text(text = displayText(option)) },
+                            text = {
+                                Text(
+                                    text = displayText(option),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            },
                             onClick = {
                                 onOptionSelected(option)
                                 isExpanded = false
