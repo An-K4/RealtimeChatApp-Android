@@ -17,15 +17,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RealtimeChatApp"
         tools:targetApi="33">
-
-<!--        <service-->
-<!--            android:name="androidx.appcompat.app.AppLocalesMetaDataHolderService"-->
-<!--            android:enabled="false"-->
-<!--            android:exported="false">-->
-<!--            <meta-data-->
-<!--                android:name="autoStoreLocales"-->
-<!--                android:value="true"/>-->
-<!--        </service>-->
         
         <activity
             android:name=".MainActivity"

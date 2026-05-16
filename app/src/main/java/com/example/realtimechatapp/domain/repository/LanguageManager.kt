@@ -1,11 +1,10 @@
 package com.example.realtimechatapp.domain.repository
 
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.Flow
 
 interface LanguageManager {
-    val currentLanguage: StateFlow<AppLanguage>
-    fun setCurrentLanguage(language: AppLanguage)
-    suspend fun setInitialLanguage()
+    val currentLanguage: Flow<AppLanguage>
+    suspend fun setCurrentLanguage(language: AppLanguage)
 }
 
 enum class AppLanguage(val code: String, val displayName: String) {
