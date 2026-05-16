@@ -108,6 +108,7 @@ app/
 - Material 3 Design với màu chủ đề xanh lá (#5CB85C)
 - Font Chewy cho logo ứng dụng
 - Hỗ trợ Edge-to-Edge và bàn phím không che nội dung
+- Hỗ trợ chuyển đổi giữa 2 chế độ sáng / tối
 
 ### 🔧 Kỹ Thuật
 - Offline-first: ưu tiên cache cục bộ, fallback khi mất mạng
@@ -168,10 +169,6 @@ app/
 #### Trả Lời Tin Nhắn (Reply)
 - Cơ sở dữ liệu đã có trường `replyToId` và `replyToContent`
 - Cần hoàn thiện UI hiển thị và tích hợp gửi reply qua socket
-
-#### Chế Độ Tối (Dark Mode)
-- Toggle dark mode đã có trong màn hình "Thêm" nhưng chưa hoạt động
-- Cần kết nối với `MaterialTheme` và lưu lựa chọn vào DataStore
 
 #### Gọi Thoại / Video
 - Placeholder UI đã có trong `ContactHeader` (đang bị comment)
