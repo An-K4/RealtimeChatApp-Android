@@ -2,6 +2,7 @@ package com.example.realtimechatapp.di
 
 import com.example.realtimechatapp.data.local.manager.CurrentUserManagerImpl
 import com.example.realtimechatapp.data.local.manager.LanguageManagerImpl
+import com.example.realtimechatapp.data.local.manager.ThemeManagerImpl
 import com.example.realtimechatapp.data.local.manager.TokenManagerImpl
 import com.example.realtimechatapp.domain.repository.NetworkChecker
 import com.example.realtimechatapp.data.repository.AuthRepositoryImpl
@@ -16,6 +17,7 @@ import com.example.realtimechatapp.domain.repository.GroupRepository
 import com.example.realtimechatapp.domain.repository.LanguageManager
 import com.example.realtimechatapp.domain.repository.MessageRepository
 import com.example.realtimechatapp.domain.repository.SocketRepository
+import com.example.realtimechatapp.domain.repository.ThemeManager
 import com.example.realtimechatapp.domain.repository.TokenManager
 import com.example.realtimechatapp.domain.repository.UserRepository
 import dagger.Binds
@@ -63,4 +65,8 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindLanguageManager(languageManagerImpl: LanguageManagerImpl): LanguageManager
+
+    @Binds
+    @Singleton
+    abstract fun bindThemeManager(themeManagerImpl: ThemeManagerImpl): ThemeManager
 }

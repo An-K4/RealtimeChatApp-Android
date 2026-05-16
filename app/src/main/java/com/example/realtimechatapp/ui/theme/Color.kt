@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.Color
 
 val White = Color(0xFFFFFFFF)
 val Black = Color(0xFF000000)
-val Gray = Color(0xFF838383)
+val Gray = Color(0xFF808080)
 val RealtimeGreen = Color(0xFF5CB85C)
 val RealtimeRed = Color(0xFFE74C3C)
 val Green = Color(0xFF4CAF50)

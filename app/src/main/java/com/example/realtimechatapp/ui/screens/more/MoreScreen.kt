@@ -17,6 +17,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
+import com.example.realtimechatapp.domain.repository.ThemeMode
 import com.example.realtimechatapp.ui.components.DropDownSettingItem
 import com.example.realtimechatapp.ui.components.ToggleSettingItem
 
@@ -26,7 +27,6 @@ fun MoreScreen(
     moreViewModel: MoreViewModel = hiltViewModel()
 ){
     val moreScreenState by moreViewModel.moreScreenState.collectAsState()
-    val selectedLanguage by moreViewModel.currentLanguage.collectAsState()
 
     LazyColumn(
         modifier = Modifier.fillMaxSize()
@@ -38,7 +38,7 @@ fun MoreScreen(
                 icon = Icons.Default.Language,
                 title = UiText.StringResource(R.string.language).asString(),
                 options = moreScreenState.supportedLanguages,
-                selectedOption = selectedLanguage,
+                selectedOption = moreScreenState.selectedLanguage,
                 displayText = { it.displayName },
                 onOptionSelected = {
                     moreViewModel.changeLanguage(it)
@@ -50,9 +50,9 @@ fun MoreScreen(
             ToggleSettingItem(
                 icon = Icons.Default.DarkMode,
                 title = UiText.StringResource(R.string.dark_mode).asString(),
-                isChecked = false,
+                isChecked = moreScreenState.isDarkTheme,
                 onCheckedChange = {
-
+                    moreViewModel.changeTheme(if (it) ThemeMode.DARK else ThemeMode.LIGHT)
                 }
             )
         }
