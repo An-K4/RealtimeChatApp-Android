@@ -12,6 +12,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -34,7 +35,6 @@ fun MessageTopAppBar(
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Black,
                 textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.fillMaxWidth()
             )
         },
@@ -42,8 +42,7 @@ fun MessageTopAppBar(
             IconButton(onClick = { onBackClick() }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "back",
-                    tint = MaterialTheme.colorScheme.onBackground
+                    contentDescription = "back"
                 )
             }
         },
@@ -51,11 +50,17 @@ fun MessageTopAppBar(
             IconButton(onClick = { onMoreClick() }) {
                 Icon(
                     imageVector = Icons.Filled.MoreVert,
-                    contentDescription = "more",
-                    tint = MaterialTheme.colorScheme.onBackground
+                    contentDescription = "more"
                 )
             }
-        }
+        },
+        colors = TopAppBarColors(
+            containerColor = MaterialTheme.colorScheme.background,
+            scrolledContainerColor = MaterialTheme.colorScheme.background,
+            navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
+            titleContentColor = MaterialTheme.colorScheme.onBackground,
+            actionIconContentColor = MaterialTheme.colorScheme.onBackground
+        )
     )
 }
 
@@ -72,7 +77,6 @@ fun MessageTopAppBar() {
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Black,
                     textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.fillMaxWidth(),
                 )
             },
@@ -80,8 +84,7 @@ fun MessageTopAppBar() {
                 IconButton(onClick = {}) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onBackground
+                        contentDescription = "Back"
                     )
                 }
             },
@@ -89,11 +92,17 @@ fun MessageTopAppBar() {
                 IconButton(onClick = {}) {
                     Icon(
                         imageVector = Icons.Filled.MoreHoriz,
-                        contentDescription = "More",
-                        tint = MaterialTheme.colorScheme.onBackground
+                        contentDescription = "More"
                     )
                 }
-            }
+            },
+            colors = TopAppBarColors(
+                containerColor = MaterialTheme.colorScheme.background,
+                scrolledContainerColor = MaterialTheme.colorScheme.background,
+                navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
+                titleContentColor = MaterialTheme.colorScheme.onBackground,
+                actionIconContentColor = MaterialTheme.colorScheme.onBackground
+            )
         )
     }
 }
