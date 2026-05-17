@@ -27,7 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.R
-import com.example.realtimechatapp.ui.components.BeginScreen
+import com.example.realtimechatapp.ui.components.WelcomePlaceholder
 import com.example.realtimechatapp.ui.components.ContactHeader
 import com.example.realtimechatapp.ui.components.MessageInput
 import com.example.realtimechatapp.ui.components.MessageRenderItem
@@ -54,7 +54,7 @@ fun DetailGroupScreen(
                     }
 
                     is DetailGroupViewModel.DetailGroupEvent.Failure -> {
-                        Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, event.message.asString(context), Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -68,7 +68,7 @@ fun DetailGroupScreen(
         ContactHeader(
             avatarContactPreview = detailGroupState.groupAvatar,
             contactName = detailGroupState.groupName ?: "",
-            contactAdditionalInfo = detailGroupState.groupStatus ?: "",
+            contactAdditionalInfo = detailGroupState.groupStatus,
             onVideoCallClick = {},
             onVoiceCallClick = {}
         )
@@ -83,7 +83,7 @@ fun DetailGroupScreen(
                 CircularProgressIndicator()
             } else {
                 if (detailGroupState.groupMessages.isEmpty()) {
-                    BeginScreen(isGroup = true, inDetailScreen = true)
+                    WelcomePlaceholder(isGroup = true, inDetailScreen = true)
                 } else {
                     LazyColumn(
                         state = rememberLazyListState(),

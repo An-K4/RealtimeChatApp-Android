@@ -11,14 +11,14 @@
     <string name="server_unreachable">Không thể kết nối tới máy chủ</string>
     <string name="unauthorized_session">Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại</string>
     <string name="missing_auth_info">Vui lòng nhập đầy đủ thông tin</string>
-    <string name="incorrect_username_or_password">Incorrect username or password</string>
-    <string name="email_already_exists">Email already exists</string>
-    <string name="username_already_exists">Username already exists</string>
-    <string name="username_length_require">Username must be between %1$d and %2$d characters</string>
-    <string name="password_length_require">Password must be at least %1%1$s characters long</string>
-    <string name="invalid_email_address">Invalid email address</string>
-    <string name="passwords_not_match">Passwords do not match</string>
-    <string name="invalid_avatar">Invalid avatar</string>
+    <string name="incorrect_username_or_password">Tên đăng nhập hoặc mật khẩu không đúng</string>
+    <string name="email_already_exists">Email đã tồn tại</string>
+    <string name="username_already_exists">Tên đăng nhập đã tồn tại</string>
+    <string name="username_length_require">Tên đăng nhập có độ dài từ %1$d đến %2$d ký tự</string>
+    <string name="password_length_require">Mật khẩu có độ dài ít nhất %1$s ký tự</string>
+    <string name="invalid_email_address">Email không hợp lệ</string>
+    <string name="passwords_not_match">Mật khẩu xác nhận không khớp</string>
+    <string name="invalid_avatar">Avatar không hợp lệ</string>
     <string name="username">Tên đăng nhập</string>
     <string name="username_colon">Tên đăng nhập:</string>
     <string name="hint_new_account">Bạn chưa có tài khoản? </string>
@@ -76,4 +76,12 @@
     <string name="ok">OK</string>
     <string name="clover_chatty_user">Người dùng Clover Chatty</string>
     <string name="you_with_arg">Bạn: %s</string>
+    <string name="group_status">%1$s thành viên</string>
+    <string name="no_information">Không có thông tin</string>
+    <string name="no_messages_yet">Chưa có tin nhắn nào.</string>
+    <string name="welcome_clover">Chào mừng đến với Clover Chatty</string>
+    <string name="type_to_start">Nhập tin nhắn để bắt đầu!</string>
+    <string name="create_group_share">Tạo nhóm và chia sẻ những câu chuyện thú vị cùng nhau!</string>
+    <string name="break_the_ice">Hãy thử làm quen bằng một lời chào!</string>
+    <string name="find_friend_start">Hãy tìm 1 người bạn và bắt đầu trò chuyện nào!</string>
 </resources>

@@ -75,4 +75,12 @@
     <string name="ok">OK</string>
     <string name="clover_chatty_user">Clover Chatty User</string>
     <string name="you_with_arg">You: %s</string>
+    <string name="group_status">%1$s members</string>
+    <string name="no_information">No information</string>
+    <string name="no_messages_yet">No messages yet.</string>
+    <string name="welcome_clover">Welcome to Clover Chatty</string>
+    <string name="type_to_start">Type a message to start!</string>
+    <string name="create_group_share">Create a group and share fun stories together!</string>
+    <string name="break_the_ice">Say hi to break the ice!</string>
+    <string name="find_friend_start">Find a friend and start chatting!</string>
 </resources>

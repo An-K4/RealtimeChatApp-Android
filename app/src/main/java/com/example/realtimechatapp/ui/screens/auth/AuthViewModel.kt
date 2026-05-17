@@ -1,18 +1,15 @@
 package com.example.realtimechatapp.ui.screens.auth
 
-import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.realtimechatapp.common.FileUtils
-import com.example.realtimechatapp.common.ImageUtils
+import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.data.local.manager.TokenManagerImpl
 import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.usecase.auth.LoginUseCase
 import com.example.realtimechatapp.domain.usecase.auth.SignupUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +18,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
@@ -29,8 +25,7 @@ class AuthViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val signupUseCase: SignupUseCase,
     private val tokenManagerImpl: TokenManagerImpl,
-    private val currentUserManager: CurrentUserManager,
-    @ApplicationContext private val context: Context
+    private val currentUserManager: CurrentUserManager
 ) : ViewModel() {
 
     data class LoginState(
@@ -51,7 +46,7 @@ class AuthViewModel @Inject constructor(
 
     sealed class AuthEvent {
         object AuthSuccess : AuthEvent()
-        data class Failure(val message: String) : AuthEvent()
+        data class Failure(val message: UiText) : AuthEvent()
     }
 
     private var _isLoading = MutableStateFlow(true)
@@ -113,7 +108,7 @@ class AuthViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _isLoading.value = false
-                Timber.d(e.getErrorMessage().asString(context))
+                Timber.d(e, "Lỗi đăng nhập bằng token")
             } finally {
                 _isLoading.value = false
             }
@@ -129,32 +124,23 @@ class AuthViewModel @Inject constructor(
             result.onSuccess { user ->
                 _authEvent.send(AuthEvent.AuthSuccess)
             }.onFailure { exception ->
-                _authEvent.send(AuthEvent.Failure(exception.getErrorMessage().asString(context)))
+                _authEvent.send(AuthEvent.Failure(exception.getErrorMessage()))
             }
         }
     }
 
     fun signup() {
         viewModelScope.launch {
-            var compressAvatar: File? = null
+            var compressAvatar: Uri? = _signupState.value.avatar
 
             _signupState.update { it.copy(isLoading = true) }
-
-            _signupState.value.avatar?.let { uri ->
-                Timber.d("Avatar tải lên: %s", uri)
-                val file = FileUtils.getFileFromUri(context, uri)
-                file?.let {
-                    Timber.d("Lấy file từ uri thành công, bắt đầu nén: %s", file.absolutePath)
-                    compressAvatar = ImageUtils.compressImageFile(it)
-                }
-            }
 
             with(_signupState.value) {
                 signupUseCase(compressAvatar, username, password, passwordRetype, fullName, email)
             }.onSuccess {
                 _authEvent.send(AuthEvent.AuthSuccess)
             }.onFailure { exception ->
-                _authEvent.send(AuthEvent.Failure(exception.getErrorMessage().asString(context)))
+                _authEvent.send(AuthEvent.Failure(exception.getErrorMessage()))
             }
 
             _signupState.update { it.copy(isLoading = false) }

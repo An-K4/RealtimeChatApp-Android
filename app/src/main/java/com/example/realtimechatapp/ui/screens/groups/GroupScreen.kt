@@ -17,7 +17,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.ui.components.ChatItem
-import com.example.realtimechatapp.ui.components.BeginScreen
+import com.example.realtimechatapp.ui.components.WelcomePlaceholder
 import com.example.realtimechatapp.ui.navigation.Screen
 
 @Composable
@@ -34,7 +34,7 @@ fun GroupScreen(
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
             if (uiState.groups.isEmpty()){
-                BeginScreen(isGroup = true, inDetailScreen = false)
+                WelcomePlaceholder(isGroup = true, inDetailScreen = false)
             } else {
                 LazyColumn(
                     state = rememberLazyListState(),

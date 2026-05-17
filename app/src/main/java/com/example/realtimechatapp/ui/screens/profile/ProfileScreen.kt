@@ -603,7 +603,7 @@ fun ProfileScreen(
         is ProfileViewModel.ProfileEvent.Failure -> {
             NotificationDialog(
                 title = UiText.StringResource(R.string.error).asString(),
-                message = (dialogState as ProfileViewModel.ProfileEvent.Failure).message,
+                message = (dialogState as ProfileViewModel.ProfileEvent.Failure).message.asString(),
                 isSuccess = false,
                 onDismiss = { dialogState = null }
             )

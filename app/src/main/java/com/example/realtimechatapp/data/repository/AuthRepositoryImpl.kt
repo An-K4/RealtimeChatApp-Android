@@ -1,5 +1,9 @@
 package com.example.realtimechatapp.data.repository
 
+import android.content.Context
+import android.net.Uri
+import com.example.realtimechatapp.common.FileUtils
+import com.example.realtimechatapp.common.ImageUtils
 import com.example.realtimechatapp.common.NetworkUtils
 import com.example.realtimechatapp.data.local.dao.UserDao
 import com.example.realtimechatapp.data.local.database.LocalDatabase
@@ -14,10 +18,8 @@ import com.example.realtimechatapp.domain.model.User
 import com.example.realtimechatapp.domain.repository.AuthRepository
 import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.repository.NetworkChecker
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import dagger.hilt.android.qualifiers.ApplicationContext
 import timber.log.Timber
-import java.io.File
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -27,7 +29,8 @@ class AuthRepositoryImpl @Inject constructor(
     private val tokenManager: TokenManagerImpl,
     private val currentUserManager: CurrentUserManager,
     private val networkChecker: NetworkChecker,
-    private val localDatabase: LocalDatabase
+    private val localDatabase: LocalDatabase,
+    @ApplicationContext private val context: Context
 ) : AuthRepository {
     override suspend fun login(
         username: String,
@@ -57,9 +60,12 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun uploadAvatar(file: File): Result<String?> {
+    override suspend fun uploadAvatar(file: Uri): Result<String?> {
         return try {
-            val part = NetworkUtils.createPartFromFile("avatar", file)
+            val file = FileUtils.getFileFromUri(context, file)
+            val compressedAvatar = ImageUtils.compressImageFile(file)
+
+            val part = NetworkUtils.createPartFromFile("avatar", compressedAvatar)
             val uploadResult = safeApiCall(networkChecker) {
                 authApi.uploadAvatar(part)
             }

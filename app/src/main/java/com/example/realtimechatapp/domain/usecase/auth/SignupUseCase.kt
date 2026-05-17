@@ -1,14 +1,14 @@
 package com.example.realtimechatapp.domain.usecase.auth
 
+import android.net.Uri
 import com.example.realtimechatapp.domain.repository.AuthRepository
 import com.example.realtimechatapp.domain.validation.AuthValidator
 import timber.log.Timber
-import java.io.File
 import javax.inject.Inject
 
 class SignupUseCase @Inject constructor(private val authRepository: AuthRepository) {
     suspend operator fun invoke(
-        avatar: File?,
+        avatar: Uri?,
         username: String,
         password: String,
         passwordRetype: String,

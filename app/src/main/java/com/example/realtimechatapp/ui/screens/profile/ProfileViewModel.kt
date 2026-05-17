@@ -1,11 +1,9 @@
 package com.example.realtimechatapp.ui.screens.profile
 
-import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.realtimechatapp.R
-import com.example.realtimechatapp.common.FileUtils
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.usecase.auth.LogoutUseCase
@@ -15,7 +13,6 @@ import com.example.realtimechatapp.domain.usecase.user.GetMeUseCase
 import com.example.realtimechatapp.domain.usecase.user.UpdateAvatarUseCase
 import com.example.realtimechatapp.domain.usecase.user.UpdateProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,8 +29,7 @@ class ProfileViewModel @Inject constructor(
     private val updateAvatarUseCase: UpdateAvatarUseCase,
     private val changePasswordUseCase: ChangePasswordUseCase,
     private val disconnectSocketUseCase: DisconnectSocketUseCase,
-    private val logoutUseCase: LogoutUseCase,
-    @ApplicationContext private val context: Context
+    private val logoutUseCase: LogoutUseCase
 ) : ViewModel() {
     data class ProfileState(
         val avatar: Any? = null,
@@ -68,7 +64,7 @@ class ProfileViewModel @Inject constructor(
         object LogoutConfirm : ProfileEvent()
         object LogoutSuccess : ProfileEvent()
         object NavigateToLogin : ProfileEvent()
-        data class Failure(val message: String) : ProfileEvent()
+        data class Failure(val message: UiText) : ProfileEvent()
     }
 
     private val _profileState = MutableStateFlow(ProfileState())
@@ -169,9 +165,7 @@ class ProfileViewModel @Inject constructor(
                 }
             }.onFailure { exception ->
                 _profileEvent.send(
-                    ProfileEvent.Failure(
-                        exception.getErrorMessage().asString(context)
-                    )
+                    ProfileEvent.Failure(exception.getErrorMessage())
                 )
                 _profileState.update { it.copy(isLoading = false) }
             }
@@ -199,14 +193,13 @@ class ProfileViewModel @Inject constructor(
                         val avatar = _updateProfileState.value.avatar as? Uri ?: run {
                             _profileEvent.send(
                                 ProfileEvent.Failure(
-                                    UiText.StringResource(R.string.invalid_avatar).asString(context)
+                                    UiText.StringResource(R.string.invalid_avatar)
                                 )
                             )
                             return@launch
                         }
-                        val avatarFile = FileUtils.getFileFromUri(context, avatar)
 
-                        val avatarDeferred = async { updateAvatarUseCase(avatarFile) }
+                        val avatarDeferred = async { updateAvatarUseCase(avatar) }
                         val infoDeferred =
                             async { updateProfileUseCase(current.fullName, current.email) }
 
@@ -226,12 +219,15 @@ class ProfileViewModel @Inject constructor(
 
                             _profileEvent.send(ProfileEvent.UpdateProfileSuccess)
                         } else {
-                            val errors = mutableListOf<String>()
-                            updateInfoResult.exceptionOrNull()
-                                ?.let { errors.add("Profile: ${it.getErrorMessage()}") }
-                            updateAvatarResult.exceptionOrNull()
-                                ?.let { errors.add("Avatar: ${it.getErrorMessage()}") }
-                            _profileEvent.send(ProfileEvent.Failure(errors.joinToString("\n")))
+                            updateAvatarResult.exceptionOrNull()?.let {
+                                _profileEvent.send(ProfileEvent.Failure(it.getErrorMessage()))
+                                return@launch
+                            }
+
+                            updateInfoResult.exceptionOrNull()?.let {
+                                _profileEvent.send(ProfileEvent.Failure(it.getErrorMessage()))
+                                return@launch
+                            }
                         }
                     }
 
@@ -239,14 +235,13 @@ class ProfileViewModel @Inject constructor(
                         val avatar = _updateProfileState.value.avatar as? Uri ?: run {
                             _profileEvent.send(
                                 ProfileEvent.Failure(
-                                    UiText.StringResource(R.string.invalid_avatar).asString(context)
+                                    UiText.StringResource(R.string.invalid_avatar)
                                 )
                             )
                             return@launch
                         }
-                        val avatarFile = FileUtils.getFileFromUri(context, avatar)
 
-                        val updateAvatarResult = updateAvatarUseCase(avatarFile)
+                        val updateAvatarResult = updateAvatarUseCase(avatar)
                         if (updateAvatarResult.isSuccess) {
                             _profileState.update { it.copy(avatar = updateAvatarResult.getOrNull()) }
                             _profileEvent.send(ProfileEvent.UpdateProfileSuccess)
@@ -255,8 +250,7 @@ class ProfileViewModel @Inject constructor(
                                 ProfileEvent.Failure(
                                     updateAvatarResult.exceptionOrNull()
                                         ?.getErrorMessage()
-                                        ?.asString(context)
-                                        ?: context.getString(R.string.unknown_error)
+                                        ?: UiText.StringResource(R.string.unknown_error)
                                 )
                             )
                         }
@@ -279,15 +273,14 @@ class ProfileViewModel @Inject constructor(
                                 ProfileEvent.Failure(
                                     updateInfoResult.exceptionOrNull()
                                         ?.getErrorMessage()
-                                        ?.asString(context)
-                                        ?: context.getString(R.string.unknown_error)
+                                        ?: UiText.StringResource(R.string.unknown_error)
                                 )
                             )
                         }
                     }
                 }
             } catch (e: Exception) {
-                _profileEvent.send(ProfileEvent.Failure("Lỗi: ${e.getErrorMessage()}"))
+                _profileEvent.send(ProfileEvent.Failure(e.getErrorMessage()))
             } finally {
                 _updateProfileState.update { it.copy(isUpdating = false) }
             }
@@ -311,7 +304,7 @@ class ProfileViewModel @Inject constructor(
             changePasswordUseCase(oldPassword, newPassword, confirmNewPassword).onSuccess {
                 _profileEvent.send(ProfileEvent.ChangePasswordSuccess)
             }.onFailure {
-                _profileEvent.send(ProfileEvent.Failure(it.getErrorMessage().asString(context)))
+                _profileEvent.send(ProfileEvent.Failure(it.getErrorMessage()))
             }
         }
     }
@@ -334,7 +327,7 @@ class ProfileViewModel @Inject constructor(
             }.onFailure { exception ->
                 _profileEvent.send(
                     ProfileEvent.Failure(
-                        exception.getErrorMessage().asString(context)
+                        exception.getErrorMessage()
                     )
                 )
             }

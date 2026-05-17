@@ -1,9 +1,10 @@
 package com.example.realtimechatapp.ui.screens.groups
 
-import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.realtimechatapp.R
+import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.model.Member
 import com.example.realtimechatapp.domain.model.Message
@@ -12,7 +13,6 @@ import com.example.realtimechatapp.domain.usecase.groups.GetGroupInfoUseCase
 import com.example.realtimechatapp.domain.usecase.groups.GetGroupMessageUseCase
 import com.example.realtimechatapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,14 +27,13 @@ class DetailGroupViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase,
     private val getGroupMessageUseCase: GetGroupMessageUseCase,
-    private val getGroupInfoUseCase: GetGroupInfoUseCase,
-    @ApplicationContext private val context: Context
+    private val getGroupInfoUseCase: GetGroupInfoUseCase
 ) : ViewModel() {
     data class DetailGroupState(
         val currentUserId: String = "",
         val groupId: String,
         val groupName: String? = null,
-        val groupStatus: String? = null,
+        val groupStatus: UiText? = null,
         val groupAvatar: String? = null,
         val groupMessages: List<Message> = emptyList(),
         val groupMembers: List<Member> = emptyList(),
@@ -44,7 +43,7 @@ class DetailGroupViewModel @Inject constructor(
 
     sealed class DetailGroupEvent {
         object Success : DetailGroupEvent()
-        data class Failure(val message: String) : DetailGroupEvent()
+        data class Failure(val message: UiText) : DetailGroupEvent()
     }
 
     private val _detailGroupState = MutableStateFlow(
@@ -86,7 +85,7 @@ class DetailGroupViewModel @Inject constructor(
                 _detailGroupState.update { it.copy(groupMessages = groupMessages, isLoading = false) }
                 Timber.d(groupMessages.toString())
             }.onFailure { exception ->
-                _detailGroupEvent.send(DetailGroupEvent.Failure(exception.getErrorMessage().asString(context)))
+                _detailGroupEvent.send(DetailGroupEvent.Failure(exception.getErrorMessage()))
                 _detailGroupState.update { it.copy(isLoading = false) }
             }
         }
@@ -102,13 +101,13 @@ class DetailGroupViewModel @Inject constructor(
                 _detailGroupState.update {
                     it.copy(
                         groupName = group?.name,
-                        groupStatus = "${group?.members?.size} thành viên",
+                        groupStatus = UiText.StringResource(R.string.group_status, group?.members?.size),
                         groupAvatar = group?.avatar,
                         groupMembers = group?.members ?: emptyList()
                     )
                 }
             }.onFailure { exception ->
-                _detailGroupEvent.send(DetailGroupEvent.Failure(exception.getErrorMessage().asString(context)))
+                _detailGroupEvent.send(DetailGroupEvent.Failure(exception.getErrorMessage()))
             }
         }
     }

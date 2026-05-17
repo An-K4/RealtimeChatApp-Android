@@ -118,8 +118,8 @@ fun SignupScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
-                MaterialTheme.colorScheme.primary,
-                MaterialTheme.colorScheme.primary
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                cursorColor = MaterialTheme.colorScheme.primary
             )
         )
 
@@ -132,8 +132,8 @@ fun SignupScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
-                MaterialTheme.colorScheme.primary,
-                MaterialTheme.colorScheme.primary
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                cursorColor = MaterialTheme.colorScheme.primary
             )
         )
 
@@ -146,8 +146,8 @@ fun SignupScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
-                MaterialTheme.colorScheme.primary,
-                MaterialTheme.colorScheme.primary
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                cursorColor = MaterialTheme.colorScheme.primary
             )
         )
 
@@ -160,8 +160,8 @@ fun SignupScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
-                MaterialTheme.colorScheme.primary,
-                MaterialTheme.colorScheme.primary
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                cursorColor = MaterialTheme.colorScheme.primary
             )
         )
 
@@ -226,7 +226,7 @@ fun SignupScreen(
         val msg = (dialogState as AuthViewModel.AuthEvent.Failure).message
         NotificationDialog(
             title = stringResource(R.string.login_error),
-            message = msg,
+            message = msg.asString(),
             isSuccess = false,
             onDismiss = { dialogState = null }
         )

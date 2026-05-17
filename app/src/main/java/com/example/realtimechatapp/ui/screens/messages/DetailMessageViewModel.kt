@@ -1,6 +1,5 @@
 package com.example.realtimechatapp.ui.screens.messages
 
-import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,7 +20,6 @@ import com.example.realtimechatapp.domain.usecase.socket.SendMessageUseCase
 import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import com.example.realtimechatapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -48,14 +46,13 @@ class DetailMessageViewModel @Inject constructor(
     private val sendMessageUseCase: SendMessageUseCase,
     private val seenMessageUseCase: SeenMessageUseCase,
     private val emitTypingStartUseCase: EmitTypingStartUseCase,
-    private val emitTypingStopUseCase: EmitTypingStopUseCase,
-    @ApplicationContext private val context: Context
+    private val emitTypingStopUseCase: EmitTypingStopUseCase
 ) : ViewModel() {
     data class DetailMessageState(
         val currentUserId: String = "",
         val friendId: String = "",
         val friendName: String? = null,
-        val friendStatus: String? = null,
+        val friendStatus: UiText? = null,
         val friendTypingStatus: Boolean = false,
         val friendAvatar: String? = null,
         val messages: List<Message> = emptyList(),
@@ -65,7 +62,7 @@ class DetailMessageViewModel @Inject constructor(
 
     sealed class DetailMessageEvent {
         object GetMessageSuccess : DetailMessageEvent()
-        data class Failure(val message: String) : DetailMessageEvent()
+        data class Failure(val message: UiText) : DetailMessageEvent()
     }
 
     private data class DetailMessageContext(
@@ -142,9 +139,9 @@ class DetailMessageViewModel @Inject constructor(
             friendId = friendId,
             friendName = detailMessageContext.friendUser?.fullName ?: "",
             friendStatus = if (socketData.onlineUserIds.contains(friendId))
-                UiText.StringResource(R.string.online).asString(context)
+                UiText.StringResource(R.string.online)
             else
-                UiText.StringResource(R.string.offline).asString(context),
+                UiText.StringResource(R.string.offline),
             friendTypingStatus = socketData.typingUserIds.contains(friendId),
             friendAvatar = detailMessageContext.friendUser?.avatar ?: "",
             messages = socketData.messages,
@@ -153,7 +150,7 @@ class DetailMessageViewModel @Inject constructor(
         )
     }.catch { exception ->
         Timber.e(exception, "Lỗi luồng màn hình nhắn chi tiết")
-        _detailMessageEvent.send(DetailMessageEvent.Failure(exception.getErrorMessage().asString(context)))
+        _detailMessageEvent.send(DetailMessageEvent.Failure(exception.getErrorMessage()))
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -178,7 +175,7 @@ class DetailMessageViewModel @Inject constructor(
                 _headerInfo.value = user
                 Timber.d("Thông tin người dùng: $user")
             }.onFailure { e ->
-                _detailMessageEvent.send(DetailMessageEvent.Failure(e.getErrorMessage().asString(context)))
+                _detailMessageEvent.send(DetailMessageEvent.Failure(e.getErrorMessage()))
             }
         }
     }
@@ -192,7 +189,7 @@ class DetailMessageViewModel @Inject constructor(
                 // _detailMessageEvent.send(DetailMessageEvent.GetMessageSuccess)
                 Timber.d("Lấy tin nhắn thành công")
             }.onFailure { e ->
-                _detailMessageEvent.send(DetailMessageEvent.Failure(e.getErrorMessage().asString(context)))
+                _detailMessageEvent.send(DetailMessageEvent.Failure(e.getErrorMessage()))
             }
 
             _isLoading.value = false

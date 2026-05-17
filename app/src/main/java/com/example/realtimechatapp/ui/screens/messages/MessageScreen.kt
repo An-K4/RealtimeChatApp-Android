@@ -29,7 +29,7 @@ import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.ui.components.ChatItem
 import com.example.realtimechatapp.ui.navigation.Screen
-import com.example.realtimechatapp.ui.components.BeginScreen
+import com.example.realtimechatapp.ui.components.WelcomePlaceholder
 import com.example.realtimechatapp.ui.components.NotificationDialog
 
 @Composable
@@ -51,7 +51,7 @@ fun MessageScreen(
                     }
 
                     is MessageViewModel.MessageEvent.Failure -> {
-                        Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, event.message.asString(context), Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -65,7 +65,7 @@ fun MessageScreen(
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
             if (messageState.users.isEmpty()) {
-                BeginScreen(isGroup = false, inDetailScreen = false)
+                WelcomePlaceholder(isGroup = false, inDetailScreen = false)
             } else {
                 LazyColumn(
                     state = rememberLazyListState(),

@@ -189,7 +189,7 @@ fun LoginScreen(
         val msg = (dialogState as AuthViewModel.AuthEvent.Failure).message
         NotificationDialog(
             title = stringResource(R.string.login_error),
-            message = msg,
+            message = msg.asString(),
             isSuccess = false,
             onDismiss = { dialogState = null }
         )

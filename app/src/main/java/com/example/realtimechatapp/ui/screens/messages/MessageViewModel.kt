@@ -1,8 +1,8 @@
 package com.example.realtimechatapp.ui.screens.messages
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.data.local.manager.TokenManagerImpl
 import com.example.realtimechatapp.domain.model.MessageContact
@@ -12,7 +12,6 @@ import com.example.realtimechatapp.domain.usecase.socket.ObserveMessageContactUs
 import com.example.realtimechatapp.domain.usecase.socket.ObserveOnlineUserUseCase
 import com.example.realtimechatapp.domain.usecase.socket.ObserveTypingUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,12 +23,6 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-// NEED TO DO:
-// - CREATE INTERFACE RESOURCE PROVIDER AND INJECT IT FOR LOG TIMBER WITHOUT USING AS STRING CONTEXT
-// - MOVE ALL LOGIC GET FILE FROM URI FROM VIEWMODEL TO REPOSITORY IMPL
-// - REMOVE ALL CONTEXT INJECTS FROM VIEWMODELS, MESSAGE IN FAILURE EVENT IS UITEXT
-// - USING AS STRING COMPOSABLE FUNCTION TO PARSE ALL UITEXT ERRORS TO STRINGS IN UI
-
 @HiltViewModel
 class MessageViewModel @Inject constructor(
     private val getMessageContactUseCase: GetMessageContactUseCase,
@@ -37,8 +30,7 @@ class MessageViewModel @Inject constructor(
     private val observeOnlineUserUseCase: ObserveOnlineUserUseCase,
     private val observeTypingUseCase: ObserveTypingUseCase,
     private val connectSocketUseCase: ConnectSocketUseCase,
-    private val tokenManager: TokenManagerImpl,
-    @ApplicationContext private val context: Context
+    private val tokenManager: TokenManagerImpl
 ) : ViewModel() {
     data class MessageState(
         val isLoading: Boolean = false,
@@ -48,7 +40,7 @@ class MessageViewModel @Inject constructor(
     sealed class MessageEvent {
         object Authenticated : MessageEvent()
         object Unauthenticated : MessageEvent()
-        data class Failure(val message: String) : MessageEvent()
+        data class Failure(val message: UiText) : MessageEvent()
     }
 
     private val _isLoading = MutableStateFlow(false)
@@ -77,8 +69,8 @@ class MessageViewModel @Inject constructor(
             }
         )
     }.catch { exception ->
-        Timber.e("Lỗi luồng màn hình tin nhắn: ${exception.getErrorMessage().asString(context)}")
-        _messageEvent.send(MessageEvent.Failure(exception.getErrorMessage().asString(context)))
+        Timber.e("Lỗi luồng màn hình tin nhắn: ${exception.getErrorMessage()}")
+        _messageEvent.send(MessageEvent.Failure(exception.getErrorMessage()))
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -117,11 +109,7 @@ class MessageViewModel @Inject constructor(
             getMessageContactUseCase().onSuccess {
                 // do nothing, delegate to observe fun
             }.onFailure { exception ->
-                _messageEvent.send(
-                    MessageEvent.Failure(
-                        exception.getErrorMessage().asString(context)
-                    )
-                )
+                _messageEvent.send(MessageEvent.Failure(exception.getErrorMessage()))
             }
 
             _isLoading.value = false

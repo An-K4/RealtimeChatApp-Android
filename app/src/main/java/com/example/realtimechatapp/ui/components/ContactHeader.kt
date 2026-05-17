@@ -31,14 +31,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
+import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
-import timber.log.Timber
 
 @Composable
 fun ContactHeader(
     avatarContactPreview: String?,
     contactName: String,
-    contactAdditionalInfo: String,
+    contactAdditionalInfo: UiText?,
     onVideoCallClick: () -> Unit,
     onVoiceCallClick: () -> Unit
 ) {
@@ -77,12 +77,10 @@ fun ContactHeader(
             )
 
             Text(
-                text = contactAdditionalInfo,
+                text = contactAdditionalInfo?.asString() ?: UiText.StringResource(R.string.no_information).asString(),
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onBackground
             )
-
-            Timber.d(contactAdditionalInfo)
         }
 
 //        IconButton(onClick = {}) {

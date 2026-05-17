@@ -34,7 +34,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
-import com.example.realtimechatapp.ui.components.BeginScreen
+import com.example.realtimechatapp.ui.components.WelcomePlaceholder
 import com.example.realtimechatapp.ui.components.ContactHeader
 import com.example.realtimechatapp.ui.components.MessageInput
 import com.example.realtimechatapp.ui.components.MessageRenderItem
@@ -64,7 +64,7 @@ fun DetailMessageScreen(
                     }
 
                     is DetailMessageViewModel.DetailMessageEvent.Failure -> {
-                        Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, event.message.asString(context), Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -94,7 +94,7 @@ fun DetailMessageScreen(
         ContactHeader(
             avatarContactPreview = detailMessageState.friendAvatar,
             contactName = detailMessageState.friendName ?: "",
-            contactAdditionalInfo = detailMessageState.friendStatus ?: "",
+            contactAdditionalInfo = detailMessageState.friendStatus,
             onVideoCallClick = {},
             onVoiceCallClick = {}
         )
@@ -109,7 +109,7 @@ fun DetailMessageScreen(
                 CircularProgressIndicator()
             } else {
                 if (detailMessageState.messages.isEmpty()) {
-                    BeginScreen(isGroup = false, inDetailScreen = true)
+                    WelcomePlaceholder(isGroup = false, inDetailScreen = true)
                 } else {
                     Column(
                         modifier = Modifier
