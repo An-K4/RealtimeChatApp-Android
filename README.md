@@ -135,11 +135,6 @@ app/
 - Xóa thành viên, chuyển quyền Owner
 - Rời nhóm
 
-#### Sửa Lỗi Ngôn Ngữ
-- Một số string còn hardcode tiếng Việt chưa được đưa vào `strings.xml`
-- Đảm bảo toàn bộ UI phản hồi đúng khi chuyển ngôn ngữ (bao gồm các màn hình detail)
-- Xử lý đúng locale cho định dạng ngày giờ
-
 ---
 
 ### 📌 Cải Thiện Hiệu Suất
