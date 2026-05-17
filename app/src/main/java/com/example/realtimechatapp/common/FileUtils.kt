@@ -2,12 +2,14 @@ package com.example.realtimechatapp.common
 
 import android.content.Context
 import android.net.Uri
+import com.example.realtimechatapp.domain.exception.FileException
+import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
 
 object FileUtils {
-    fun getFileFromUri(context: Context, uri: Uri) : File?{
-        return try {
+    fun getFileFromUri(context: Context, uri: Uri): File {
+        try {
             // val contentResolver = context.contentResolver
 
             val fileName = "temp_upload_${System.currentTimeMillis()}"
@@ -15,22 +17,15 @@ object FileUtils {
 
             // avoid memory leak: A resource failed to call close.
             context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                FileOutputStream(tempFile).use { outputStream -> inputStream.copyTo(outputStream)
+                FileOutputStream(tempFile).use { outputStream ->
+                    inputStream.copyTo(outputStream)
                 }
-            }
+            } ?: throw FileException.FileNotFoundException
 
-//            val inputStream: InputStream? = contentResolver.openInputStream(uri)
-//            val outputStream = FileOutputStream(tempFile)
-//
-//            inputStream?.copyTo(outputStream)
-//
-//            inputStream?.close()
-//            outputStream.close()
-
-            tempFile
-        } catch (e: Exception){
-            e.printStackTrace()
-            null
+            return tempFile
+        } catch (e: Exception) {
+            Timber.e(e, "Lỗi khi tải file từ uri")
+            throw FileException.FileNotFoundException
         }
     }
 }
