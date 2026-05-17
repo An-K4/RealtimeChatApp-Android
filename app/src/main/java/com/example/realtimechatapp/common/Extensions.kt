@@ -3,10 +3,10 @@ package com.example.realtimechatapp.common
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.domain.exception.AuthException
 import com.example.realtimechatapp.domain.exception.DatabaseException
+import com.example.realtimechatapp.domain.exception.FileException
 import com.example.realtimechatapp.domain.exception.GroupException
 import com.example.realtimechatapp.domain.exception.MessageException
 import com.example.realtimechatapp.domain.exception.NetworkException
-import com.example.realtimechatapp.domain.exception.UserException
 import timber.log.Timber
 import java.io.IOException
 import java.time.Instant
@@ -50,9 +50,9 @@ fun Throwable.getErrorMessage(): UiText {
         // message exceptions
         is MessageException.ContactIdNotExistException -> UiText.StringResource(R.string.contact_id_not_exist)
 
-        // user exceptions
-        is UserException.FileNotFoundException -> UiText.StringResource(R.string.file_not_found)
-        is UserException.CompressAvatarException -> UiText.StringResource(R.string.compress_avatar_fail)
+        // file exceptions
+        is FileException.FileNotFoundException -> UiText.StringResource(R.string.file_not_found)
+        is FileException.CompressFileException -> UiText.StringResource(R.string.compress_avatar_fail)
 
         // other exceptions
         is IOException -> UiText.StringResource(R.string.lost_connection_to_server)
