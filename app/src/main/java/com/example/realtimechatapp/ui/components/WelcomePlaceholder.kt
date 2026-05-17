@@ -20,27 +20,28 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.realtimechatapp.R
+import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 
 @Composable
-fun BeginScreen(
+fun WelcomePlaceholder(
     isGroup: Boolean,
     inDetailScreen: Boolean
 ) {
     val suggestText1 =
-        if (inDetailScreen) "Chưa có tin nhắn nào." else "Chào mừng đến với Clover Chatty"
+        if (inDetailScreen) UiText.StringResource(R.string.no_messages_yet) else UiText.StringResource(R.string.welcome_clover)
 
     val suggestText2 = if (isGroup) {
         if (inDetailScreen) {
-            "Nhập tin nhắn để bắt đầu!"
+            UiText.StringResource(R.string.type_to_start)
         } else {
-            "Tạo nhóm và chia sẻ những câu chuyện thú vị cùng nhau!"
+            UiText.StringResource(R.string.create_group_share)
         }
     } else {
         if (inDetailScreen) {
-            "Hãy thử làm quen bằng một lời chào!"
+            UiText.StringResource(R.string.break_the_ice)
         } else {
-            "Hãy tìm 1 người bạn và bắt đầu trò chuyện nào!"
+            UiText.StringResource(R.string.find_friend_start)
         }
     }
 
@@ -57,7 +58,7 @@ fun BeginScreen(
             )
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = suggestText1,
+                text = suggestText1.asString(),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
@@ -65,7 +66,7 @@ fun BeginScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = suggestText2,
+                text = suggestText2.asString(),
                 fontSize = 16.sp,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onBackground
@@ -77,7 +78,7 @@ fun BeginScreen(
 @Preview(showBackground = true)
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun BeginScreen() {
+fun WelcomePlaceholder() {
     RealtimeChatAppTheme {
         Box(
             contentAlignment = Alignment.Center,
