@@ -8,9 +8,9 @@ import com.example.realtimechatapp.data.local.manager.TokenManagerImpl
 import com.example.realtimechatapp.domain.model.MessageContact
 import com.example.realtimechatapp.domain.usecase.messages.GetMessageContactUseCase
 import com.example.realtimechatapp.domain.usecase.socket.ConnectSocketUseCase
-import com.example.realtimechatapp.domain.usecase.socket.ObserveMessageContactUseCase
-import com.example.realtimechatapp.domain.usecase.socket.ObserveOnlineUserUseCase
-import com.example.realtimechatapp.domain.usecase.socket.ObserveTypingUseCase
+import com.example.realtimechatapp.domain.usecase.socket.message.ObserveMessageContactUseCase
+import com.example.realtimechatapp.domain.usecase.socket.message.ObserveOnlineUserUseCase
+import com.example.realtimechatapp.domain.usecase.socket.message.ObserveTypingUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow

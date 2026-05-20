@@ -1,4 +1,4 @@
-package com.example.realtimechatapp.domain.usecase.socket
+package com.example.realtimechatapp.domain.usecase.socket.message
 
 import com.example.realtimechatapp.domain.model.MessageContact
 import com.example.realtimechatapp.domain.repository.MessageRepository

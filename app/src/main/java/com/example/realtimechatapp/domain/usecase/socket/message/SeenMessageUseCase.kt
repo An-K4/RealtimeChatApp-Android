@@ -1,8 +1,6 @@
-package com.example.realtimechatapp.domain.usecase.socket
+package com.example.realtimechatapp.domain.usecase.socket.message
 
-import com.example.realtimechatapp.data.remote.dto.MessageSeenDto
 import com.example.realtimechatapp.domain.repository.MessageRepository
-import com.example.realtimechatapp.domain.repository.SocketRepository
 import javax.inject.Inject
 
 class SeenMessageUseCase @Inject constructor(
