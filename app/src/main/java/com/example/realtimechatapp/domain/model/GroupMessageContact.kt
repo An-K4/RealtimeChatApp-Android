@@ -1,6 +1,6 @@
 package com.example.realtimechatapp.domain.model
 
-data class GroupContact(
+data class GroupMessageContact(
     val id: String,
     val name: String,
     val avatar: String?,

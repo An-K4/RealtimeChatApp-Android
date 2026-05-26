@@ -25,7 +25,7 @@ fun GroupScreen(
     navController: NavController,
     groupViewModel: GroupViewModel = hiltViewModel()
 ){
-    val uiState by groupViewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by groupViewModel.groupState.collectAsStateWithLifecycle()
 
     Box(
         modifier = Modifier.fillMaxSize()

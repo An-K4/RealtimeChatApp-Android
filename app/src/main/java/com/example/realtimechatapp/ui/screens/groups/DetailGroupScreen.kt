@@ -38,6 +38,7 @@ fun DetailGroupScreen(
     detailGroupViewModel: DetailGroupViewModel = hiltViewModel()
 ) {
     val detailGroupState by detailGroupViewModel.detailGroupState.collectAsStateWithLifecycle()
+    val listState = rememberLazyListState()
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
 
@@ -58,6 +59,12 @@ fun DetailGroupScreen(
                     }
                 }
             }
+        }
+    }
+
+    LaunchedEffect(detailGroupState.groupMessages.size) {
+        if (detailGroupState.groupMessages.isNotEmpty()) {
+            listState.animateScrollToItem(0)
         }
     }
 
@@ -86,7 +93,7 @@ fun DetailGroupScreen(
                     WelcomePlaceholder(isGroup = true, inDetailScreen = true)
                 } else {
                     LazyColumn(
-                        state = rememberLazyListState(),
+                        state = listState,
                         reverseLayout = true,
                         contentPadding = PaddingValues(10.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -118,7 +125,7 @@ fun DetailGroupScreen(
             onMessageTextChange = { detailGroupViewModel.onGroupMessageInputChange(it) },
             onCameraClick = {},
             onGalleryClick = {},
-            onSendClick = {}
+            onSendClick = { detailGroupViewModel.sendGroupMessage() }
         )
     }
 }

@@ -6,32 +6,41 @@ import androidx.lifecycle.viewModelScope
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
+import com.example.realtimechatapp.domain.model.Group
 import com.example.realtimechatapp.domain.model.Member
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import com.example.realtimechatapp.domain.usecase.groups.GetGroupInfoUseCase
 import com.example.realtimechatapp.domain.usecase.groups.GetGroupMessageUseCase
+import com.example.realtimechatapp.domain.usecase.socket.group.ObserveGroupMessageUseCase
+import com.example.realtimechatapp.domain.usecase.socket.group.SendGroupMessageUseCase
 import com.example.realtimechatapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.String
 
 @HiltViewModel
 class DetailGroupViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase,
     private val getGroupMessageUseCase: GetGroupMessageUseCase,
-    private val getGroupInfoUseCase: GetGroupInfoUseCase
+    private val getGroupInfoUseCase: GetGroupInfoUseCase,
+    private val observeGroupMessageUseCase: ObserveGroupMessageUseCase,
+    private val sendGroupMessageUseCase: SendGroupMessageUseCase
 ) : ViewModel() {
     data class DetailGroupState(
         val currentUserId: String = "",
-        val groupId: String,
+        val groupId: String = "",
         val groupName: String? = null,
         val groupStatus: UiText? = null,
         val groupAvatar: String? = null,
@@ -46,69 +55,116 @@ class DetailGroupViewModel @Inject constructor(
         data class Failure(val message: UiText) : DetailGroupEvent()
     }
 
-    private val _detailGroupState = MutableStateFlow(
-        DetailGroupState(
-            groupId = checkNotNull(
-                savedStateHandle[Screen.DetailGroup.ARG_GROUP_ID]
-            )
-        )
+    private data class DetailGroupContext(
+        val currentUserId: String,
+        val groupHeaderInfo: Group?
     )
-    val detailGroupState = _detailGroupState.asStateFlow()
+
+    private data class InputAndLoadingState(
+        val messageInput: String,
+        val isLoading: Boolean
+    )
+
+    private val currentUserId = flow { emit(getCurrentUserIdUseCase()) }.catch { exception ->
+        Timber.d(exception,"Lỗi lấy id người dùng hiện tại")
+    }
+
+    private val groupId: String = checkNotNull(savedStateHandle[Screen.DetailGroup.ARG_GROUP_ID])
+    private val _messageInput = MutableStateFlow("")
+    private val _isLoading = MutableStateFlow(true)
+    private val _groupHeaderInfo = MutableStateFlow<Group?>(null)
+
+    private val detailGroupContextFlow = combine(currentUserId, _groupHeaderInfo){ currentUserId, groupHeaderInfo ->
+        DetailGroupContext(
+            currentUserId = currentUserId,
+            groupHeaderInfo = groupHeaderInfo
+        )
+    }
+
+    private val inputAndLoadingStateFlow = combine(_messageInput, _isLoading) { messageInput, isLoading ->
+        InputAndLoadingState(
+            messageInput = messageInput,
+            isLoading = isLoading
+        )
+    }
+
+    val detailGroupState = combine(
+        detailGroupContextFlow,
+        observeGroupMessageUseCase(groupId).catch { exception ->
+            Timber.e("Lỗi luồng lấy tin nhắn nhóm: ${exception.getErrorMessage()}")
+            emit(emptyList())
+        },
+        inputAndLoadingStateFlow
+    ) { detailGroupContext, groupMessages, inputAndLoadingState ->
+        DetailGroupState(
+            currentUserId = detailGroupContext.currentUserId,
+            groupId = groupId,
+            groupName = detailGroupContext.groupHeaderInfo?.name,
+            groupStatus = UiText.StringResource(R.string.group_status, detailGroupContext.groupHeaderInfo?.members?.size ?: 0),
+            groupAvatar = detailGroupContext.groupHeaderInfo?.avatar,
+            groupMessages = groupMessages,
+            groupMembers = detailGroupContext.groupHeaderInfo?.members ?: emptyList(),
+            messageInput = inputAndLoadingState.messageInput,
+            isLoading = inputAndLoadingState.isLoading && groupMessages.isEmpty()
+        )
+    }.catch { exception ->
+        Timber.e(exception, "Lỗi luồng màn hình nhắn nhóm chi tiết")
+        _detailGroupEvent.send(DetailGroupEvent.Failure(exception.getErrorMessage()))
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = DetailGroupState(isLoading = true)
+    )
 
     private val _detailGroupEvent = Channel<DetailGroupEvent>()
     val detailGroupEvent = _detailGroupEvent.receiveAsFlow()
 
     // init after state variables
     init {
-        getCurrentUserId()
         getGroupInfo()
         getGroupMessage()
     }
 
     fun onGroupMessageInputChange(newValue: String){
-        _detailGroupState.update { it.copy(messageInput = newValue) }
-    }
-
-    fun getCurrentUserId(){
-        viewModelScope.launch {
-            val currentUserId = getCurrentUserIdUseCase()
-            _detailGroupState.update { it.copy(currentUserId = currentUserId) }
-        }
+        _messageInput.value = newValue
     }
 
     fun getGroupMessage(){
         viewModelScope.launch {
-            _detailGroupState.update { it.copy(isLoading = true) }
+            _isLoading.value = true
 
-            val result = getGroupMessageUseCase(_detailGroupState.value.groupId)
-            result.onSuccess { groupMessages ->
-                _detailGroupState.update { it.copy(groupMessages = groupMessages, isLoading = false) }
-                Timber.d(groupMessages.toString())
+            val result = getGroupMessageUseCase(groupId)
+            result.onSuccess {
+                // do nothing, saved db before, wait observe
             }.onFailure { exception ->
                 _detailGroupEvent.send(DetailGroupEvent.Failure(exception.getErrorMessage()))
-                _detailGroupState.update { it.copy(isLoading = false) }
             }
+
+            _isLoading.value = false
         }
     }
 
     fun getGroupInfo(){
         viewModelScope.launch {
-            val result = getGroupInfoUseCase(_detailGroupState.value.groupId)
-
-            result.onSuccess {
-                val group = result.getOrNull()
-
-                _detailGroupState.update {
-                    it.copy(
-                        groupName = group?.name,
-                        groupStatus = UiText.StringResource(R.string.group_status, group?.members?.size),
-                        groupAvatar = group?.avatar,
-                        groupMembers = group?.members ?: emptyList()
-                    )
-                }
+            getGroupInfoUseCase(groupId).onSuccess { group ->
+                _groupHeaderInfo.value = group
             }.onFailure { exception ->
                 _detailGroupEvent.send(DetailGroupEvent.Failure(exception.getErrorMessage()))
             }
+        }
+    }
+
+    fun sendGroupMessage(){
+        val content = _messageInput.value.trim()
+        if (content.isEmpty()) return
+
+        viewModelScope.launch {
+            sendGroupMessageUseCase(
+                content = content,
+                groupId = groupId
+            )
+
+            _messageInput.value = ""
         }
     }
 }

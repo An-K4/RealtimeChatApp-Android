@@ -2,6 +2,7 @@ package com.example.realtimechatapp.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Upsert
 import com.example.realtimechatapp.data.local.entity.ContactEntity
 import kotlinx.coroutines.flow.Flow
@@ -10,6 +11,9 @@ import kotlinx.coroutines.flow.Flow
 interface GroupContactDao {
     @Query("SELECT * FROM contacts WHERE is_group=1 ORDER BY last_time_stamp DESC")
     fun getGroupContact(): List<ContactEntity>
+
+    @Query("SELECT * FROM contacts WHERE id = :contactId")
+    fun getGroupContactById(contactId: String): ContactEntity?
 
     @Query("SELECT * FROM contacts WHERE is_group=1 ORDER BY last_time_stamp")
     fun observeGroupContact(): Flow<List<ContactEntity>>
@@ -39,6 +43,43 @@ interface GroupContactDao {
         lastSenderName: String?,
         lastTimeStamp: Long
     )
+
+    @Transaction
+    suspend fun upsertGroupContact(
+        contactId: String,
+        lastMessage: String?,
+        lastSenderName: String,
+        isMine: Boolean,
+        lastTimeStamp: Long,
+    ){
+        val existingContact = getGroupContactById(contactId)
+
+        if (existingContact != null){
+            val updatedGroupContact = existingContact.copy(
+                lastMessage = lastMessage,
+                lastSenderName = lastSenderName,
+                isMine = isMine,
+                lastTimeStamp = lastTimeStamp,
+                unreadCount = if (isMine) existingContact.unreadCount else existingContact.unreadCount + 1
+            )
+
+            insertContact(updatedGroupContact)
+        } else {
+            val newGroupContact = ContactEntity(
+                id = contactId,
+                isGroup = true,
+                lastMessage = lastMessage,
+                lastSenderName = lastSenderName,
+                isMine = isMine,
+                lastTimeStamp = lastTimeStamp,
+                unreadCount = if (isMine) 0 else 1,
+                contactName = "Nhóm $contactId",
+                contactAvatar = null,
+            )
+
+            insertContact(newGroupContact)
+        }
+    }
 
     @Query("DELETE FROM contacts WHERE id = :contactId")
     suspend fun deleteContact(contactId: String)

@@ -2,8 +2,6 @@ package com.example.realtimechatapp.data.remote.dto
 
 import com.example.realtimechatapp.common.isoToLong
 import com.example.realtimechatapp.data.local.entity.ContactEntity
-import com.example.realtimechatapp.data.local.entity.GroupEntity
-import com.example.realtimechatapp.domain.model.GroupContact
 import com.google.gson.annotations.SerializedName
 
 data class GroupContactDto(

@@ -1,5 +1,6 @@
 package com.example.realtimechatapp.data.repository
 
+import com.example.realtimechatapp.common.isoToLong
 import com.example.realtimechatapp.data.local.dao.GroupContactDao
 import com.example.realtimechatapp.data.local.dao.GroupDao
 import com.example.realtimechatapp.data.local.dao.GroupMessageDao
@@ -11,12 +12,19 @@ import com.example.realtimechatapp.data.local.pojo.toMessage
 import com.example.realtimechatapp.data.remote.api.GroupApi
 import com.example.realtimechatapp.data.remote.safeApiCall
 import com.example.realtimechatapp.data.local.safeDbCall
+import com.example.realtimechatapp.di.ApplicationScope
 import com.example.realtimechatapp.domain.exception.DatabaseException
 import com.example.realtimechatapp.domain.model.Group
-import com.example.realtimechatapp.domain.model.GroupContact
+import com.example.realtimechatapp.domain.model.GroupMessageContact
 import com.example.realtimechatapp.domain.model.Message
+import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.repository.GroupRepository
 import com.example.realtimechatapp.domain.repository.NetworkChecker
+import com.example.realtimechatapp.domain.repository.SocketRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -26,41 +34,57 @@ class GroupRepositoryImpl @Inject constructor(
     private val groupContactDao: GroupContactDao,
     private val groupMessageDao: GroupMessageDao,
     private val groupDao: GroupDao,
+    private val socketRepository: SocketRepository,
     private val memberDao: MemberDao,
     private val userDao: UserDao,
-    private val networkChecker: NetworkChecker
+    private val networkChecker: NetworkChecker,
+    private val currentUserManager: CurrentUserManager,
+    @ApplicationScope private val applicationScope: CoroutineScope
 ) : GroupRepository {
-    override suspend fun getGroups(): Result<List<GroupContact>> {
-        val cachedGroups = safeDbCall { groupContactDao.getGroupContact() }
 
-        return try {
-            val response = safeApiCall(networkChecker) { groupApi.getGroups() }
-            val responseGroups = response.groups.map { it.toContactEntity() }
-            safeDbCall { groupContactDao.insertAllContact(responseGroups) }
-            val groups =
-                safeDbCall { groupContactDao.getGroupContact().map { it.toGroupContact() } }
-            Timber.d(responseGroups.toString())
-            Timber.d(groups.toString())
-            Result.success(groups)
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
+    init {
+        applicationScope.launch {
+            socketRepository.observeGroupMessages().collect {
+                val messageEntity = it.toMessageEntity()
+                safeDbCall { groupMessageDao.insertMessage(messageEntity) }
+            }
+        }
 
-            Timber.e(e, "Lỗi lấy danh sách nhóm")
+        applicationScope.launch {
+            socketRepository.observeGroupMessages().collect { messageDto ->
+                val currentUserId = currentUserManager.getCurrentUserId()
+                val contactId = messageDto.getMessageContactId(currentUserId)
+                val isMine = messageDto.senderId.id == currentUserId
 
-            if (cachedGroups.isNotEmpty()) {
-                Timber.d("Lỗi, lấy danh sách nhóm trong cache")
-                Result.success(cachedGroups.map { it.toGroupContact() })
-            } else {
-                Result.failure(e)
+                safeDbCall {
+                    groupContactDao.upsertGroupContact(
+                        contactId = contactId,
+                        lastMessage = messageDto.content,
+                        lastSenderName = messageDto.senderId.fullName,
+                        isMine = isMine,
+                        lastTimeStamp = messageDto.createdAt.isoToLong()
+                    )
+                }
             }
         }
     }
 
-    override suspend fun getGroupMessage(groupId: String): Result<List<Message>> {
-        val cachedGroupMessages = safeDbCall {
-            groupMessageDao.getGroupMessages(groupId, 30, 0).map { it.toMessage() }
-        }
+    override suspend fun getGroups(): Result<Unit> {
+        return try {
+            val response = safeApiCall(networkChecker) { groupApi.getGroups() }
+            val responseGroups = response.groups.map { it.toContactEntity() }
+            safeDbCall { groupContactDao.insertAllContact(responseGroups) }
+            Timber.d(responseGroups.toString())
+            Result.success(Unit)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
 
+            Timber.e(e, "Lỗi lấy danh sách nhóm")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getGroupMessage(groupId: String): Result<Unit> {
         return try {
             val result = safeApiCall(networkChecker) { groupApi.getGroupMessage(groupId) }
             val responseGroupMessages = result.groupMessages
@@ -73,33 +97,21 @@ class GroupRepositoryImpl @Inject constructor(
                 Timber.d(responseSender.toString())
                 Timber.d("${responseSender.size}")
 
-                safeDbCall { userDao.insertAllUsers(responseSender) }
+                userDao.insertAllUsers(responseSender)
 
                 // debug - after
                 Timber.d("${userDao.getUserCount()}")
                 Timber.d(responseSender.toString())
                 Timber.d("${responseSender.size}")
 
-                safeDbCall {
-                    groupMessageDao.insertAllMessages(responseGroupMessages.map { it.toMessageEntity() })
-                }
+                groupMessageDao.insertAllMessages(responseGroupMessages.map { it.toMessageEntity() })
             }
-            val groupMessages =
-                safeDbCall {
-                    groupMessageDao.getGroupMessages(groupId, 30, 0).map { it.toMessage() }
-                }
-            Result.success(groupMessages)
+            Result.success(Unit)
         } catch (e: Exception) {
             if (e is CancellationException) throw e
 
             Timber.e(e, "Lỗi lấy tin nhắn nhóm")
-
-            if (cachedGroupMessages.isNotEmpty()) {
-                Timber.d("Lỗi, lấy danh sách tin nhắn nhóm trong cache")
-                Result.success(cachedGroupMessages)
-            } else {
-                Result.failure(e)
-            }
+            Result.failure(e)
         }
     }
 
@@ -140,6 +152,18 @@ class GroupRepositoryImpl @Inject constructor(
             } else {
                 Result.failure(e)
             }
+        }
+    }
+
+    override fun observeGroupMessages(groupId: String): Flow<List<Message>> {
+        return groupMessageDao.observeGroupMessages(groupId).map { messageWithDetails ->
+            messageWithDetails.map { it.toMessage() }
+        }
+    }
+
+    override fun observeGroupMessageContacts(): Flow<List<GroupMessageContact>> {
+        return groupContactDao.observeGroupContact().map { contactEntities ->
+            contactEntities.map { it.toGroupContact() }
         }
     }
 }

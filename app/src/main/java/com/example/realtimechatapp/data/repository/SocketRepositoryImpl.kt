@@ -1,8 +1,10 @@
 package com.example.realtimechatapp.data.repository
 
+import com.example.realtimechatapp.data.remote.dto.GroupMessageSeenDto
 import com.example.realtimechatapp.domain.repository.SocketEvents
 import com.example.realtimechatapp.data.remote.dto.MessageDto
 import com.example.realtimechatapp.data.remote.dto.MessageSeenDto
+import com.example.realtimechatapp.domain.model.SendGroupMessageParam
 import com.example.realtimechatapp.domain.model.SendMessageParam
 import com.example.realtimechatapp.domain.repository.SocketConnectionState
 import com.example.realtimechatapp.domain.repository.SocketRepository
@@ -39,8 +41,16 @@ class SocketRepositoryImpl @Inject constructor(
     override fun observeMessages(): Flow<MessageDto> = _messagesFlow.asSharedFlow()
     override fun observeMessageContacts(): Flow<MessageDto> = _messagesFlow.asSharedFlow()
 
+    private val _groupMessageFlow = MutableSharedFlow<MessageDto>()
+    override suspend fun observeGroupMessages(): Flow<MessageDto> = _groupMessageFlow.asSharedFlow()
+    override suspend fun observeGroupMessageContacts(): Flow<MessageDto> =
+        _groupMessageFlow.asSharedFlow()
+
     private val _messageSeenFlow = MutableSharedFlow<MessageSeenDto>()
     override fun observeMessageSeen(): Flow<MessageSeenDto> = _messageSeenFlow.asSharedFlow()
+
+    private val _groupMessageSeenFlow = MutableSharedFlow<GroupMessageSeenDto>()
+    override suspend fun observeGroupMessageSeen(): Flow<GroupMessageSeenDto> = _groupMessageSeenFlow.asSharedFlow()
 
     // each id in set is unique
     private val _onlineUserIds = MutableStateFlow<Set<String>>(emptySet())
@@ -76,6 +86,7 @@ class SocketRepositoryImpl @Inject constructor(
 
         setupSocketConnectionListener()
         setupMessageListener()
+        setupGroupMessageListener()
         setupOnlineUserIdsListener()
         setupTypingUserIdsListener()
 
@@ -258,5 +269,64 @@ class SocketRepositoryImpl @Inject constructor(
         // direct put (standard)
         val jsonObject = JSONObject().apply { put("receiverId", receiverId) }
         socket?.emit(SocketEvents.TYPING_STOP, jsonObject)
+    }
+
+    private fun setupGroupMessageListener() {
+        socket?.on(SocketEvents.RECEIVE_GROUP_MESSAGE) { args ->
+            val rawJson = args[0].toString()
+
+            try {
+                val messageDto = gson.fromJson(rawJson, MessageDto::class.java)
+
+                scope.launch {
+                    _groupMessageFlow.emit(messageDto)
+                    Timber.d("Đã nhận tin nhắn nhóm: $messageDto")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Parse json thất bại")
+            }
+        }
+
+        socket?.on(SocketEvents.USER_SEEN_MESSAGE) { args ->
+            val rawData = args[0].toString()
+
+            scope.launch {
+                val groupMessageSeenDto = gson.fromJson(rawData, GroupMessageSeenDto::class.java)
+                _groupMessageSeenFlow.emit(groupMessageSeenDto)
+            }
+        }
+    }
+
+    override suspend fun sendGroupMessage(groupMessage: SendGroupMessageParam) {
+        val jsonString = gson.toJson(groupMessage)
+        val jsonObject = JSONObject(jsonString)
+
+        socket?.emit(SocketEvents.SEND_GROUP_MESSAGE, jsonObject, Ack { args ->
+            if (args.isNotEmpty()) {
+                val response = args[0] as JSONObject
+                val success = response.getBoolean("success")
+
+                if (success) {
+                    Timber.d("Gửi tin nhắn nhóm thành công")
+                    val savedMessageJson = response.getString("data").toString()
+                    val messageDto = gson.fromJson(savedMessageJson, MessageDto::class.java)
+
+                    scope.launch {
+                        Timber.d(savedMessageJson)
+                        _groupMessageFlow.emit(messageDto)
+                    }
+                } else {
+                    val errorMessage = response.optString("message", "Lỗi không xác định")
+                    Timber.d("Gửi tin nhắn nhóm thất bại: $errorMessage")
+                }
+            }
+        })
+    }
+
+    override suspend fun seenGroupMessage(messageSeen: GroupMessageSeenDto) {
+        val jsonString = gson.toJson(messageSeen)
+        val jsonObject = JSONObject(jsonString)
+
+        socket?.emit(SocketEvents.SEEN_GROUP_MESSAGE, jsonObject)
     }
 }
