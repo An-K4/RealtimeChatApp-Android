@@ -14,7 +14,7 @@ data class MessageDto(
     val attachments: String?,
     val seenBy: List<UserDto>?,
     val createdAt: String
-){
+) {
     fun toMessageEntity() = MessageEntity(
         id = this.id,
         senderId = this.senderId.id,
@@ -27,11 +27,17 @@ data class MessageDto(
         createdAt = this.createdAt.isoToLong()
     )
 
-    fun getMessageContactId(currentUserId: String): String{
-        return if (this.receiverId?.id == currentUserId){
-            this.senderId.id
-        } else {
-            this.receiverId!!.id
+    fun getMessageContactId(currentUserId: String): String {
+        return when {
+            groupId != null -> groupId
+            receiverId != null -> {
+                if (senderId.id == currentUserId){
+                    receiverId.id
+                } else {
+                    senderId.id
+                }
+            }
+            else -> senderId.id
         }
     }
 }

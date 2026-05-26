@@ -8,7 +8,5 @@ import javax.inject.Inject
 class ObserveMessageUseCase @Inject constructor(
     private val messageRepository: MessageRepository
 ) {
-    operator fun invoke(friendId: String): Flow<List<Message>> {
-        return messageRepository.observeMessages(friendId)
-    }
+    operator fun invoke(friendId: String): Flow<List<Message>> = messageRepository.observeMessages(friendId)
 }

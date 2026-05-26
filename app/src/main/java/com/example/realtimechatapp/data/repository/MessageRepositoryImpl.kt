@@ -16,7 +16,6 @@ import com.example.realtimechatapp.di.ApplicationScope
 import com.example.realtimechatapp.domain.exception.DatabaseException
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.model.MessageContact
-import com.example.realtimechatapp.domain.model.SendMessageParam
 import com.example.realtimechatapp.domain.model.User
 import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.repository.MessageRepository
@@ -93,24 +92,24 @@ class MessageRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getMessageContacts(): Result<Unit> {
-            return try {
-                val response = safeApiCall(networkChecker) { messageApi.getUsers() }
-                val users = response.users.map { it.toUserEntity() }
-                val messageContacts = response.users.map { it.toMessageContactEntity() }
+        return try {
+            val response = safeApiCall(networkChecker) { messageApi.getUsers() }
+            val users = response.users.map { it.toUserEntity() }
+            val messageContacts = response.users.map { it.toMessageContactEntity() }
 
-                Timber.d(users.toString())
-                safeDbCall {
-                    userDao.insertAllUsers(users)
-                    messageContactDao.insertAllContact(messageContacts)
-                }
-                Result.success(Unit)
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-
-                Timber.e(e, "Lỗi lấy danh sách tin nhắn")
-                Result.failure(e)
+            Timber.d(users.toString())
+            safeDbCall {
+                userDao.insertAllUsers(users)
+                messageContactDao.insertAllContact(messageContacts)
             }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
+            Timber.e(e, "Lỗi lấy danh sách tin nhắn")
+            Result.failure(e)
         }
+    }
 
     override suspend fun getMessage(friendId: String): Result<Unit> {
         return try {
@@ -151,16 +150,12 @@ class MessageRepositoryImpl @Inject constructor(
         )
     }
 
-    override fun observeMessageContacts(): Flow<List<MessageContact>> = flow {
-        emitAll(
-            messageContactDao.observeMessageContact().map { contactEntities ->
-                contactEntities.map { it.toMessageContact() }
-            }
-        )
-    }
-
-    override suspend fun sendMessage(message: SendMessageParam) {
-        socketRepository.sendMessage(message)
+    // direct return is preferred since Room already yields a reactive Flow.
+    // wrapping with 'flow { emitAll(...) }' is only needed when calling suspending functions before emitting
+    override fun observeMessageContacts(): Flow<List<MessageContact>> {
+        return messageContactDao.observeMessageContact().map { contactEntities ->
+            contactEntities.map { it.toMessageContact() }
+        }
     }
 
     override suspend fun seenMessage(friendId: String) {

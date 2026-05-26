@@ -1,12 +1,12 @@
 package com.example.realtimechatapp.domain.usecase.socket.message
 
 import com.example.realtimechatapp.domain.model.SendMessageParam
-import com.example.realtimechatapp.domain.repository.MessageRepository
+import com.example.realtimechatapp.domain.repository.SocketRepository
 import timber.log.Timber
 import javax.inject.Inject
 
 class SendMessageUseCase @Inject constructor(
-    private val messageRepository: MessageRepository
+    private val socketRepository: SocketRepository
 ) {
     suspend operator fun invoke(
         content: String,
@@ -21,6 +21,6 @@ class SendMessageUseCase @Inject constructor(
             fileUrl = fileUrl
         )
         Timber.d("Đã gọi hàm gửi tin nhắn")
-        messageRepository.sendMessage(sendMessageParam)
+        socketRepository.sendMessage(sendMessageParam)
     }
 }
