@@ -13,14 +13,17 @@ import com.google.gson.Gson
 import io.socket.client.Ack
 import io.socket.client.IO
 import io.socket.client.Socket
+import io.socket.emitter.Emitter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -134,6 +137,25 @@ class SocketRepositoryImpl @Inject constructor(
 
             Timber.e("${Socket.EVENT_CONNECT_ERROR}: $error, disconnect right now!")
             _socketConnectionState.value = SocketConnectionState.Error(error)
+        }
+    }
+
+    override fun observeSocketConnectionState(): Flow<Boolean> = callbackFlow {
+        val onConnect = Emitter.Listener {
+            trySend(true)
+        }
+        val onDisconnect = Emitter.Listener {
+            trySend(false)
+        }
+
+        socket?.on(Socket.EVENT_CONNECT, onConnect)
+        socket?.on(Socket.EVENT_DISCONNECT, onDisconnect)
+
+        trySend(socket?.connected() == true)
+
+        awaitClose {
+            socket?.off(Socket.EVENT_CONNECT, onConnect)
+            socket?.off(Socket.EVENT_DISCONNECT, onDisconnect)
         }
     }
 
@@ -269,6 +291,10 @@ class SocketRepositoryImpl @Inject constructor(
         // direct put (standard)
         val jsonObject = JSONObject().apply { put("receiverId", receiverId) }
         socket?.emit(SocketEvents.TYPING_STOP, jsonObject)
+    }
+
+    override fun joinGroup(groupId: String) {
+        socket?.emit(SocketEvents.JOIN_GROUP, groupId)
     }
 
     private fun setupGroupMessageListener() {

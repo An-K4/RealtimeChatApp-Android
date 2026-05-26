@@ -11,6 +11,7 @@ interface SocketRepository {
     suspend fun connect()
     suspend fun disconnect()
     suspend fun isConnected(): Boolean
+    fun observeSocketConnectionState(): Flow<Boolean>
 
     fun observeMessages(): Flow<MessageDto>
     fun observeMessageContacts(): Flow<MessageDto>
@@ -24,6 +25,7 @@ interface SocketRepository {
     suspend fun emitTypingStart(receiverId: String)
     suspend fun emitTypingStop(receiverId: String)
 
+    fun joinGroup(groupId: String)
     suspend fun observeGroupMessages(): Flow<MessageDto>
     suspend fun observeGroupMessageContacts(): Flow<MessageDto>
     suspend fun observeGroupMessageSeen(): Flow<GroupMessageSeenDto>
@@ -50,6 +52,7 @@ object SocketEvents {
     const val NOTIFY_ONLINE_LIST = "noti-onlineList-toMe"
 
     // group
+    const val JOIN_GROUP = "join-group"
     const val RECEIVE_GROUP_MESSAGE = "receive-group-message"
     const val SEEN_GROUP_MESSAGE = "seen-group-message"
     const val USER_SEEN_MESSAGE = "user-seen-message"

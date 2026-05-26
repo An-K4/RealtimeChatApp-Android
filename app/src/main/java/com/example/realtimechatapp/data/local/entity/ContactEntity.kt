@@ -52,7 +52,7 @@ fun ContactEntity.toMessageContact() = MessageContact(
     lastMessageTime = this.lastTimeStamp.formatToTime(true)
 )
 
-fun ContactEntity.toGroupContact() = GroupMessageContact(
+fun ContactEntity.toGroupMessageContact() = GroupMessageContact(
     id = this.id,
     name = this.contactName ?: "",
     avatar = this.contactAvatar,

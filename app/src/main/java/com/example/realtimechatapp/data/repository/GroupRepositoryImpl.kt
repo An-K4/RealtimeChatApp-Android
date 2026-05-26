@@ -6,7 +6,7 @@ import com.example.realtimechatapp.data.local.dao.GroupDao
 import com.example.realtimechatapp.data.local.dao.GroupMessageDao
 import com.example.realtimechatapp.data.local.dao.MemberDao
 import com.example.realtimechatapp.data.local.dao.UserDao
-import com.example.realtimechatapp.data.local.entity.toGroupContact
+import com.example.realtimechatapp.data.local.entity.toGroupMessageContact
 import com.example.realtimechatapp.data.local.pojo.toGroup
 import com.example.realtimechatapp.data.local.pojo.toMessage
 import com.example.realtimechatapp.data.remote.api.GroupApi
@@ -43,6 +43,16 @@ class GroupRepositoryImpl @Inject constructor(
 ) : GroupRepository {
 
     init {
+        applicationScope.launch {
+            socketRepository.observeSocketConnectionState().collect {
+                val groupIds = groupContactDao.getAllGroupContactIds()
+
+                groupIds.forEach { groupId ->
+                    socketRepository.joinGroup(groupId)
+                }
+            }
+        }
+
         applicationScope.launch {
             socketRepository.observeGroupMessages().collect {
                 val messageEntity = it.toMessageEntity()
@@ -163,7 +173,7 @@ class GroupRepositoryImpl @Inject constructor(
 
     override fun observeGroupMessageContacts(): Flow<List<GroupMessageContact>> {
         return groupContactDao.observeGroupContact().map { contactEntities ->
-            contactEntities.map { it.toGroupContact() }
+            contactEntities.map { it.toGroupMessageContact() }
         }
     }
 }
