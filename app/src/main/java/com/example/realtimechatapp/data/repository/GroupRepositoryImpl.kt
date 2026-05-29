@@ -6,12 +6,14 @@ import com.example.realtimechatapp.data.local.dao.GroupDao
 import com.example.realtimechatapp.data.local.dao.GroupMessageDao
 import com.example.realtimechatapp.data.local.dao.MemberDao
 import com.example.realtimechatapp.data.local.dao.UserDao
+import com.example.realtimechatapp.data.local.entity.MessageEntity
 import com.example.realtimechatapp.data.local.entity.toGroupMessageContact
 import com.example.realtimechatapp.data.local.pojo.toGroup
 import com.example.realtimechatapp.data.local.pojo.toMessage
 import com.example.realtimechatapp.data.remote.api.GroupApi
 import com.example.realtimechatapp.data.remote.safeApiCall
 import com.example.realtimechatapp.data.local.safeDbCall
+import com.example.realtimechatapp.data.remote.dto.GroupMessageSeenDto
 import com.example.realtimechatapp.di.ApplicationScope
 import com.example.realtimechatapp.domain.exception.DatabaseException
 import com.example.realtimechatapp.domain.model.Group
@@ -76,6 +78,31 @@ class GroupRepositoryImpl @Inject constructor(
                     )
                 }
             }
+        }
+
+        applicationScope.launch {
+            applicationScope.launch {
+                socketRepository.observeGroupMessageSeen().collect { groupMessageSeenDto ->
+                    val groupId = groupMessageSeenDto.groupId
+                    val userId = groupMessageSeenDto.userId
+
+                    if (groupId != null && userId != null) {
+                        markGroupMessageAsSeen(groupId, userId)
+                    } else {
+                        Timber.e("Thiếu dữ liệu để đánh dấu đã xem tin nhắn nhóm")
+                    }
+                }
+            }
+
+            // use explicit property access instead of destructuring declarations (e.g., '(groupId, userId)').
+            // destructuring depends on property order, which can cause silent logical bugs if DTO fields are reordered or modified later.
+            // socketRepository.observeGroupMessageSeen().collect { (groupId, userId) ->
+            //     if (groupId != null && userId != null) {
+            //         markGroupMessageAsSeen(groupId, userId)
+            //     } else {
+            //         Timber.e("Thiếu dữ liệu để đánh dấu đã xem tin nhắn nhóm")
+            //     }
+            // }
         }
     }
 
@@ -175,5 +202,29 @@ class GroupRepositoryImpl @Inject constructor(
         return groupContactDao.observeGroupContact().map { contactEntities ->
             contactEntities.map { it.toGroupMessageContact() }
         }
+    }
+
+    override suspend fun seenGroupMessage(groupId: String) {
+        val currentUserId = currentUserManager.getCurrentUserId()
+
+        markGroupMessageAsSeen(groupId, currentUserId)
+        safeDbCall { groupContactDao.resetUnreadCount(groupId) }
+        socketRepository.seenGroupMessage(GroupMessageSeenDto(groupId))
+    }
+
+    override suspend fun markGroupMessageAsSeen(groupId: String, userId: String) {
+        val messages = safeDbCall { groupMessageDao.getMessagesToMarkSeen(groupId, userId) }
+        val markedMessages = mutableListOf<MessageEntity>()
+
+        for (msg in messages){
+            val currentSeenBy = msg.seenBy?.toMutableList()
+
+            if (currentSeenBy?.contains(userId) != true){
+                currentSeenBy?.add(userId)
+                markedMessages.add(msg.copy(seenBy = currentSeenBy))
+            }
+        }
+
+        safeDbCall { groupMessageDao.updateGroupMessages(markedMessages) }
     }
 }

@@ -11,4 +11,6 @@ interface GroupRepository {
     suspend fun getGroupInfo(groupId: String): Result<Group>
     fun observeGroupMessages(groupId: String): Flow<List<Message>>
     fun observeGroupMessageContacts(): Flow<List<GroupMessageContact>>
+    suspend fun seenGroupMessage(groupId: String)
+    suspend fun markGroupMessageAsSeen(groupId: String, userId: String)
 }

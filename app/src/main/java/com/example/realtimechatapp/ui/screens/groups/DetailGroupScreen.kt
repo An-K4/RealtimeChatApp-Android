@@ -64,6 +64,15 @@ fun DetailGroupScreen(
 
     LaunchedEffect(detailGroupState.groupMessages.size) {
         if (detailGroupState.groupMessages.isNotEmpty()) {
+            val hasUnseenMessages = detailGroupState.groupMessages.any { message ->
+                message.senderId != detailGroupState.currentUserId
+                        && message.seenUserIds?.contains(detailGroupState.currentUserId) != true
+            }
+
+            if (hasUnseenMessages){
+                detailGroupViewModel.markGroupMessageAsSeen()
+            }
+
             listState.animateScrollToItem(0)
         }
     }
@@ -110,7 +119,7 @@ fun DetailGroupScreen(
                                 senderName = groupMessage.senderName,
                                 message = groupMessage.content ?: "",
                                 time = groupMessage.createdAt,
-                                isSeen = groupMessage.seenUserIds != null,
+                                isSeen = groupMessage.seenUserIds?.isNotEmpty() == true,
                                 isGroup = true,
                                 fromCurrentUser = groupMessage.senderId == detailGroupState.currentUserId
                             )

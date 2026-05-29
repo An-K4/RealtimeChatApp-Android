@@ -13,6 +13,7 @@ import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import com.example.realtimechatapp.domain.usecase.groups.GetGroupInfoUseCase
 import com.example.realtimechatapp.domain.usecase.groups.GetGroupMessageUseCase
 import com.example.realtimechatapp.domain.usecase.socket.group.ObserveGroupMessageUseCase
+import com.example.realtimechatapp.domain.usecase.socket.group.SeenGroupMessageUseCase
 import com.example.realtimechatapp.domain.usecase.socket.group.SendGroupMessageUseCase
 import com.example.realtimechatapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,7 +37,8 @@ class DetailGroupViewModel @Inject constructor(
     private val getGroupMessageUseCase: GetGroupMessageUseCase,
     private val getGroupInfoUseCase: GetGroupInfoUseCase,
     private val observeGroupMessageUseCase: ObserveGroupMessageUseCase,
-    private val sendGroupMessageUseCase: SendGroupMessageUseCase
+    private val sendGroupMessageUseCase: SendGroupMessageUseCase,
+    private val seenGroupMessageUseCase: SeenGroupMessageUseCase
 ) : ViewModel() {
     data class DetailGroupState(
         val currentUserId: String = "",
@@ -123,6 +125,13 @@ class DetailGroupViewModel @Inject constructor(
     init {
         getGroupInfo()
         getGroupMessage()
+        markGroupMessageAsSeen()
+    }
+
+    fun markGroupMessageAsSeen(){
+        viewModelScope.launch {
+            seenGroupMessageUseCase(groupId)
+        }
     }
 
     fun onGroupMessageInputChange(newValue: String){

@@ -19,7 +19,10 @@ interface GroupMessageDao {
     suspend fun insertAllMessages(messages: List<MessageEntity>)
 
     @Update
-    suspend fun updateMessage(message: MessageEntity)
+    suspend fun updateGroupMessage(message: MessageEntity)
+
+    @Update
+    suspend fun updateGroupMessages(messages: List<MessageEntity>)
 
     // REMEMBER TO ADD TRANSACTION ANNOTATION
     @Transaction
@@ -59,13 +62,8 @@ interface GroupMessageDao {
         groupId: String
     ): Flow<List<MessageWithDetails>>
 
-    @Query(
-        "UPDATE messages " +
-                "SET seen_by = json_insert(seen_by, '\$', :userId)" +
-                "WHERE (receiver_id = :userId OR group_id = :groupId)" +
-                "AND json_extract(seen_by, '\$') NOT LIKE '%' || :userId || '%'"
-    )
-    suspend fun markMessageAsSeen(userId: String, groupId: String? = null)
+    @Query("SELECT * FROM messages WHERE group_id = :groupId AND sender_id != :userId")
+    suspend fun getMessagesToMarkSeen(groupId: String, userId: String): List<MessageEntity>
 
     @Query("""
         SELECT COUNT(*) FROM messages
@@ -73,7 +71,6 @@ interface GroupMessageDao {
         AND created_at > (
             SELECT last_read_timestamp FROM members
             WHERE group_id = :groupId AND user_id = :userId
-        
         )
     """)
     fun observeUnreadCount(groupId: String, userId: String): Flow<Int>
