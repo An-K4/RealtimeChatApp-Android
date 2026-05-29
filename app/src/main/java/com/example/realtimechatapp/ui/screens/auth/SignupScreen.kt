@@ -104,6 +104,8 @@ fun SignupScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                 cursorColor = MaterialTheme.colorScheme.primary
             )
@@ -118,6 +120,8 @@ fun SignupScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                 cursorColor = MaterialTheme.colorScheme.primary
             )
@@ -132,6 +136,8 @@ fun SignupScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                 cursorColor = MaterialTheme.colorScheme.primary
             )
@@ -146,6 +152,8 @@ fun SignupScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                 cursorColor = MaterialTheme.colorScheme.primary
             )
@@ -160,6 +168,8 @@ fun SignupScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                 cursorColor = MaterialTheme.colorScheme.primary
             )
@@ -185,7 +195,7 @@ fun SignupScreen(
             if (signupState.isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             } else {
                 Text(stringResource(R.string.sign_up))

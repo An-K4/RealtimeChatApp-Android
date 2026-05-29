@@ -119,6 +119,8 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     cursorColor = MaterialTheme.colorScheme.primary
                 )
@@ -134,6 +136,8 @@ fun LoginScreen(
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     cursorColor = MaterialTheme.colorScheme.primary
                 )
@@ -159,7 +163,7 @@ fun LoginScreen(
                 if (loginState.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 } else Text(
                     text = stringResource(R.string.log_in),
