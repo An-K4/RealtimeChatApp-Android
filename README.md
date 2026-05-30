@@ -123,10 +123,9 @@ app/
 
 ### 📌 Ưu Tiên Cao
 
-#### Nhắn Tin Nhóm Đầy Đủ
-- Tích hợp Socket.IO để gửi/nhận tin nhắn nhóm theo thời gian thực (hiện tại chỉ load từ API)
+#### Nhắn Tin Nhóm Và Cá nhân Đầy Đủ:
 - Typing indicator trong nhóm
-- Trạng thái đã đọc / chưa đọc cho từng thành viên nhóm
+- Màn hình thao tác phụ với từng cuộc trò chuyện
 
 #### Quản Lý Nhóm
 - Tạo nhóm mới và thêm thành viên
@@ -139,6 +138,7 @@ app/
 
 ### 📌 Cải Thiện Hiệu Suất
 
+- **Áp dụng Message Cursor/Watermark**: Thay thế query quét toàn bộ bảng bằng con trỏ trạng thái (lastSeenMessageId hoặc lastSeenTimestamp) để quản lý trạng thái đã đọc tự động và tối ưu hóa DB.
 - **Phân trang tin nhắn**: Hiện tại load cố định 30 tin nhắn — cần implement lazy loading khi cuộn lên trên
 - **Tối ưu Room query**: Thêm index phù hợp, tránh load toàn bộ bảng
 - **Tối ưu Coil**: Cấu hình cache size, placeholder thống nhất
