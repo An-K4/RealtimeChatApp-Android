@@ -22,6 +22,7 @@ import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.repository.GroupRepository
 import com.example.realtimechatapp.domain.repository.NetworkChecker
+import com.example.realtimechatapp.domain.repository.SocketConnectionState
 import com.example.realtimechatapp.domain.repository.SocketRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -46,11 +47,13 @@ class GroupRepositoryImpl @Inject constructor(
 
     init {
         applicationScope.launch {
-            socketRepository.observeSocketConnectionState().collect {
-                val groupIds = groupContactDao.getAllGroupContactIds()
+            socketRepository.observeConnectionState().collect {
+                if (it is SocketConnectionState.Connected) {
+                    val groupIds = groupContactDao.getAllGroupContactIds()
 
-                groupIds.forEach { groupId ->
-                    socketRepository.joinGroup(groupId)
+                    groupIds.forEach { groupId ->
+                        socketRepository.joinGroup(groupId)
+                    }
                 }
             }
         }

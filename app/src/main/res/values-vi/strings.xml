@@ -35,7 +35,7 @@
     <string name="log_in_success_notification">Đăng ký thành công, chuyển hướng về trang đăng nhập.</string>
     <string name="get_group_messages_success_notification">Lấy tin nhắn nhóm từ db thành công</string>
     <string name="get_messages_success_notification">Lấy tin nhắn từ db thành công</string>
-    <string name="sb_is_typing">%s đang soạn tin</string>
+    <string name="sb_is_typing">%s đang soạn tin…</string>
     <string name="online">Đang hoạt động</string>
     <string name="offline">Ngoại tuyến</string>
     <string name="error">Lỗi</string>
@@ -84,4 +84,6 @@
     <string name="create_group_share">Tạo nhóm và chia sẻ những câu chuyện thú vị cùng nhau!</string>
     <string name="break_the_ice">Hãy thử làm quen bằng một lời chào!</string>
     <string name="find_friend_start">Hãy tìm 1 người bạn và bắt đầu trò chuyện nào!</string>
+    <string name="many_users_is_typing">%1$s, %2$s và %3$d người khác đang soạn tin…</string>
+    <string name="two_users_is_typing">%1$s, %2$s đang soạn tin…</string>
 </resources>

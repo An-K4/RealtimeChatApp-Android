@@ -3,22 +3,24 @@ package com.example.realtimechatapp.domain.repository
 import com.example.realtimechatapp.data.remote.dto.GroupMessageSeenDto
 import com.example.realtimechatapp.data.remote.dto.MessageDto
 import com.example.realtimechatapp.data.remote.dto.MessageSeenDto
+import com.example.realtimechatapp.domain.model.GroupTypingUser
 import com.example.realtimechatapp.domain.model.SendGroupMessageParam
 import com.example.realtimechatapp.domain.model.SendMessageParam
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 
 interface SocketRepository {
     suspend fun connect()
     suspend fun disconnect()
     suspend fun isConnected(): Boolean
-    fun observeSocketConnectionState(): Flow<Boolean>
+    fun observeConnectionState(): StateFlow<SocketConnectionState>
 
-    fun observeMessages(): Flow<MessageDto>
-    fun observeMessageContacts(): Flow<MessageDto>
-    fun observeMessageSeen(): Flow<MessageSeenDto>
-    fun observeConnectionState(): Flow<SocketConnectionState>
-    fun observeOnlineUserIds(): Flow<Set<String>>
-    fun observeTypingStatus(): Flow<Set<String>>
+    fun observeMessages(): SharedFlow<MessageDto>
+    fun observeMessageContacts(): SharedFlow<MessageDto>
+    fun observeMessageSeen(): SharedFlow<MessageSeenDto>
+    fun observeOnlineUserIds(): StateFlow<Set<String>>
+    fun observeTypingStatus(): StateFlow<Set<String>>
 
     suspend fun sendMessage(message: SendMessageParam)
     suspend fun seenMessage(messageSeen: MessageSeenDto)
@@ -26,12 +28,15 @@ interface SocketRepository {
     suspend fun emitTypingStop(receiverId: String)
 
     fun joinGroup(groupId: String)
-    suspend fun observeGroupMessages(): Flow<MessageDto>
-    suspend fun observeGroupMessageContacts(): Flow<MessageDto>
-    suspend fun observeGroupMessageSeen(): Flow<GroupMessageSeenDto>
+    fun observeGroupMessages(): SharedFlow<MessageDto>
+    fun observeGroupMessageContacts(): SharedFlow<MessageDto>
+    fun observeGroupMessageSeen(): SharedFlow<GroupMessageSeenDto>
+    fun observeGroupTypingStatus(): StateFlow<Map<String, Set<GroupTypingUser>>>
 
     suspend fun sendGroupMessage(groupMessage: SendGroupMessageParam)
     suspend fun seenGroupMessage(messageSeen: GroupMessageSeenDto)
+    suspend fun emitGroupTypingStart(groupId: String)
+    suspend fun emitGroupTypingStop(groupId: String)
 }
 
 sealed class SocketConnectionState {
@@ -57,4 +62,6 @@ object SocketEvents {
     const val SEEN_GROUP_MESSAGE = "seen-group-message"
     const val USER_SEEN_MESSAGE = "user-seen-message"
     const val SEND_GROUP_MESSAGE = "send-group-message"
+    const val GROUP_TYPING_START = "group-typing-start"
+    const val GROUP_TYPING_STOP = "group-typing-stop"
 }

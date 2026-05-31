@@ -10,13 +10,13 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface GroupContactDao {
     @Query("SELECT * FROM contacts WHERE is_group=1 ORDER BY last_time_stamp DESC")
-    fun getGroupContact(): List<ContactEntity>
+    suspend fun getGroupContact(): List<ContactEntity>
 
     @Query("SELECT * FROM contacts WHERE id = :contactId")
-    fun getGroupContactById(contactId: String): ContactEntity?
+    suspend fun getGroupContactById(contactId: String): ContactEntity?
 
     @Query("SELECT id FROM contacts WHERE is_group=1")
-    fun getAllGroupContactIds(): List<String>
+    suspend fun getAllGroupContactIds(): List<String>
 
     @Query("SELECT * FROM contacts WHERE is_group=1 ORDER BY last_time_stamp")
     fun observeGroupContact(): Flow<List<ContactEntity>>

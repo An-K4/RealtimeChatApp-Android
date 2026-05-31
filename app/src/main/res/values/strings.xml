@@ -83,4 +83,6 @@
     <string name="create_group_share">Create a group and share fun stories together!</string>
     <string name="break_the_ice">Say hi to break the ice!</string>
     <string name="find_friend_start">Find a friend and start chatting!</string>
+    <string name="many_users_is_typing">%1$s, %2$s and %3$d users is typing…</string>
+    <string name="two_users_is_typing">%1$s, %2$s is typing…</string>
 </resources>

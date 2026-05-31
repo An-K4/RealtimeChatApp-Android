@@ -4,6 +4,7 @@ import com.example.realtimechatapp.data.remote.dto.GroupMessageSeenDto
 import com.example.realtimechatapp.domain.repository.SocketEvents
 import com.example.realtimechatapp.data.remote.dto.MessageDto
 import com.example.realtimechatapp.data.remote.dto.MessageSeenDto
+import com.example.realtimechatapp.domain.model.GroupTypingUser
 import com.example.realtimechatapp.domain.model.SendGroupMessageParam
 import com.example.realtimechatapp.domain.model.SendMessageParam
 import com.example.realtimechatapp.domain.repository.SocketConnectionState
@@ -21,6 +22,8 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
@@ -41,32 +44,37 @@ class SocketRepositoryImpl @Inject constructor(
     private var socket: Socket? = null
 
     private val _messagesFlow = MutableSharedFlow<MessageDto>()
-    override fun observeMessages(): Flow<MessageDto> = _messagesFlow.asSharedFlow()
-    override fun observeMessageContacts(): Flow<MessageDto> = _messagesFlow.asSharedFlow()
+    override fun observeMessages(): SharedFlow<MessageDto> = _messagesFlow.asSharedFlow()
+    override fun observeMessageContacts(): SharedFlow<MessageDto> = _messagesFlow.asSharedFlow()
 
     private val _groupMessageFlow = MutableSharedFlow<MessageDto>()
-    override suspend fun observeGroupMessages(): Flow<MessageDto> = _groupMessageFlow.asSharedFlow()
-    override suspend fun observeGroupMessageContacts(): Flow<MessageDto> =
+    override fun observeGroupMessages(): SharedFlow<MessageDto> = _groupMessageFlow.asSharedFlow()
+    override fun observeGroupMessageContacts(): SharedFlow<MessageDto> =
         _groupMessageFlow.asSharedFlow()
 
     private val _messageSeenFlow = MutableSharedFlow<MessageSeenDto>()
-    override fun observeMessageSeen(): Flow<MessageSeenDto> = _messageSeenFlow.asSharedFlow()
+    override fun observeMessageSeen(): SharedFlow<MessageSeenDto> = _messageSeenFlow.asSharedFlow()
 
     private val _groupMessageSeenFlow = MutableSharedFlow<GroupMessageSeenDto>()
-    override suspend fun observeGroupMessageSeen(): Flow<GroupMessageSeenDto> = _groupMessageSeenFlow.asSharedFlow()
+    override fun observeGroupMessageSeen(): SharedFlow<GroupMessageSeenDto> =
+        _groupMessageSeenFlow.asSharedFlow()
 
     // each id in set is unique
     private val _onlineUserIds = MutableStateFlow<Set<String>>(emptySet())
-    override fun observeOnlineUserIds(): Flow<Set<String>> = _onlineUserIds.asStateFlow()
+    override fun observeOnlineUserIds(): StateFlow<Set<String>> = _onlineUserIds.asStateFlow()
 
     private val _typingUserIds = MutableStateFlow<Set<String>>(emptySet())
-    override fun observeTypingStatus(): Flow<Set<String>> = _typingUserIds.asStateFlow()
+    override fun observeTypingStatus(): StateFlow<Set<String>> = _typingUserIds.asStateFlow()
+
+    private val _groupTypingUsers = MutableStateFlow<Map<String, Set<GroupTypingUser>>>(emptyMap())
+    override fun observeGroupTypingStatus(): StateFlow<Map<String, Set<GroupTypingUser>>> =
+        _groupTypingUsers.asStateFlow()
 
     private val _socketConnectionState = MutableStateFlow<SocketConnectionState>(
         SocketConnectionState.Disconnected
     )
 
-    override fun observeConnectionState(): Flow<SocketConnectionState> =
+    override fun observeConnectionState(): StateFlow<SocketConnectionState> =
         _socketConnectionState.asStateFlow()
 
     override suspend fun connect() {
@@ -92,6 +100,7 @@ class SocketRepositoryImpl @Inject constructor(
         setupGroupMessageListener()
         setupOnlineUserIdsListener()
         setupTypingUserIdsListener()
+        setupGroupTypingUsersListener()
 
         socket?.connect()
     }
@@ -137,25 +146,6 @@ class SocketRepositoryImpl @Inject constructor(
 
             Timber.e("${Socket.EVENT_CONNECT_ERROR}: $error, disconnect right now!")
             _socketConnectionState.value = SocketConnectionState.Error(error)
-        }
-    }
-
-    override fun observeSocketConnectionState(): Flow<Boolean> = callbackFlow {
-        val onConnect = Emitter.Listener {
-            trySend(true)
-        }
-        val onDisconnect = Emitter.Listener {
-            trySend(false)
-        }
-
-        socket?.on(Socket.EVENT_CONNECT, onConnect)
-        socket?.on(Socket.EVENT_DISCONNECT, onDisconnect)
-
-        trySend(socket?.connected() == true)
-
-        awaitClose {
-            socket?.off(Socket.EVENT_CONNECT, onConnect)
-            socket?.off(Socket.EVENT_DISCONNECT, onDisconnect)
         }
     }
 
@@ -323,6 +313,64 @@ class SocketRepositoryImpl @Inject constructor(
         }
     }
 
+    // using Gson deserialization instead of native JSONObject casting for type safety and code
+    // consistency across socket handlers, making it easier to scale the payload in the future.
+    // in typing event of messages, just 1 field 'senderId' is needed (simple), so use casting
+    private fun setupGroupTypingUsersListener() {
+        socket?.on(SocketEvents.GROUP_TYPING_START) { args ->
+            val rawJson = args[0].toString()
+
+            try {
+                val data = gson.fromJson(rawJson, GroupTypingUser::class.java)
+
+                updateGroupTypingState(
+                    data.groupId,
+                    data.senderId,
+                    data.senderName,
+                    true
+                )
+            } catch (e: Exception) {
+                Timber.e(e, "Parse json thất bại")
+            }
+        }
+
+        socket?.on(SocketEvents.GROUP_TYPING_STOP) { args ->
+            val rawJson = args[0].toString()
+
+            try {
+                val data = gson.fromJson(rawJson, GroupTypingUser::class.java)
+
+                updateGroupTypingState(
+                    data.groupId,
+                    data.senderId,
+                    data.senderName,
+                    false
+                )
+            } catch (e: Exception) {
+                Timber.e(e, "Parse json thất bại")
+            }
+        }
+    }
+
+    private fun updateGroupTypingState(groupId: String, senderId: String, senderName: String?, isTyping: Boolean){
+        val currentMap = _groupTypingUsers.value.toMutableMap()
+        val currentSet = currentMap[groupId]?.toMutableSet() ?: mutableSetOf()
+
+        if (isTyping){
+            currentSet.add(GroupTypingUser(groupId, senderId, senderName))
+        } else {
+            currentSet.removeAll { it.senderId == senderId }
+        }
+
+        if (currentSet.isEmpty()){
+            currentMap.remove(groupId)
+        } else {
+            currentMap[groupId] = currentSet
+        }
+
+        _groupTypingUsers.value = currentMap
+    }
+
     override suspend fun sendGroupMessage(groupMessage: SendGroupMessageParam) {
         val jsonString = gson.toJson(groupMessage)
         val jsonObject = JSONObject(jsonString)
@@ -354,5 +402,15 @@ class SocketRepositoryImpl @Inject constructor(
         val jsonObject = JSONObject(jsonString)
 
         socket?.emit(SocketEvents.SEEN_GROUP_MESSAGE, jsonObject)
+    }
+
+    override suspend fun emitGroupTypingStart(groupId: String) {
+        val jsonObject = JSONObject().apply { put("groupId", groupId) }
+        socket?.emit(SocketEvents.GROUP_TYPING_START, jsonObject)
+    }
+
+    override suspend fun emitGroupTypingStop(groupId: String) {
+        val jsonObject = JSONObject().apply { put("groupId", groupId) }
+        socket?.emit(SocketEvents.GROUP_TYPING_STOP, jsonObject)
     }
 }
