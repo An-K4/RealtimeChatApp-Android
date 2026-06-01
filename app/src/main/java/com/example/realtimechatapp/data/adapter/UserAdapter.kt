@@ -1,6 +1,6 @@
 package com.example.realtimechatapp.data.adapter
 
-import com.example.realtimechatapp.data.remote.dto.UserDto
+import com.example.realtimechatapp.data.remote.dto.user.UserDto
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement

@@ -9,7 +9,7 @@ import com.example.realtimechatapp.data.local.entity.toMessageContact
 import com.example.realtimechatapp.data.local.entity.toUser
 import com.example.realtimechatapp.data.local.pojo.toMessage
 import com.example.realtimechatapp.data.remote.api.MessageApi
-import com.example.realtimechatapp.data.remote.dto.MessageSeenDto
+import com.example.realtimechatapp.data.remote.dto.message.MessageSeenDto
 import com.example.realtimechatapp.data.remote.safeApiCall
 import com.example.realtimechatapp.data.local.safeDbCall
 import com.example.realtimechatapp.di.ApplicationScope

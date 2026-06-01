@@ -10,8 +10,8 @@ import com.example.realtimechatapp.data.local.database.LocalDatabase
 import com.example.realtimechatapp.data.local.entity.toUser
 import com.example.realtimechatapp.data.local.manager.TokenManagerImpl
 import com.example.realtimechatapp.data.remote.api.AuthApi
-import com.example.realtimechatapp.data.remote.dto.LoginRequestDto
-import com.example.realtimechatapp.data.remote.dto.SignupRequestDto
+import com.example.realtimechatapp.data.remote.dto.auth.LoginRequestDto
+import com.example.realtimechatapp.data.remote.dto.auth.SignupRequestDto
 import com.example.realtimechatapp.data.remote.safeApiCall
 import com.example.realtimechatapp.data.local.safeDbCall
 import com.example.realtimechatapp.domain.model.User

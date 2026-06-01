@@ -1,11 +1,11 @@
 package com.example.realtimechatapp.data.remote.api
 
-import com.example.realtimechatapp.data.remote.dto.UserResponseDto
-import com.example.realtimechatapp.data.remote.dto.LoginRequestDto
-import com.example.realtimechatapp.data.remote.dto.LoginResponseDto
-import com.example.realtimechatapp.data.remote.dto.SignupRequestDto
+import com.example.realtimechatapp.data.remote.dto.user.UserResponseDto
+import com.example.realtimechatapp.data.remote.dto.auth.LoginRequestDto
+import com.example.realtimechatapp.data.remote.dto.auth.LoginResponseDto
+import com.example.realtimechatapp.data.remote.dto.auth.SignupRequestDto
 import com.example.realtimechatapp.data.remote.dto.SimpleResponseDto
-import com.example.realtimechatapp.data.remote.dto.UploadResponseDto
+import com.example.realtimechatapp.data.remote.dto.user.UploadResponseDto
 import okhttp3.MultipartBody
 import retrofit2.http.Body
 import retrofit2.http.GET

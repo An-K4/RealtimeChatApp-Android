@@ -6,7 +6,7 @@ import com.example.realtimechatapp.data.remote.AuthInterceptor
 import com.example.realtimechatapp.data.remote.api.GroupApi
 import com.example.realtimechatapp.data.remote.api.MessageApi
 import com.example.realtimechatapp.data.remote.api.UserApi
-import com.example.realtimechatapp.data.remote.dto.UserDto
+import com.example.realtimechatapp.data.remote.dto.user.UserDto
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module

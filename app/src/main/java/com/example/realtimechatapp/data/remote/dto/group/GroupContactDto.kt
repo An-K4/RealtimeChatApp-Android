@@ -1,7 +1,8 @@
-package com.example.realtimechatapp.data.remote.dto
+package com.example.realtimechatapp.data.remote.dto.group
 
 import com.example.realtimechatapp.common.isoToLong
 import com.example.realtimechatapp.data.local.entity.ContactEntity
+import com.example.realtimechatapp.data.remote.dto.message.LastMessageDto
 import com.google.gson.annotations.SerializedName
 
 data class GroupContactDto(

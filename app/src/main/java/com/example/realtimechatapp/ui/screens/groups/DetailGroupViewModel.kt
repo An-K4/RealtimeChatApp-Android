@@ -10,8 +10,8 @@ import com.example.realtimechatapp.domain.model.Group
 import com.example.realtimechatapp.domain.model.Member
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
-import com.example.realtimechatapp.domain.usecase.groups.GetGroupInfoUseCase
-import com.example.realtimechatapp.domain.usecase.groups.GetGroupMessageUseCase
+import com.example.realtimechatapp.domain.usecase.group.GetGroupInfoUseCase
+import com.example.realtimechatapp.domain.usecase.group.GetGroupMessageUseCase
 import com.example.realtimechatapp.domain.usecase.socket.group.EmitGroupTypingStartUseCase
 import com.example.realtimechatapp.domain.usecase.socket.group.EmitGroupTypingStopUseCase
 import com.example.realtimechatapp.domain.usecase.socket.group.ObserveGroupMessageUseCase

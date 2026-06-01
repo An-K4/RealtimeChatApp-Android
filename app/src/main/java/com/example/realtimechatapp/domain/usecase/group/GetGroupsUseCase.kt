@@ -1,4 +1,4 @@
-package com.example.realtimechatapp.domain.usecase.groups
+package com.example.realtimechatapp.domain.usecase.group
 
 import com.example.realtimechatapp.domain.repository.GroupRepository
 import javax.inject.Inject

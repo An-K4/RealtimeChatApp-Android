@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.model.GroupMessageContact
-import com.example.realtimechatapp.domain.usecase.groups.GetGroupsUseCase
+import com.example.realtimechatapp.domain.usecase.group.GetGroupsUseCase
 import com.example.realtimechatapp.domain.usecase.socket.group.ObserveGroupMessageContactUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel

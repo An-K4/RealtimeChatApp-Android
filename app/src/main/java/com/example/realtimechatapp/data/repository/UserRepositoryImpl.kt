@@ -7,8 +7,8 @@ import com.example.realtimechatapp.common.ImageUtils
 import com.example.realtimechatapp.common.NetworkUtils
 import com.example.realtimechatapp.data.local.dao.UserDao
 import com.example.realtimechatapp.data.remote.api.UserApi
-import com.example.realtimechatapp.data.remote.dto.ChangePasswordRequestDto
-import com.example.realtimechatapp.data.remote.dto.UpdateProfileRequestDto
+import com.example.realtimechatapp.data.remote.dto.user.ChangePasswordRequestDto
+import com.example.realtimechatapp.data.remote.dto.user.UpdateProfileRequestDto
 import com.example.realtimechatapp.data.remote.safeApiCall
 import com.example.realtimechatapp.data.local.safeDbCall
 import com.example.realtimechatapp.domain.model.User

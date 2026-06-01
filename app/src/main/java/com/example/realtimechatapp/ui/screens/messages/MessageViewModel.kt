@@ -6,7 +6,7 @@ import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.data.local.manager.TokenManagerImpl
 import com.example.realtimechatapp.domain.model.MessageContact
-import com.example.realtimechatapp.domain.usecase.messages.GetMessageContactUseCase
+import com.example.realtimechatapp.domain.usecase.message.GetMessageContactUseCase
 import com.example.realtimechatapp.domain.usecase.socket.ConnectSocketUseCase
 import com.example.realtimechatapp.domain.usecase.socket.message.ObserveMessageContactUseCase
 import com.example.realtimechatapp.domain.usecase.socket.message.ObserveOnlineUserUseCase

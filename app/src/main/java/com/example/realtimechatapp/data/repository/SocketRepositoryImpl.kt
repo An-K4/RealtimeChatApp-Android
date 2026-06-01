@@ -1,9 +1,9 @@
 package com.example.realtimechatapp.data.repository
 
-import com.example.realtimechatapp.data.remote.dto.GroupMessageSeenDto
+import com.example.realtimechatapp.data.remote.dto.group.GroupMessageSeenDto
 import com.example.realtimechatapp.domain.repository.SocketEvents
-import com.example.realtimechatapp.data.remote.dto.MessageDto
-import com.example.realtimechatapp.data.remote.dto.MessageSeenDto
+import com.example.realtimechatapp.data.remote.dto.message.MessageDto
+import com.example.realtimechatapp.data.remote.dto.message.MessageSeenDto
 import com.example.realtimechatapp.domain.model.GroupTypingUser
 import com.example.realtimechatapp.domain.model.SendGroupMessageParam
 import com.example.realtimechatapp.domain.model.SendMessageParam
@@ -14,19 +14,15 @@ import com.google.gson.Gson
 import io.socket.client.Ack
 import io.socket.client.IO
 import io.socket.client.Socket
-import io.socket.emitter.Emitter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch

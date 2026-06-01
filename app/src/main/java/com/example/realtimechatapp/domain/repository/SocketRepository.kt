@@ -1,12 +1,11 @@
 package com.example.realtimechatapp.domain.repository
 
-import com.example.realtimechatapp.data.remote.dto.GroupMessageSeenDto
-import com.example.realtimechatapp.data.remote.dto.MessageDto
-import com.example.realtimechatapp.data.remote.dto.MessageSeenDto
+import com.example.realtimechatapp.data.remote.dto.group.GroupMessageSeenDto
+import com.example.realtimechatapp.data.remote.dto.message.MessageDto
+import com.example.realtimechatapp.data.remote.dto.message.MessageSeenDto
 import com.example.realtimechatapp.domain.model.GroupTypingUser
 import com.example.realtimechatapp.domain.model.SendGroupMessageParam
 import com.example.realtimechatapp.domain.model.SendMessageParam
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 

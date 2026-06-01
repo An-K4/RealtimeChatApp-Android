@@ -1,8 +1,8 @@
 package com.example.realtimechatapp.data.remote.api
 
-import com.example.realtimechatapp.data.remote.dto.GetGroupInfoResponseDto
-import com.example.realtimechatapp.data.remote.dto.GetGroupMessageResponseDto
-import com.example.realtimechatapp.data.remote.dto.GetGroupResponseDto
+import com.example.realtimechatapp.data.remote.dto.group.GetGroupInfoResponseDto
+import com.example.realtimechatapp.data.remote.dto.group.GetGroupMessageResponseDto
+import com.example.realtimechatapp.data.remote.dto.group.GetGroupResponseDto
 import retrofit2.http.GET
 import retrofit2.http.Path
 

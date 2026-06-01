@@ -1,6 +1,5 @@
-package com.example.realtimechatapp.domain.usecase.messages
+package com.example.realtimechatapp.domain.usecase.message
 
-import com.example.realtimechatapp.domain.model.MessageContact
 import com.example.realtimechatapp.domain.repository.MessageRepository
 import javax.inject.Inject
 

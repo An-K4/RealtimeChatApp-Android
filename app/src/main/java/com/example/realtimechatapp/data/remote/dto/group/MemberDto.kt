@@ -1,8 +1,9 @@
-package com.example.realtimechatapp.data.remote.dto
+package com.example.realtimechatapp.data.remote.dto.group
 
 import com.example.realtimechatapp.common.isoToLong
 import com.example.realtimechatapp.data.local.entity.MemberEntity
 import com.example.realtimechatapp.data.local.entity.MemberRole
+import com.example.realtimechatapp.data.remote.dto.user.UserDto
 import com.google.gson.annotations.SerializedName
 
 enum class RoleDto{

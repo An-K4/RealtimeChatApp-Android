@@ -1,4 +1,4 @@
-package com.example.realtimechatapp.data.remote.dto
+package com.example.realtimechatapp.data.remote.dto.message
 
 import com.example.realtimechatapp.common.isoToLong
 import com.example.realtimechatapp.data.local.entity.ContactEntity

@@ -1,7 +1,8 @@
-package com.example.realtimechatapp.data.remote.dto
+package com.example.realtimechatapp.data.remote.dto.message
 
 import com.example.realtimechatapp.common.isoToLong
 import com.example.realtimechatapp.data.local.entity.MessageEntity
+import com.example.realtimechatapp.data.remote.dto.user.UserDto
 import com.google.gson.annotations.SerializedName
 
 data class MessageDto(

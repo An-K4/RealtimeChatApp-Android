@@ -8,8 +8,8 @@ import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.model.User
-import com.example.realtimechatapp.domain.usecase.messages.GetHeaderInfoUseCase
-import com.example.realtimechatapp.domain.usecase.messages.GetMessageUseCase
+import com.example.realtimechatapp.domain.usecase.message.GetHeaderInfoUseCase
+import com.example.realtimechatapp.domain.usecase.message.GetMessageUseCase
 import com.example.realtimechatapp.domain.usecase.socket.message.EmitTypingStartUseCase
 import com.example.realtimechatapp.domain.usecase.socket.message.EmitTypingStopUseCase
 import com.example.realtimechatapp.domain.usecase.socket.message.ObserveMessageUseCase

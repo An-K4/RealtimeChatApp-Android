@@ -1,4 +1,4 @@
-package com.example.realtimechatapp.domain.usecase.messages
+package com.example.realtimechatapp.domain.usecase.message
 
 import com.example.realtimechatapp.domain.repository.MessageRepository
 import com.example.realtimechatapp.domain.validation.MessageValidator
