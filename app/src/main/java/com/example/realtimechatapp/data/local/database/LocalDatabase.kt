@@ -26,7 +26,7 @@ import com.example.realtimechatapp.data.local.entity.UserEntity
         MemberEntity::class,
         MessageEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -51,6 +51,7 @@ abstract class LocalDatabase: RoomDatabase() {
                     LocalDatabase::class.java,
                     "local_database.db"
                 )
+                    .fallbackToDestructiveMigration()
                     .addTypeConverter(converters)
                     .build()
 
