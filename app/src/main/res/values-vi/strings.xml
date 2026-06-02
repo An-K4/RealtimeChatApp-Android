@@ -86,4 +86,11 @@
     <string name="find_friend_start">Hãy tìm 1 người bạn và bắt đầu trò chuyện nào!</string>
     <string name="many_users_is_typing">%1$s, %2$s và %3$d người khác đang soạn tin…</string>
     <string name="two_users_is_typing">%1$s, %2$s đang soạn tin…</string>
+    <string name="user_not_found">Không tìm thấy người dùng</string>
+    <string name="error_searching">Đã xảy ra lỗi khi tìm kiếm</string>
+    <string name="type_something_to_search">Nhập từ khóa để bắt đầu tìm kiếm.</string>
+    <string name="no_user_found">Không tìm thấy người dùng</string>
+    <string name="no_group_found">Không tìm thấy nhóm</string>
+    <string name="type_a_keyword">Nhập từ khóa</string>
+    <string name="everyone">Mọi người</string>
 </resources>

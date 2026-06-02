@@ -25,6 +25,7 @@ import com.example.realtimechatapp.ui.screens.messages.DetailMessageScreen
 import com.example.realtimechatapp.ui.screens.messages.MessageScreen
 import com.example.realtimechatapp.ui.screens.more.MoreScreen
 import com.example.realtimechatapp.ui.screens.profile.ProfileScreen
+import com.example.realtimechatapp.ui.screens.search.SearchScreen
 
 @Composable
 fun AppNavigation() {
@@ -46,7 +47,7 @@ fun AppNavigation() {
 
     Scaffold(
         topBar = {
-            when{
+            when {
                 showMainBars -> {
                     MainTopAppBar(
                         onSearchClick = {
@@ -54,10 +55,13 @@ fun AppNavigation() {
                         }
                     )
                 }
+
                 showMessageTopAppBar -> {
                     // add pair to specific more screen in the future
-                    val title = when(currentRoute){
-                        Screen.DetailGroup.route -> UiText.StringResource(R.string.groups).asString()
+                    val title = when (currentRoute) {
+                        Screen.DetailGroup.route -> UiText.StringResource(R.string.groups)
+                            .asString()
+
                         else -> UiText.StringResource(R.string.messages).asString()
                     }
 
@@ -102,7 +106,7 @@ fun AppNavigation() {
             composable(
                 Screen.DetailMessage.route,
                 arguments = listOf(
-                    navArgument(Screen.DetailMessage.ARG_FRIEND_ID){ type = NavType.StringType }
+                    navArgument(Screen.DetailMessage.ARG_FRIEND_ID) { type = NavType.StringType }
                 )
             ) {
                 DetailMessageScreen(navController)
@@ -115,7 +119,7 @@ fun AppNavigation() {
             composable(
                 Screen.DetailGroup.route,
                 arguments = listOf(
-                    navArgument(Screen.DetailGroup.ARG_GROUP_ID){ type = NavType.StringType }
+                    navArgument(Screen.DetailGroup.ARG_GROUP_ID) { type = NavType.StringType }
                 )
             ) {
                 DetailGroupScreen(navController)
@@ -127,6 +131,10 @@ fun AppNavigation() {
 
             composable(Screen.More.route) {
                 MoreScreen(navController)
+            }
+
+            composable(Screen.Search.route) {
+                SearchScreen(navController)
             }
         }
     }

@@ -11,11 +11,14 @@ import com.example.realtimechatapp.data.remote.dto.user.ChangePasswordRequestDto
 import com.example.realtimechatapp.data.remote.dto.user.UpdateProfileRequestDto
 import com.example.realtimechatapp.data.remote.safeApiCall
 import com.example.realtimechatapp.data.local.safeDbCall
+import com.example.realtimechatapp.domain.model.SearchResult
 import com.example.realtimechatapp.domain.model.User
 import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.repository.NetworkChecker
 import com.example.realtimechatapp.domain.repository.UserRepository
+import com.google.gson.Gson
 import dagger.hilt.android.qualifiers.ApplicationContext
+import org.json.JSONObject
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -78,6 +81,21 @@ class UserRepositoryImpl @Inject constructor(
             if (e is CancellationException) throw e
 
             Timber.e(e, "Đổi mật khẩu thất bại")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun performSearch(query: String): Result<SearchResult> {
+        return try {
+            val response = safeApiCall(networkChecker) { userApi.performSearch(query) }
+            val responseUsers = response.users.map { it.toUser() }
+            val responseGroups = response.groups.map { it.toGroup() }
+
+            Result.success(SearchResult(responseUsers, responseGroups))
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
+            Timber.e(e, "Tìm kiếm lỗi")
             Result.failure(e)
         }
     }

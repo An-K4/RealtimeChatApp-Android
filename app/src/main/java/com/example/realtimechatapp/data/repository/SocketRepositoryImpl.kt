@@ -152,6 +152,7 @@ class SocketRepositoryImpl @Inject constructor(
                 Timber.d("Raw json: $rawJsonData")
 
                 try {
+                    // without gson converter factory like retrofit, need to convert manually
                     val messageDto = gson.fromJson(rawJsonData, MessageDto::class.java)
 
                     scope.launch {

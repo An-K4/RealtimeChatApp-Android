@@ -85,4 +85,11 @@
     <string name="find_friend_start">Find a friend and start chatting!</string>
     <string name="many_users_is_typing">%1$s, %2$s and %3$d users is typing…</string>
     <string name="two_users_is_typing">%1$s, %2$s is typing…</string>
+    <string name="user_not_found">User not found</string>
+    <string name="error_searching">An error occurred while searching</string>
+    <string name="type_something_to_search">Type a keyword to start searching.</string>
+    <string name="no_user_found">User not found</string>
+    <string name="no_group_found">Group not found</string>
+    <string name="type_a_keyword">Type a keyword</string>
+    <string name="everyone">Everyone</string>
 </resources>
