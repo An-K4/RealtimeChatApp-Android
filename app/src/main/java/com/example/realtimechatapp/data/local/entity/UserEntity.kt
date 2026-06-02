@@ -23,12 +23,6 @@ data class UserEntity(
     val email: String,
     val avatar: String?,
 
-    @ColumnInfo(name = "is_online")
-    val isOnline: Boolean = false,
-
-    @ColumnInfo(name = "last_seen")
-    val lastSeen: Long = System.currentTimeMillis(),
-
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
 
