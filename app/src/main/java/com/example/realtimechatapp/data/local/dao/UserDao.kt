@@ -42,15 +42,6 @@ interface UserDao {
     )
     suspend fun getGroupMember(groupId: String): List<UserEntity>
 
-    @Query("""
-        UPDATE users SET is_online = :isOnline, last_seen = :lastSeen
-        WHERE id = :userId
-    """)
-    suspend fun updateOnlineStatus(userId: String, isOnline: Boolean, lastSeen: Long)
-
-    @Query("SELECT * FROM users WHERE is_online = 1")
-    fun observeOnlineUsers(): Flow<List<UserEntity>>
-
     @Query("SELECT * FROM users ORDER BY fullName ASC")
     fun observeAllUser(): Flow<List<UserEntity>>
 }

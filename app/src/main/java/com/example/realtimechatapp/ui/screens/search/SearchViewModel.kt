@@ -7,6 +7,7 @@ import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.model.Group
 import com.example.realtimechatapp.domain.model.User
 import com.example.realtimechatapp.domain.usecase.user.PerformSearchUseCase
+import com.example.realtimechatapp.domain.usecase.user.SaveNewUserInfoUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
@@ -23,7 +24,8 @@ import javax.inject.Inject
 @OptIn(FlowPreview::class)
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val performSearchUseCase: PerformSearchUseCase
+    private val performSearchUseCase: PerformSearchUseCase,
+    private val saveNewUserInfoUseCase: SaveNewUserInfoUseCase
 ) : ViewModel() {
     data class SearchState(
         val query: String = "",
@@ -34,8 +36,8 @@ class SearchViewModel @Inject constructor(
     )
 
     sealed class SearchEvents {
-        object Success : SearchEvents()
-        data class Failure(val message: UiText): SearchEvents()
+        data class SaveNewUserSuccess(val newUserId: String) : SearchEvents()
+        data class Failure(val message: UiText) : SearchEvents()
     }
 
     private var _searchState = MutableStateFlow(SearchState())
@@ -65,7 +67,7 @@ class SearchViewModel @Inject constructor(
         }
     }
 
-    fun onTabSelected(tab: SearchTabs){
+    fun onTabSelected(tab: SearchTabs) {
         _searchState.update { it.copy(currentTab = tab) }
     }
 
@@ -88,5 +90,15 @@ class SearchViewModel @Inject constructor(
         }
 
         _searchState.update { it.copy(isLoading = false) }
+    }
+
+    fun saveNewUserInfo(newUser: User) {
+        viewModelScope.launch {
+            saveNewUserInfoUseCase(newUser).onSuccess {
+                _searchEvents.send(SearchEvents.SaveNewUserSuccess(newUser.id))
+            }.onFailure { exception ->
+                _searchEvents.send(SearchEvents.Failure(exception.getErrorMessage()))
+            }
+        }
     }
 }

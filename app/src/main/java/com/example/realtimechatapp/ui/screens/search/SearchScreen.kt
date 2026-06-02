@@ -44,6 +44,7 @@ import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.domain.model.Group
 import com.example.realtimechatapp.domain.model.User
 import com.example.realtimechatapp.ui.components.SearchResultItem
+import com.example.realtimechatapp.ui.navigation.Screen
 import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 
 @Composable
@@ -57,7 +58,9 @@ fun SearchScreen(
     LaunchedEffect(Unit) {
         searchViewModel.searchEvents.collect {
             when (it) {
-                is SearchViewModel.SearchEvents.Success -> {}
+                is SearchViewModel.SearchEvents.SaveNewUserSuccess -> {
+                    navController.navigate(Screen.DetailMessage.createRoute(it.newUserId))
+                }
                 is SearchViewModel.SearchEvents.Failure -> {
                     Toast.makeText(context, it.message.asString(context), Toast.LENGTH_SHORT).show()
                 }
@@ -168,7 +171,7 @@ fun SearchScreen(
                                         name = user.fullName,
                                         additionalInfo = user.email,
                                         onItemClicked = {
-                                            // navController.navigate(Screen.DetailMessage.createRoute(user.id))
+                                            searchViewModel.saveNewUserInfo(user)
                                         }
                                     )
                                 }
@@ -206,7 +209,7 @@ fun SearchScreen(
                                             group.members.size
                                         ).asString(),
                                         onItemClicked = {
-                                            // navController.navigate(Screen.DetailGroupMessage.createRoute(group.id))
+                                            navController.navigate(Screen.DetailGroup.createRoute(group.id))
                                         }
                                     )
                                 }

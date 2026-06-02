@@ -9,4 +9,5 @@ interface UserRepository {
     suspend fun updateAvatar(avatar: Uri): Result<String>
     suspend fun changePassword(oldPassword: String, newPassword: String): Result<Unit>
     suspend fun performSearch(query: String): Result<SearchResult>
+    suspend fun saveNewUserInfo(newUser: User): Result<Unit>
 }

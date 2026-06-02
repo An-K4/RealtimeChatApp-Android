@@ -5,7 +5,9 @@ import android.net.Uri
 import com.example.realtimechatapp.common.FileUtils
 import com.example.realtimechatapp.common.ImageUtils
 import com.example.realtimechatapp.common.NetworkUtils
+import com.example.realtimechatapp.common.isoToLong
 import com.example.realtimechatapp.data.local.dao.UserDao
+import com.example.realtimechatapp.data.local.entity.UserEntity
 import com.example.realtimechatapp.data.remote.api.UserApi
 import com.example.realtimechatapp.data.remote.dto.user.ChangePasswordRequestDto
 import com.example.realtimechatapp.data.remote.dto.user.UpdateProfileRequestDto
@@ -16,9 +18,7 @@ import com.example.realtimechatapp.domain.model.User
 import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.repository.NetworkChecker
 import com.example.realtimechatapp.domain.repository.UserRepository
-import com.google.gson.Gson
 import dagger.hilt.android.qualifiers.ApplicationContext
-import org.json.JSONObject
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -96,6 +96,27 @@ class UserRepositoryImpl @Inject constructor(
             if (e is CancellationException) throw e
 
             Timber.e(e, "Tìm kiếm lỗi")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun saveNewUserInfo(newUser: User): Result<Unit> {
+        return try {
+            val newUserEntity = UserEntity(
+                id = newUser.id,
+                username = newUser.username,
+                fullName = newUser.fullName,
+                email = newUser.email,
+                avatar = newUser.avatar,
+                createdAt = newUser.createdAt.isoToLong()
+            )
+
+            safeDbCall { userDao.insertUser(newUserEntity) }
+            Result.success(Unit)
+        } catch (e: Exception){
+            if (e is CancellationException) throw e
+
+            Timber.e(e, "Lỗi lưu thông tin người dùng mới")
             Result.failure(e)
         }
     }
