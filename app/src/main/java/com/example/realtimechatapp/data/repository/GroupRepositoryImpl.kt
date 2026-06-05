@@ -1,11 +1,14 @@
 package com.example.realtimechatapp.data.repository
 
+import androidx.room.withTransaction
 import com.example.realtimechatapp.common.isoToLong
 import com.example.realtimechatapp.data.local.dao.GroupContactDao
 import com.example.realtimechatapp.data.local.dao.GroupDao
 import com.example.realtimechatapp.data.local.dao.GroupMessageDao
 import com.example.realtimechatapp.data.local.dao.MemberDao
 import com.example.realtimechatapp.data.local.dao.UserDao
+import com.example.realtimechatapp.data.local.database.LocalDatabase
+import com.example.realtimechatapp.data.local.entity.ContactEntity
 import com.example.realtimechatapp.data.local.entity.MessageEntity
 import com.example.realtimechatapp.data.local.entity.toGroupMessageContact
 import com.example.realtimechatapp.data.local.pojo.toGroup
@@ -37,9 +40,10 @@ class GroupRepositoryImpl @Inject constructor(
     private val groupContactDao: GroupContactDao,
     private val groupMessageDao: GroupMessageDao,
     private val groupDao: GroupDao,
-    private val socketRepository: SocketRepository,
+    private val localDatabase: LocalDatabase,
     private val memberDao: MemberDao,
     private val userDao: UserDao,
+    private val socketRepository: SocketRepository,
     private val networkChecker: NetworkChecker,
     private val currentUserManager: CurrentUserManager,
     @ApplicationScope private val applicationScope: CoroutineScope
@@ -59,9 +63,24 @@ class GroupRepositoryImpl @Inject constructor(
         }
 
         applicationScope.launch {
-            socketRepository.observeGroupMessages().collect {
-                val messageEntity = it.toMessageEntity()
-                safeDbCall { groupMessageDao.insertMessage(messageEntity) }
+            socketRepository.observeGroupMessages().collect { messageDto ->
+                val messageEntity = messageDto.toMessageEntity()
+                val currentUserId = currentUserManager.getCurrentUserId()
+                val contactId = messageDto.getMessageContactId(currentUserId)
+                val isMine = messageDto.senderId.id == currentUserId
+
+                safeDbCall {
+                    localDatabase.withTransaction {
+                        groupMessageDao.insertMessage(messageEntity)
+                        groupContactDao.upsertGroupContact(
+                            contactId = contactId,
+                            lastMessage = messageDto.content,
+                            lastSenderName = messageDto.senderId.fullName,
+                            isMine = isMine,
+                            lastTimeStamp = messageDto.createdAt.isoToLong()
+                        )
+                    }
+                }
             }
         }
 
