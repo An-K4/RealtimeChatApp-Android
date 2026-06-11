@@ -43,6 +43,8 @@ fun Throwable.getErrorMessage(): UiText {
         is DatabaseException.RecordNotFoundException -> UiText.StringResource(R.string.record_not_found)
         is DatabaseException.OutOfSpaceException -> UiText.StringResource(R.string.out_of_space)
         is DatabaseException.LocalDataWriteException -> UiText.StringResource(R.string.local_data_write_error)
+        is DatabaseException.DataCorruptedException -> UiText.StringResource(R.string.database_corrupted)
+        is DatabaseException.ConstraintViolationException -> UiText.StringResource(R.string.database_constraint_violation)
 
         // group exceptions
         is GroupException.GroupIdNotExistException -> UiText.StringResource(R.string.group_id_not_exist)
