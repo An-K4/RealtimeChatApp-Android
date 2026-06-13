@@ -8,4 +8,10 @@ object GroupValidator {
             throw GroupException.GroupIdNotExistException
         }
     }
+
+    fun validateGroupMemberSize(members: List<String>) {
+        if (members.size < 2) {
+            throw GroupException.GroupMemberSizeException
+        }
+    }
 }
