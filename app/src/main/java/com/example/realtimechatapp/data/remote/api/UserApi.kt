@@ -28,4 +28,7 @@ interface UserApi {
 
     @GET("/users/search")
     suspend fun performSearch(@Query("keyword") keyword: String): SearchResponseDto
+
+    @GET("/users/search-users")
+    suspend fun performSearchUsers(@Query("keyword") keyword: String): SearchResponseDto
 }

@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,18 +45,20 @@ fun ChatItem(
     avatar: String?,
     name: String,
     unreadCount: Int,
-    lastMessage: LastMessage,
+    lastMessage: LastMessage?,
     isOnline: Boolean = false,
     isTyping: Boolean = false,
     onItemClicked: () -> Unit
 ) {
-    val previewLastMessage = if (lastMessage.isMine) {
-        UiText.StringResource(R.string.you_with_arg, lastMessage.content).asString()
-    } else {
-        if (isGroup) {
-            "${lastMessage.senderName}: ${lastMessage.content}"
+    val previewLastMessage = lastMessage?.let {
+        if (lastMessage.isMine) {
+            UiText.StringResource(R.string.you_with_arg, lastMessage.content).asString()
         } else {
-            lastMessage.content
+            if (isGroup) {
+                "${lastMessage.senderName}: ${lastMessage.content}"
+            } else {
+                lastMessage.content
+            }
         }
     }
     val onlineColor =
@@ -75,6 +78,9 @@ fun ChatItem(
             AsyncImage(
                 model = avatar ?: R.drawable.default_avatar,
                 contentDescription = "small preview avatar",
+                placeholder = painterResource(R.drawable.default_avatar),
+                error = painterResource(R.drawable.default_avatar),
+                fallback = painterResource(R.drawable.default_avatar),
                 modifier = Modifier
                     .matchParentSize()
                     .clip(CircleShape)
@@ -124,7 +130,7 @@ fun ChatItem(
                 )
             } else {
                 Text(
-                    text = previewLastMessage,
+                    text = previewLastMessage ?: UiText.StringResource(R.string.new_group).asString(),
                     fontSize = 14.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -138,7 +144,7 @@ fun ChatItem(
             modifier = Modifier.padding(start = 5.dp)
         ) {
             Text(
-                text = lastMessage.createdAt,
+                text = lastMessage?.createdAt ?: "",
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onBackground
             )

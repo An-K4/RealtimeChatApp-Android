@@ -25,6 +25,9 @@ interface UserDao {
     @Query("UPDATE users SET avatar = :newAvatar WHERE id = :userId")
     suspend fun updateAvatar(newAvatar: String?, userId: String)
 
+    @Query("SELECT * FROM users")
+    suspend fun getAllUsers(): List<UserEntity>
+
     @Query("SELECT * FROM users WHERE id = :id")
     suspend fun getUserById(id: String): UserEntity?
 

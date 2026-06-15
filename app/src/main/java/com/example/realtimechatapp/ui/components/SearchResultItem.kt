@@ -33,11 +33,11 @@ fun SearchResultItem(
     avatar: String,
     name: String,
     additionalInfo: String,
-    onItemClicked: () -> Unit
+    onItemClicked: () -> Unit,
+    modifier: Modifier
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
             .padding(horizontal = 12.dp)
             .clickable{ onItemClicked() },
         verticalAlignment = Alignment.CenterVertically

@@ -27,4 +27,7 @@ sealed class Screen(
         const val ARG_GROUP_ID = "groupId"
         fun createRoute(groupId: String) = "detail_group/$groupId"
     }
+
+    // screens using normal top app bar
+    object CreateGroup: Screen("create_group", UiText.StringResource(R.string.create_group))
 }

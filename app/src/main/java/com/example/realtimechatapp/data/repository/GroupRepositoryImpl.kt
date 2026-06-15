@@ -16,6 +16,7 @@ import com.example.realtimechatapp.data.local.pojo.toMessage
 import com.example.realtimechatapp.data.remote.api.GroupApi
 import com.example.realtimechatapp.data.remote.safeApiCall
 import com.example.realtimechatapp.data.local.safeDbCall
+import com.example.realtimechatapp.data.remote.dto.group.CreateGroupRequestDto
 import com.example.realtimechatapp.data.remote.dto.group.GroupMessageSeenDto
 import com.example.realtimechatapp.di.ApplicationScope
 import com.example.realtimechatapp.domain.exception.DatabaseException
@@ -71,7 +72,6 @@ class GroupRepositoryImpl @Inject constructor(
 
                 safeDbCall {
                     localDatabase.withTransaction {
-                        groupMessageDao.insertMessage(messageEntity)
                         groupContactDao.upsertGroupContact(
                             contactId = contactId,
                             lastMessage = messageDto.content,
@@ -79,25 +79,8 @@ class GroupRepositoryImpl @Inject constructor(
                             isMine = isMine,
                             lastTimeStamp = messageDto.createdAt.isoToLong()
                         )
+                        groupMessageDao.insertMessage(messageEntity)
                     }
-                }
-            }
-        }
-
-        applicationScope.launch {
-            socketRepository.observeGroupMessages().collect { messageDto ->
-                val currentUserId = currentUserManager.getCurrentUserId()
-                val contactId = messageDto.getMessageContactId(currentUserId)
-                val isMine = messageDto.senderId.id == currentUserId
-
-                safeDbCall {
-                    groupContactDao.upsertGroupContact(
-                        contactId = contactId,
-                        lastMessage = messageDto.content,
-                        lastSenderName = messageDto.senderId.fullName,
-                        isMine = isMine,
-                        lastTimeStamp = messageDto.createdAt.isoToLong()
-                    )
                 }
             }
         }
@@ -238,15 +221,61 @@ class GroupRepositoryImpl @Inject constructor(
         val messages = safeDbCall { groupMessageDao.getMessagesToMarkSeen(groupId, userId) }
         val markedMessages = mutableListOf<MessageEntity>()
 
-        for (msg in messages){
+        for (msg in messages) {
             val currentSeenBy = msg.seenBy?.toMutableList()
 
-            if (currentSeenBy?.contains(userId) != true){
+            if (currentSeenBy?.contains(userId) != true) {
                 currentSeenBy?.add(userId)
                 markedMessages.add(msg.copy(seenBy = currentSeenBy))
             }
         }
 
         safeDbCall { groupMessageDao.updateGroupMessages(markedMessages) }
+    }
+
+    override suspend fun createGroup(
+        name: String,
+        members: List<String>
+    ): Result<String> {
+        return try {
+            val response = safeApiCall(networkChecker) {
+                groupApi.createGroup(
+                    CreateGroupRequestDto(
+                        name,
+                        members
+                    )
+                )
+            }
+
+            val group = response.group.toGroupEntity()
+            val members = response.group.members
+
+            safeDbCall {
+                // atomicity all 3 tables are written atomically — commit together or rollback entirely
+                localDatabase.withTransaction {
+                    groupDao.insertGroup(group)
+                    groupContactDao.insertContact(
+                        ContactEntity(
+                            id = group.id,
+                            isGroup = true,
+                            lastMessage = null,
+                            lastSenderName = null,
+                            isMine = false,
+                            lastTimeStamp = group.createdAt,
+                            unreadCount = 0,
+                            contactName = group.name,
+                            contactAvatar = group.avatar
+                        )
+                    )
+                    memberDao.insertAllMember(members.map { it.toMemberEntity(group.id) })
+                }
+            }
+            Result.success(group.id)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
+            Timber.e(e, "Lỗi khi tạo nhóm")
+            Result.failure(e)
+        }
     }
 }

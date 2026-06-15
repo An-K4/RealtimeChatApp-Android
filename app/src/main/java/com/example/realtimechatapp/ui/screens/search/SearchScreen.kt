@@ -172,7 +172,8 @@ fun SearchScreen(
                                         additionalInfo = user.email,
                                         onItemClicked = {
                                             searchViewModel.saveNewUserInfo(user)
-                                        }
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
                                     )
                                 }
                             }
@@ -210,7 +211,8 @@ fun SearchScreen(
                                         ).asString(),
                                         onItemClicked = {
                                             navController.navigate(Screen.DetailGroup.createRoute(group.id))
-                                        }
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
                                     )
                                 }
                             }

@@ -8,5 +8,4 @@ sealed class DatabaseException : Exception() {
     object DataCorruptedException : DatabaseException()
     // developer logic error violating schema rules (e.g., duplicate PK or null in NOT NULL column)
     object ConstraintViolationException : DatabaseException()
-
 }

@@ -1,6 +1,7 @@
 package com.example.realtimechatapp.ui.components
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.GroupAdd
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -24,7 +25,8 @@ import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainTopAppBar(
-    onSearchClick: () -> Unit
+    onSearchClick: () -> Unit,
+    onCreateGroupClick: () -> Unit
 ) {
     TopAppBar(
         title = {
@@ -44,6 +46,14 @@ fun MainTopAppBar(
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = "search",
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+
+            IconButton(onClick = { onCreateGroupClick() }) {
+                Icon(
+                    imageVector = Icons.Default.GroupAdd,
+                    contentDescription = "create group",
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
@@ -81,6 +91,14 @@ fun PreviewTopAppBar() {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+
+                IconButton(onClick = {}) {
+                    Icon(
+                        imageVector = Icons.Default.GroupAdd,
+                        contentDescription = "create group",
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
