@@ -580,7 +580,13 @@ fun ProfileScreen(
                 onDismiss = {
                     dialogState = null
                     navController.navigate(Screen.Login.route) {
-                        popUpTo(0) {
+                        popUpTo(navController.graph.id) {
+                            // "group" tab state is saved by BottomNavBar (saveState=true) and not present
+                            // in backstack at logout time, so popUpTo(0) won't destroy it — clear manually
+                            // if not, when logout again in the same application lifecycle
+                            // restoreState will use old instance of GroupViewModel, getGroups in init will not be called
+                            navController.clearBackStack(Screen.Groups.route)
+
                             inclusive = true
                         }
                         launchSingleTop = true
