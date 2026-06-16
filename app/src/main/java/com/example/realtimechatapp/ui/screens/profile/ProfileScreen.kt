@@ -598,6 +598,7 @@ fun ProfileScreen(
         is ProfileViewModel.ProfileEvent.NavigateToLogin -> {
             navController.navigate(Screen.Login.route) {
                 popUpTo(0) {
+                    navController.clearBackStack(Screen.Groups.route)
                     inclusive = true
                 }
                 launchSingleTop = true
