@@ -27,6 +27,7 @@ import com.example.realtimechatapp.domain.model.Group
 import com.example.realtimechatapp.domain.model.GroupMessageContact
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.repository.CurrentUserManager
+import com.example.realtimechatapp.domain.repository.GroupCrudEvents
 import com.example.realtimechatapp.domain.repository.GroupRepository
 import com.example.realtimechatapp.domain.repository.NetworkChecker
 import com.example.realtimechatapp.domain.repository.SocketConnectionState
@@ -89,16 +90,14 @@ class GroupRepositoryImpl @Inject constructor(
         }
 
         applicationScope.launch {
-            applicationScope.launch {
-                socketRepository.observeGroupMessageSeen().collect { groupMessageSeenDto ->
-                    val groupId = groupMessageSeenDto.groupId
-                    val userId = groupMessageSeenDto.userId
+            socketRepository.observeGroupMessageSeen().collect { groupMessageSeenDto ->
+                val groupId = groupMessageSeenDto.groupId
+                val userId = groupMessageSeenDto.userId
 
-                    if (groupId != null && userId != null) {
-                        markGroupMessageAsSeen(groupId, userId)
-                    } else {
-                        Timber.e("Thiếu dữ liệu để đánh dấu đã xem tin nhắn nhóm")
-                    }
+                if (groupId != null && userId != null) {
+                    markGroupMessageAsSeen(groupId, userId)
+                } else {
+                    Timber.e("Thiếu dữ liệu để đánh dấu đã xem tin nhắn nhóm")
                 }
             }
 
@@ -158,18 +157,7 @@ class GroupRepositoryImpl @Inject constructor(
                 result.groupMessages.map { it.senderId.toUserEntity() }.distinctBy { it.id }
 
             safeDbCall {
-                // debug - before
-                Timber.d("${userDao.getUserCount()}")
-                Timber.d(responseSender.toString())
-                Timber.d("${responseSender.size}")
-
                 userDao.insertAllUsers(responseSender)
-
-                // debug - after
-                Timber.d("${userDao.getUserCount()}")
-                Timber.d(responseSender.toString())
-                Timber.d("${responseSender.size}")
-
                 groupMessageDao.insertAllMessages(responseGroupMessages.map { it.toMessageEntity() })
             }
             Result.success(Unit)
