@@ -1,5 +1,6 @@
 package com.example.realtimechatapp.data.repository
 
+import com.example.realtimechatapp.data.remote.dto.group.GroupDto
 import com.example.realtimechatapp.data.remote.dto.group.GroupMessageSeenDto
 import com.example.realtimechatapp.domain.repository.SocketEvents
 import com.example.realtimechatapp.data.remote.dto.message.MessageDto
@@ -7,6 +8,7 @@ import com.example.realtimechatapp.data.remote.dto.message.MessageSeenDto
 import com.example.realtimechatapp.domain.model.GroupTypingUser
 import com.example.realtimechatapp.domain.model.SendGroupMessageParam
 import com.example.realtimechatapp.domain.model.SendMessageParam
+import com.example.realtimechatapp.domain.repository.GroupCrudEvents
 import com.example.realtimechatapp.domain.repository.SocketConnectionState
 import com.example.realtimechatapp.domain.repository.SocketRepository
 import com.example.realtimechatapp.domain.repository.TokenManager
@@ -66,6 +68,9 @@ class SocketRepositoryImpl @Inject constructor(
     override fun observeGroupTypingStatus(): StateFlow<Map<String, Set<GroupTypingUser>>> =
         _groupTypingUsers.asStateFlow()
 
+    private val _groupCrudEventsFlow = MutableSharedFlow<GroupCrudEvents>()
+    override fun observeGroupCrudEvents(): SharedFlow<GroupCrudEvents> = _groupCrudEventsFlow.asSharedFlow()
+
     private val _socketConnectionState = MutableStateFlow<SocketConnectionState>(
         SocketConnectionState.Disconnected
     )
@@ -93,6 +98,7 @@ class SocketRepositoryImpl @Inject constructor(
 
         setupSocketConnectionListener()
         setupMessageListener()
+        setupGroupCrudListener()
         setupGroupMessageListener()
         setupOnlineUserIdsListener()
         setupTypingUserIdsListener()
@@ -284,6 +290,21 @@ class SocketRepositoryImpl @Inject constructor(
         socket?.emit(SocketEvents.JOIN_GROUP, groupId)
     }
 
+    private fun setupGroupCrudListener() {
+        socket?.on(SocketEvents.NEW_GROUP_RECEIVED) { args ->
+            val rawJson = args[0].toString()
+
+            try {
+                val groupDto = gson.fromJson(rawJson, GroupDto::class.java)
+                scope.launch {
+                    _groupCrudEventsFlow.emit(GroupCrudEvents.Created(groupDto))
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Parse json thất bại")
+            }
+        }
+    }
+
     private fun setupGroupMessageListener() {
         socket?.on(SocketEvents.RECEIVE_GROUP_MESSAGE) { args ->
             val rawJson = args[0].toString()
@@ -409,5 +430,12 @@ class SocketRepositoryImpl @Inject constructor(
     override suspend fun emitGroupTypingStop(groupId: String) {
         val jsonObject = JSONObject().apply { put("groupId", groupId) }
         socket?.emit(SocketEvents.GROUP_TYPING_STOP, jsonObject)
+    }
+
+    override suspend fun emitGroupCreated(group: GroupDto) {
+        val jsonString = gson.toJson(group)
+        val jsonObject = JSONObject(jsonString)
+
+        socket?.emit(SocketEvents.GROUP_CREATED, jsonObject)
     }
 }

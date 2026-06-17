@@ -9,6 +9,7 @@ import com.example.realtimechatapp.data.local.dao.MemberDao
 import com.example.realtimechatapp.data.local.dao.UserDao
 import com.example.realtimechatapp.data.local.database.LocalDatabase
 import com.example.realtimechatapp.data.local.entity.ContactEntity
+import com.example.realtimechatapp.data.local.entity.GroupEntity
 import com.example.realtimechatapp.data.local.entity.MessageEntity
 import com.example.realtimechatapp.data.local.entity.toGroupMessageContact
 import com.example.realtimechatapp.data.local.pojo.toGroup
@@ -18,6 +19,8 @@ import com.example.realtimechatapp.data.remote.safeApiCall
 import com.example.realtimechatapp.data.local.safeDbCall
 import com.example.realtimechatapp.data.remote.dto.group.CreateGroupRequestDto
 import com.example.realtimechatapp.data.remote.dto.group.GroupMessageSeenDto
+import com.example.realtimechatapp.data.remote.dto.group.MemberDto
+import com.example.realtimechatapp.data.remote.dto.user.UserDto
 import com.example.realtimechatapp.di.ApplicationScope
 import com.example.realtimechatapp.domain.exception.DatabaseException
 import com.example.realtimechatapp.domain.model.Group
@@ -108,6 +111,27 @@ class GroupRepositoryImpl @Inject constructor(
             //         Timber.e("Thiếu dữ liệu để đánh dấu đã xem tin nhắn nhóm")
             //     }
             // }
+        }
+
+        applicationScope.launch {
+            socketRepository.observeGroupCrudEvents().collect { event ->
+                when (event) {
+                    is GroupCrudEvents.Created -> {
+                        val groupDto = event.group
+
+                        saveGroupToLocalDatabase(groupDto.toGroupEntity(), groupDto.owner, groupDto.members)
+                        socketRepository.joinGroup(groupDto.id)
+                    }
+
+                    is GroupCrudEvents.Updated -> {
+                        // in development
+                    }
+
+                    is GroupCrudEvents.Deleted -> {
+                        // in development
+                    }
+                }
+            }
         }
     }
 
@@ -247,35 +271,50 @@ class GroupRepositoryImpl @Inject constructor(
                 )
             }
 
-            val group = response.group.toGroupEntity()
+            val groupEntity = response.group.toGroupEntity()
+            val owner = response.group.owner
             val members = response.group.members
 
-            safeDbCall {
-                // atomicity all 3 tables are written atomically — commit together or rollback entirely
-                localDatabase.withTransaction {
-                    groupDao.insertGroup(group)
-                    groupContactDao.insertContact(
-                        ContactEntity(
-                            id = group.id,
-                            isGroup = true,
-                            lastMessage = null,
-                            lastSenderName = null,
-                            isMine = false,
-                            lastTimeStamp = group.createdAt,
-                            unreadCount = 0,
-                            contactName = group.name,
-                            contactAvatar = group.avatar
-                        )
-                    )
-                    memberDao.insertAllMember(members.map { it.toMemberEntity(group.id) })
-                }
+            saveGroupToLocalDatabase(groupEntity, owner, members)
+
+            with(socketRepository) {
+                emitGroupCreated(response.group)
+                joinGroup(groupEntity.id)
             }
-            Result.success(group.id)
+
+            Result.success(groupEntity.id)
         } catch (e: Exception) {
             if (e is CancellationException) throw e
 
             Timber.e(e, "Lỗi khi tạo nhóm")
             Result.failure(e)
+        }
+    }
+
+    private suspend fun saveGroupToLocalDatabase(
+        groupEntity: GroupEntity,
+        owner: UserDto,
+        members: List<MemberDto>
+    ) {
+        safeDbCall {
+            localDatabase.withTransaction {
+                groupDao.insertGroup(groupEntity)
+                groupContactDao.insertContact(
+                    ContactEntity(
+                        id = groupEntity.id,
+                        isGroup = true,
+                        lastMessage = null,
+                        lastSenderName = null,
+                        isMine = false,
+                        lastTimeStamp = groupEntity.createdAt,
+                        unreadCount = 0,
+                        contactName = groupEntity.name,
+                        contactAvatar = groupEntity.avatar
+                    )
+                )
+                userDao.insertUser(owner.toUserEntity())
+                memberDao.insertAllMember(members.map { it.toMemberEntity(groupEntity.id) })
+            }
         }
     }
 }
