@@ -18,7 +18,7 @@ interface GroupContactDao {
     @Query("SELECT id FROM contacts WHERE is_group=1")
     suspend fun getAllGroupContactIds(): List<String>
 
-    @Query("SELECT * FROM contacts WHERE is_group=1 ORDER BY last_time_stamp")
+    @Query("SELECT * FROM contacts WHERE is_group=1 ORDER BY last_time_stamp DESC")
     fun observeGroupContact(): Flow<List<ContactEntity>>
 
     @Upsert
