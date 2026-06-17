@@ -54,7 +54,6 @@ class MessageRepositoryImpl @Inject constructor(
                     messageDto.toMessageEntity()
                 }
                 safeDbCall { messageDao.insertMessage(messageEntity) }
-                Timber.d("Đã chèn tin nhắn vào db: ${messageDto.toMessageEntity()}")
             }
         }
 
@@ -75,8 +74,6 @@ class MessageRepositoryImpl @Inject constructor(
                         contactAvatar = if (isMine) messageDto.receiverId?.avatar else messageDto.senderId.avatar
                     )
                 }
-                Timber.d("Đã cập nhật tin nhắn mới đến ở contact: $contactId")
-                Timber.d("Tin nhắn mói chèn: ${messageDto.content}")
             }
         }
 
@@ -86,7 +83,6 @@ class MessageRepositoryImpl @Inject constructor(
                 val senderId = currentUserManager.getCurrentUserId()
 
                 viewerId?.let { markMessageAsSeen(senderId, viewerId) }
-                Timber.d("User $viewerId đã xem tin nhắn")
             }
         }
     }

@@ -58,15 +58,15 @@ class SocketRepositoryImpl @Inject constructor(
         _groupMessageSeenFlow.asSharedFlow()
 
     // each id in set is unique
-    private val _onlineUserIds = MutableStateFlow<Set<String>>(emptySet())
-    override fun observeOnlineUserIds(): StateFlow<Set<String>> = _onlineUserIds.asStateFlow()
+    private val _onlineUserIdsFlow = MutableStateFlow<Set<String>>(emptySet())
+    override fun observeOnlineUserIds(): StateFlow<Set<String>> = _onlineUserIdsFlow.asStateFlow()
 
-    private val _typingUserIds = MutableStateFlow<Set<String>>(emptySet())
-    override fun observeTypingStatus(): StateFlow<Set<String>> = _typingUserIds.asStateFlow()
+    private val _typingUserIdsFlow = MutableStateFlow<Set<String>>(emptySet())
+    override fun observeTypingStatus(): StateFlow<Set<String>> = _typingUserIdsFlow.asStateFlow()
 
-    private val _groupTypingUsers = MutableStateFlow<Map<String, Set<GroupTypingUser>>>(emptyMap())
+    private val _groupTypingUsersFlow = MutableStateFlow<Map<String, Set<GroupTypingUser>>>(emptyMap())
     override fun observeGroupTypingStatus(): StateFlow<Map<String, Set<GroupTypingUser>>> =
-        _groupTypingUsers.asStateFlow()
+        _groupTypingUsersFlow.asStateFlow()
 
     private val _groupCrudEventsFlow = MutableSharedFlow<GroupCrudEvents>()
     override fun observeGroupCrudEvents(): SharedFlow<GroupCrudEvents> = _groupCrudEventsFlow.asSharedFlow()
@@ -109,8 +109,8 @@ class SocketRepositoryImpl @Inject constructor(
 
     override suspend fun disconnect() {
         Timber.d("Ngắt kết nối socket...")
-        _onlineUserIds.value = emptySet()
-        _typingUserIds.value = emptySet()
+        _onlineUserIdsFlow.value = emptySet()
+        _typingUserIdsFlow.value = emptySet()
 
         socket?.let { socket ->
             socket.disconnect()
@@ -129,8 +129,8 @@ class SocketRepositoryImpl @Inject constructor(
         }
 
         socket?.on(Socket.EVENT_DISCONNECT) {
-            _onlineUserIds.value = emptySet()
-            _typingUserIds.value = emptySet()
+            _onlineUserIdsFlow.value = emptySet()
+            _typingUserIdsFlow.value = emptySet()
 
             Timber.e(Socket.EVENT_DISCONNECT)
             _socketConnectionState.value = SocketConnectionState.Disconnected
@@ -198,21 +198,21 @@ class SocketRepositoryImpl @Inject constructor(
             for (i in 0 until data.length()) {
                 ids.add(data.getString(i))
             }
-            _onlineUserIds.value = ids
+            _onlineUserIdsFlow.value = ids
         }
 
         socket?.on(SocketEvents.NOTIFY_USER_ONLINE) { args ->
             val data = args[0] as JSONObject
             val id = data.getString("id")
 
-            _onlineUserIds.update { it + id }
+            _onlineUserIdsFlow.update { it + id }
         }
 
         socket?.on(SocketEvents.NOTIFY_USER_OFFLINE) { args ->
             val data = args[0] as JSONObject
             val id = data.getString("id")
 
-            _onlineUserIds.update { it - id }
+            _onlineUserIdsFlow.update { it - id }
         }
     }
 
@@ -221,14 +221,14 @@ class SocketRepositoryImpl @Inject constructor(
             val data = args[0] as JSONObject
             val id = data.getString("senderId")
 
-            _typingUserIds.update { it + id }
+            _typingUserIdsFlow.update { it + id }
         }
 
         socket?.on(SocketEvents.TYPING_STOP) { args ->
             val data = args[0] as JSONObject
             val id = data.getString("senderId")
 
-            _typingUserIds.update { it - id }
+            _typingUserIdsFlow.update { it - id }
         }
     }
 
@@ -314,7 +314,6 @@ class SocketRepositoryImpl @Inject constructor(
 
                 scope.launch {
                     _groupMessageFlow.emit(messageDto)
-                    Timber.d("Đã nhận tin nhắn nhóm: $messageDto")
                 }
             } catch (e: Exception) {
                 Timber.e(e, "Parse json thất bại")
@@ -371,7 +370,7 @@ class SocketRepositoryImpl @Inject constructor(
     }
 
     private fun updateGroupTypingState(groupId: String, senderId: String, senderName: String?, isTyping: Boolean){
-        val currentMap = _groupTypingUsers.value.toMutableMap()
+        val currentMap = _groupTypingUsersFlow.value.toMutableMap()
         val currentSet = currentMap[groupId]?.toMutableSet() ?: mutableSetOf()
 
         if (isTyping){
@@ -386,7 +385,7 @@ class SocketRepositoryImpl @Inject constructor(
             currentMap[groupId] = currentSet
         }
 
-        _groupTypingUsers.value = currentMap
+        _groupTypingUsersFlow.value = currentMap
     }
 
     override suspend fun sendGroupMessage(groupMessage: SendGroupMessageParam) {
@@ -399,7 +398,6 @@ class SocketRepositoryImpl @Inject constructor(
                 val success = response.getBoolean("success")
 
                 if (success) {
-                    Timber.d("Gửi tin nhắn nhóm thành công")
                     val savedMessageJson = response.getString("data").toString()
                     val messageDto = gson.fromJson(savedMessageJson, MessageDto::class.java)
 
