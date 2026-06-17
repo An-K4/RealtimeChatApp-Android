@@ -136,9 +136,9 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getLocalUser(): Result<List<User>> {
+    override suspend fun getOtherLocalUsers(): Result<List<User>> {
         return try {
-            val localUserEntity = safeDbCall { userDao.getAllUsers() }
+            val localUserEntity = safeDbCall { userDao.getAllUsersExcept(currentUserManager.getCurrentUserId()) }
             val localUsers = localUserEntity.map { it.toUser() }
             Result.success(localUsers)
         } catch (e: Exception) {

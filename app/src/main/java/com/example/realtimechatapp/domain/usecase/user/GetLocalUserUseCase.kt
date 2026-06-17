@@ -7,5 +7,5 @@ import javax.inject.Inject
 class GetLocalUserUseCase @Inject constructor(
     private val userRepository: UserRepository
 ) {
-    suspend operator fun invoke(): Result<List<User>> = userRepository.getLocalUser()
+    suspend operator fun invoke(): Result<List<User>> = userRepository.getOtherLocalUsers()
 }

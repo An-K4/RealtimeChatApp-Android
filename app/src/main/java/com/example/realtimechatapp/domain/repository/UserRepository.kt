@@ -11,5 +11,5 @@ interface UserRepository {
     suspend fun performSearch(query: String): Result<SearchResult>
     suspend fun performSearchUsers(query: String): Result<SearchResult>
     suspend fun saveNewUserInfo(newUser: User): Result<Unit>
-    suspend fun getLocalUser(): Result<List<User>>
+    suspend fun getOtherLocalUsers(): Result<List<User>>
 }
