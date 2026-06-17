@@ -51,13 +51,17 @@ fun ChatItem(
     onItemClicked: () -> Unit
 ) {
     val previewLastMessage = lastMessage?.let {
-        if (lastMessage.isMine) {
-            UiText.StringResource(R.string.you_with_arg, lastMessage.content).asString()
+        if (lastMessage.content.isEmpty()) {
+            UiText.StringResource(R.string.no_messages_yet).asString()
         } else {
-            if (isGroup) {
-                "${lastMessage.senderName}: ${lastMessage.content}"
+            if (lastMessage.isMine) {
+                UiText.StringResource(R.string.you_with_arg, lastMessage.content).asString()
             } else {
-                lastMessage.content
+                if (isGroup) {
+                    "${lastMessage.senderName}: ${lastMessage.content}"
+                } else {
+                    lastMessage.content
+                }
             }
         }
     }
@@ -130,7 +134,8 @@ fun ChatItem(
                 )
             } else {
                 Text(
-                    text = previewLastMessage ?: UiText.StringResource(R.string.new_group).asString(),
+                    text = previewLastMessage ?: UiText.StringResource(R.string.new_group)
+                        .asString(),
                     fontSize = 14.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
