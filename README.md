@@ -90,6 +90,13 @@ app/
 - Phân biệt tin nhắn của mình và người khác trong nhóm
 - Hiển thị avatar và tên người gửi trong nhóm
 
+### 👥 Quản Lý Nhóm
+- Tạo nhóm mới và thêm thành viên
+
+### 🔍 Tìm Kiếm
+- Màn hình tìm kiếm (`Screen.Search`) đã có trong navigation và hoạt động ổn định
+- Tìm kiếm bạn bè, nhóm theo từ khóa
+
 ### 👤 Hồ Sơ & Cài Đặt
 - Xem thông tin cá nhân (tên, username, email, ngày tham gia)
 - Cập nhật họ tên và email
@@ -123,12 +130,7 @@ app/
 
 ### 📌 Ưu Tiên Cao
 
-#### Tìm Kiếm
-- Màn hình tìm kiếm (`Screen.Search`) đã có trong navigation nhưng chưa implement
-- Tìm kiếm bạn bè, nhóm, tin nhắn theo từ khóa
-
 #### Quản Lý Nhóm
-- Tạo nhóm mới và thêm thành viên
 - Chỉnh sửa tên nhóm, ảnh đại diện nhóm
 - Phân quyền: Owner, Admin, Member
 - Xóa thành viên, chuyển quyền Owner
