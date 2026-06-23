@@ -47,7 +47,7 @@ fun <T> DropDownSettingItem(
     var isExpanded by remember { mutableStateOf(false) }
     var rowSize by remember { mutableStateOf(Size.Zero) }
 
-    MoreScreenItem(
+    ActionItem(
         icon = icon,
         title = title,
         onClick = { },
@@ -118,7 +118,7 @@ fun DropDownSettingItem() {
         Box(
             modifier = Modifier.fillMaxWidth()
         ) {
-            MoreScreenItem(
+            ActionItem(
                 icon = Icons.Default.Language,
                 title = "Ngôn ngữ",
                 onClick = {},

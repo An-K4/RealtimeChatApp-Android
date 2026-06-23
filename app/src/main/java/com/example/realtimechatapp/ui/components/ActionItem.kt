@@ -25,10 +25,11 @@ import androidx.compose.ui.unit.sp
 import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 
 @Composable
-fun MoreScreenItem(
+fun ActionItem(
     icon: ImageVector,
     title: String,
     clickable: Boolean = true,
+    isDangerAction: Boolean = false,
     onClick: () -> Unit,
     trailingContent: (@Composable () -> Unit)? = null
 ) {
@@ -36,7 +37,7 @@ fun MoreScreenItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = clickable, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -53,7 +54,7 @@ fun MoreScreenItem(
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(1f),
-            color = MaterialTheme.colorScheme.onBackground
+            color = if (isDangerAction) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onBackground
         )
 
         if (trailingContent != null) {
@@ -62,8 +63,8 @@ fun MoreScreenItem(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                 contentDescription = "arrow forward",
-                modifier = Modifier.size(32.dp),
-                tint = MaterialTheme.colorScheme.onBackground
+                modifier = Modifier.size(24.dp),
+                tint = if (isDangerAction) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onBackground
             )
         }
     }
@@ -72,7 +73,7 @@ fun MoreScreenItem(
 @Preview(showBackground = true)
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun MoreScreenItem() {
+fun ActionItem() {
     RealtimeChatAppTheme {
         Row(
             modifier = Modifier
