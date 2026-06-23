@@ -44,7 +44,7 @@ fun ActionItem(
             imageVector = icon,
             contentDescription = "language configuration",
             modifier = Modifier.size(32.dp),
-            tint = MaterialTheme.colorScheme.onBackground
+            tint = if (isDangerAction) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onBackground
         )
 
         Spacer(modifier = Modifier.width(16.dp))
@@ -64,7 +64,7 @@ fun ActionItem(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                 contentDescription = "arrow forward",
                 modifier = Modifier.size(24.dp),
-                tint = if (isDangerAction) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onBackground
+                tint = MaterialTheme.colorScheme.onBackground
             )
         }
     }
