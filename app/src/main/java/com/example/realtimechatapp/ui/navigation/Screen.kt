@@ -29,5 +29,10 @@ sealed class Screen(
     }
 
     // screens using normal top app bar
+    object MessageAction: Screen("message_action/{friendId}", UiText.StringResource(R.string.actions)){
+        const val ARG_FRIEND_ID = "friendId"
+        fun createRoute(friendId: String) = "message_action/$friendId"
+    }
+
     object CreateGroup: Screen("create_group", UiText.StringResource(R.string.create_group))
 }

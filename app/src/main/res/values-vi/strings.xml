@@ -103,4 +103,9 @@
     <string name="add">Thêm</string>
     <string name="create_group_success">Tạo nhóm thành công</string>
     <string name="member_size_too_small">Số lượng thành viên quá ít để tạo nhóm</string>
+    <string name="actions">Thao tác</string>
+    <string name="media_files">File Phương Tiện</string>
+    <string name="mute_notification">Tắt Thông Báo</string>
+    <string name="add_to_group">Thêm Vào Nhóm</string>
+    <string name="block">Chặn</string>
 </resources>

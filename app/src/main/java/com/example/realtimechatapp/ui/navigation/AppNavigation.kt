@@ -35,6 +35,7 @@ import com.example.realtimechatapp.ui.screens.groups.CreateGroupScreen
 import com.example.realtimechatapp.ui.screens.groups.DetailGroupScreen
 import com.example.realtimechatapp.ui.screens.groups.GroupScreen
 import com.example.realtimechatapp.ui.screens.messages.DetailMessageScreen
+import com.example.realtimechatapp.ui.screens.messages.MessageActionScreen
 import com.example.realtimechatapp.ui.screens.messages.MessageScreen
 import com.example.realtimechatapp.ui.screens.more.MoreScreen
 import com.example.realtimechatapp.ui.screens.profile.ProfileScreen
@@ -60,7 +61,8 @@ fun AppNavigation() {
     )
 
     val showNormalTopBar = currentRoute in listOf(
-        Screen.CreateGroup.route
+        Screen.CreateGroup.route,
+        Screen.MessageAction.route
     )
 
     Scaffold(
@@ -85,6 +87,11 @@ fun AppNavigation() {
 
                         else -> UiText.StringResource(R.string.messages).asString()
                     }
+                    val id = when (currentRoute) {
+                        Screen.DetailGroup.route -> navBackStackEntry?.arguments?.getString(Screen.DetailGroup.ARG_GROUP_ID)
+                        Screen.DetailMessage.route -> navBackStackEntry?.arguments?.getString(Screen.DetailMessage.ARG_FRIEND_ID)
+                        else -> null
+                    }
 
                     MessageTopAppBar(
                         title = title,
@@ -92,14 +99,22 @@ fun AppNavigation() {
                             navController.popBackStack()
                         },
                         onMoreClick = {
+                            when(currentRoute) {
+                                Screen.DetailMessage.route -> {
+                                    id?.let { navController.navigate(Screen.MessageAction.createRoute(id)) }
+                                }
+                                Screen.DetailGroup.route -> {
 
+                                }
+                            }
                         }
                     )
                 }
 
                 showNormalTopBar -> {
                     val title = when (currentRoute) {
-                        Screen.CreateGroup.route -> UiText.StringResource(R.string.create_group).asString()
+                        Screen.CreateGroup.route -> Screen.CreateGroup.title?.asString() ?: UiText.StringResource(R.string.create_group).asString()
+                        Screen.MessageAction.route -> Screen.MessageAction.title?.asString() ?: UiText.StringResource(R.string.actions).asString()
                         else -> ""
                     }
 
@@ -164,6 +179,14 @@ fun AppNavigation() {
                 )
             ) {
                 DetailMessageScreen(navController)
+            }
+
+            composable(Screen.MessageAction.route,
+                arguments = listOf(
+                    navArgument(Screen.MessageAction.ARG_FRIEND_ID) { type = NavType.StringType }
+                )
+            ) {
+                MessageActionScreen(navController)
             }
 
             composable(Screen.Groups.route) {
