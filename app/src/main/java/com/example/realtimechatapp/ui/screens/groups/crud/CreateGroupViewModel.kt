@@ -1,4 +1,4 @@
-package com.example.realtimechatapp.ui.screens.groups
+package com.example.realtimechatapp.ui.screens.groups.crud
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

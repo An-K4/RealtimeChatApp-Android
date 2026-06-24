@@ -1,4 +1,4 @@
-package com.example.realtimechatapp.ui.screens.groups
+package com.example.realtimechatapp.ui.screens.groups.crud
 
 import android.content.res.Configuration
 import android.widget.Toast

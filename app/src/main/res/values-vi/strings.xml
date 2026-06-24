@@ -108,4 +108,7 @@
     <string name="mute_notification">Tắt Thông Báo</string>
     <string name="add_to_group">Thêm Vào Nhóm</string>
     <string name="block">Chặn</string>
+    <string name="see_all_members">Xem Thành Viên (%s)</string>
+    <string name="edit_group">Sửa Thông Tin Nhóm</string>
+    <string name="leave_group">Rời Nhóm</string>
 </resources>

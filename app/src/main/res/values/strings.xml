@@ -107,4 +107,7 @@
     <string name="mute_notification">Mute Notifications</string>
     <string name="add_to_group">Add To Group</string>
     <string name="block">Block</string>
+    <string name="see_all_members">See All Members (%s)</string>
+    <string name="edit_group">Edit Group</string>
+    <string name="leave_group">Leave Group</string>
 </resources>

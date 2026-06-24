@@ -31,7 +31,7 @@ import com.example.realtimechatapp.ui.components.MainTopAppBar
 import com.example.realtimechatapp.ui.components.MessageTopAppBar
 import com.example.realtimechatapp.ui.screens.auth.LoginScreen
 import com.example.realtimechatapp.ui.screens.auth.SignupScreen
-import com.example.realtimechatapp.ui.screens.groups.CreateGroupScreen
+import com.example.realtimechatapp.ui.screens.groups.crud.CreateGroupScreen
 import com.example.realtimechatapp.ui.screens.groups.DetailGroupScreen
 import com.example.realtimechatapp.ui.screens.groups.GroupScreen
 import com.example.realtimechatapp.ui.screens.messages.DetailMessageScreen
@@ -61,8 +61,9 @@ fun AppNavigation() {
     )
 
     val showNormalTopBar = currentRoute in listOf(
-        Screen.CreateGroup.route,
-        Screen.MessageAction.route
+        Screen.MessageAction.route,
+        Screen.GroupMessageAction.route,
+        Screen.CreateGroup.route
     )
 
     Scaffold(
@@ -104,7 +105,7 @@ fun AppNavigation() {
                                     id?.let { navController.navigate(Screen.MessageAction.createRoute(id)) }
                                 }
                                 Screen.DetailGroup.route -> {
-
+                                    id?.let { navController.navigate(Screen.GroupMessageAction.createRoute(id)) }
                                 }
                             }
                         }
@@ -113,8 +114,9 @@ fun AppNavigation() {
 
                 showNormalTopBar -> {
                     val title = when (currentRoute) {
-                        Screen.CreateGroup.route -> Screen.CreateGroup.title?.asString() ?: UiText.StringResource(R.string.create_group).asString()
                         Screen.MessageAction.route -> Screen.MessageAction.title?.asString() ?: UiText.StringResource(R.string.actions).asString()
+                        Screen.GroupMessageAction.route -> Screen.GroupMessageAction.title?.asString() ?: UiText.StringResource(R.string.actions).asString()
+                        Screen.CreateGroup.route -> Screen.CreateGroup.title?.asString() ?: UiText.StringResource(R.string.create_group).asString()
                         else -> ""
                     }
 
