@@ -111,4 +111,5 @@
     <string name="see_all_members">Xem Thành Viên (%s)</string>
     <string name="edit_group">Sửa Thông Tin Nhóm</string>
     <string name="leave_group">Rời Nhóm</string>
+    <string name="in_development">Đang phát triển</string>
 </resources>

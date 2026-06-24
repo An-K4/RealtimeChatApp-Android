@@ -34,6 +34,7 @@ import com.example.realtimechatapp.ui.screens.auth.SignupScreen
 import com.example.realtimechatapp.ui.screens.groups.crud.CreateGroupScreen
 import com.example.realtimechatapp.ui.screens.groups.DetailGroupScreen
 import com.example.realtimechatapp.ui.screens.groups.GroupScreen
+import com.example.realtimechatapp.ui.screens.groups.crud.GroupMessageActionScreen
 import com.example.realtimechatapp.ui.screens.messages.DetailMessageScreen
 import com.example.realtimechatapp.ui.screens.messages.MessageActionScreen
 import com.example.realtimechatapp.ui.screens.messages.MessageScreen
@@ -100,12 +101,25 @@ fun AppNavigation() {
                             navController.popBackStack()
                         },
                         onMoreClick = {
-                            when(currentRoute) {
+                            when (currentRoute) {
                                 Screen.DetailMessage.route -> {
-                                    id?.let { navController.navigate(Screen.MessageAction.createRoute(id)) }
+                                    id?.let {
+                                        navController.navigate(
+                                            Screen.MessageAction.createRoute(
+                                                id
+                                            )
+                                        )
+                                    }
                                 }
+
                                 Screen.DetailGroup.route -> {
-                                    id?.let { navController.navigate(Screen.GroupMessageAction.createRoute(id)) }
+                                    id?.let {
+                                        navController.navigate(
+                                            Screen.GroupMessageAction.createRoute(
+                                                id
+                                            )
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -114,9 +128,15 @@ fun AppNavigation() {
 
                 showNormalTopBar -> {
                     val title = when (currentRoute) {
-                        Screen.MessageAction.route -> Screen.MessageAction.title?.asString() ?: UiText.StringResource(R.string.actions).asString()
-                        Screen.GroupMessageAction.route -> Screen.GroupMessageAction.title?.asString() ?: UiText.StringResource(R.string.actions).asString()
-                        Screen.CreateGroup.route -> Screen.CreateGroup.title?.asString() ?: UiText.StringResource(R.string.create_group).asString()
+                        Screen.MessageAction.route -> Screen.MessageAction.title?.asString()
+                            ?: UiText.StringResource(R.string.actions).asString()
+
+                        Screen.GroupMessageAction.route -> Screen.GroupMessageAction.title?.asString()
+                            ?: UiText.StringResource(R.string.actions).asString()
+
+                        Screen.CreateGroup.route -> Screen.CreateGroup.title?.asString()
+                            ?: UiText.StringResource(R.string.create_group).asString()
+
                         else -> ""
                     }
 
@@ -183,7 +203,8 @@ fun AppNavigation() {
                 DetailMessageScreen(navController)
             }
 
-            composable(Screen.MessageAction.route,
+            composable(
+                Screen.MessageAction.route,
                 arguments = listOf(
                     navArgument(Screen.MessageAction.ARG_FRIEND_ID) { type = NavType.StringType }
                 )
@@ -202,6 +223,17 @@ fun AppNavigation() {
                 )
             ) {
                 DetailGroupScreen(navController)
+            }
+
+            composable(
+                Screen.GroupMessageAction.route,
+                arguments = listOf(
+                    navArgument(Screen.GroupMessageAction.ARG_GROUP_ID) {
+                        type = NavType.StringType
+                    }
+                )
+            ) {
+                GroupMessageActionScreen(navController)
             }
 
             composable(Screen.CreateGroup.route) {
