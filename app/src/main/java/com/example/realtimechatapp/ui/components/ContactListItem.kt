@@ -29,7 +29,7 @@ import com.example.realtimechatapp.R
 import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 
 @Composable
-fun SearchResultItem(
+fun ContactListItem(
     avatar: String,
     name: String,
     additionalInfo: String,
@@ -85,7 +85,7 @@ fun SearchResultItem(
 @Preview(showBackground = true)
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun SearchResultItem() {
+fun ContactListItem() {
     RealtimeChatAppTheme {
         Row(
             modifier = Modifier

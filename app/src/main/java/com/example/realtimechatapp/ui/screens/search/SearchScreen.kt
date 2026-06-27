@@ -43,7 +43,7 @@ import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.domain.model.Group
 import com.example.realtimechatapp.domain.model.User
-import com.example.realtimechatapp.ui.components.SearchResultItem
+import com.example.realtimechatapp.ui.components.ContactListItem
 import com.example.realtimechatapp.ui.navigation.Screen
 import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 
@@ -166,7 +166,7 @@ fun SearchScreen(
                                     items = userSearchResult,
                                     key = { user -> user.id }
                                 ) { user ->
-                                    SearchResultItem(
+                                    ContactListItem(
                                         avatar = user.avatar ?: "",
                                         name = user.fullName,
                                         additionalInfo = user.email,
@@ -202,7 +202,7 @@ fun SearchScreen(
                                     items = groupSearchResult,
                                     key = { group -> group.id }
                                 ) { group ->
-                                    SearchResultItem(
+                                    ContactListItem(
                                         avatar = group.avatar ?: "",
                                         name = group.name,
                                         additionalInfo = UiText.StringResource(

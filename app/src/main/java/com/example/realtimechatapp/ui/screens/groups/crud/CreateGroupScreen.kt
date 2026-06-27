@@ -59,7 +59,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
-import com.example.realtimechatapp.ui.components.SearchResultItem
+import com.example.realtimechatapp.ui.components.ContactListItem
 import com.example.realtimechatapp.ui.navigation.Screen
 import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 import com.example.realtimechatapp.ui.theme.RealtimeGreen
@@ -175,7 +175,7 @@ fun CreateGroupScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    SearchResultItem(
+                    ContactListItem(
                         avatar = groupMember.avatar ?: "",
                         name = groupMember.fullName,
                         additionalInfo = groupMember.email,
@@ -302,7 +302,7 @@ fun CreateGroupScreen(
                                 onCheckedChange = { checkAction() }
                             )
 
-                            SearchResultItem(
+                            ContactListItem(
                                 avatar = user.avatar ?: "",
                                 name = user.fullName,
                                 additionalInfo = user.email,
