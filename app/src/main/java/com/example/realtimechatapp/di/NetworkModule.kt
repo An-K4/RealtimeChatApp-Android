@@ -4,6 +4,7 @@ import com.example.realtimechatapp.data.adapter.UserAdapter
 import com.example.realtimechatapp.data.remote.api.AuthApi
 import com.example.realtimechatapp.data.remote.AuthInterceptor
 import com.example.realtimechatapp.data.remote.api.GroupApi
+import com.example.realtimechatapp.data.remote.api.MediaApi
 import com.example.realtimechatapp.data.remote.api.MessageApi
 import com.example.realtimechatapp.data.remote.api.UserApi
 import com.example.realtimechatapp.data.remote.dto.user.UserDto
@@ -52,6 +53,12 @@ object NetworkModule {
     @Singleton
     fun provideAuthApi(retrofit: Retrofit): AuthApi {
         return retrofit.create(AuthApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMediaApi(retrofit: Retrofit): MediaApi {
+        return retrofit.create(MediaApi::class.java)
     }
 
     @Provides

@@ -7,6 +7,7 @@ import com.example.realtimechatapp.data.local.manager.TokenManagerImpl
 import com.example.realtimechatapp.domain.repository.NetworkChecker
 import com.example.realtimechatapp.data.repository.AuthRepositoryImpl
 import com.example.realtimechatapp.data.repository.GroupRepositoryImpl
+import com.example.realtimechatapp.data.repository.MediaRepositoryImpl
 import com.example.realtimechatapp.data.repository.MessageRepositoryImpl
 import com.example.realtimechatapp.data.repository.NetworkCheckerImpl
 import com.example.realtimechatapp.data.repository.SocketRepositoryImpl
@@ -15,6 +16,7 @@ import com.example.realtimechatapp.domain.repository.AuthRepository
 import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.repository.GroupRepository
 import com.example.realtimechatapp.domain.repository.LanguageManager
+import com.example.realtimechatapp.domain.repository.MediaRepository
 import com.example.realtimechatapp.domain.repository.MessageRepository
 import com.example.realtimechatapp.domain.repository.SocketRepository
 import com.example.realtimechatapp.domain.repository.ThemeManager
@@ -33,6 +35,10 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindAuthRepository(authRepositoryImpl: AuthRepositoryImpl): AuthRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindMediaRepository(mediaRepositoryImpl: MediaRepositoryImpl): MediaRepository
 
     @Binds
     @Singleton

@@ -3,17 +3,14 @@ package com.example.realtimechatapp.ui.screens.profile
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.usecase.auth.LogoutUseCase
 import com.example.realtimechatapp.domain.usecase.socket.DisconnectSocketUseCase
 import com.example.realtimechatapp.domain.usecase.user.ChangePasswordUseCase
 import com.example.realtimechatapp.domain.usecase.user.GetMeUseCase
-import com.example.realtimechatapp.domain.usecase.user.UpdateAvatarUseCase
 import com.example.realtimechatapp.domain.usecase.user.UpdateProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,7 +23,6 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val getMeUseCase: GetMeUseCase,
     private val updateProfileUseCase: UpdateProfileUseCase,
-    private val updateAvatarUseCase: UpdateAvatarUseCase,
     private val changePasswordUseCase: ChangePasswordUseCase,
     private val disconnectSocketUseCase: DisconnectSocketUseCase,
     private val logoutUseCase: LogoutUseCase
@@ -182,108 +178,31 @@ class ProfileViewModel @Inject constructor(
         val original = _profileState.value
         val current = _updateProfileState.value
         val isAvatarChanged = original.avatar != current.avatar
-        val isInfoChanged = original.fullName != current.fullName || original.email != current.email
 
         viewModelScope.launch {
-            try {
-                _updateProfileState.update { it.copy(isUpdating = true) }
+            _updateProfileState.update { it.copy(isUpdating = true) }
+            val updateProfileResult = updateProfileUseCase(
+                current.fullName,
+                current.email,
+                current.avatar as? Uri,
+                isAvatarChanged
+            )
 
-                when {
-                    isAvatarChanged && isInfoChanged -> {
-                        val avatar = _updateProfileState.value.avatar as? Uri ?: run {
-                            _profileEvent.send(
-                                ProfileEvent.Failure(
-                                    UiText.StringResource(R.string.invalid_avatar)
-                                )
-                            )
-                            return@launch
-                        }
-
-                        val avatarDeferred = async { updateAvatarUseCase(avatar) }
-                        val infoDeferred =
-                            async { updateProfileUseCase(current.fullName, current.email) }
-
-                        val updateAvatarResult = avatarDeferred.await()
-                        val updateInfoResult = infoDeferred.await()
-
-                        if (updateInfoResult.isSuccess && updateAvatarResult.isSuccess) {
-                            val updatedInfo = updateInfoResult.getOrNull()
-
-                            _profileState.update {
-                                it.copy(
-                                    avatar = updateAvatarResult.getOrNull(),
-                                    fullName = updatedInfo?.fullName ?: original.fullName,
-                                    email = updatedInfo?.email ?: original.email
-                                )
-                            }
-
-                            _profileEvent.send(ProfileEvent.UpdateProfileSuccess)
-                        } else {
-                            updateAvatarResult.exceptionOrNull()?.let {
-                                _profileEvent.send(ProfileEvent.Failure(it.getErrorMessage()))
-                                return@launch
-                            }
-
-                            updateInfoResult.exceptionOrNull()?.let {
-                                _profileEvent.send(ProfileEvent.Failure(it.getErrorMessage()))
-                                return@launch
-                            }
-                        }
-                    }
-
-                    isAvatarChanged -> {
-                        val avatar = _updateProfileState.value.avatar as? Uri ?: run {
-                            _profileEvent.send(
-                                ProfileEvent.Failure(
-                                    UiText.StringResource(R.string.invalid_avatar)
-                                )
-                            )
-                            return@launch
-                        }
-
-                        val updateAvatarResult = updateAvatarUseCase(avatar)
-                        if (updateAvatarResult.isSuccess) {
-                            _profileState.update { it.copy(avatar = updateAvatarResult.getOrNull()) }
-                            _profileEvent.send(ProfileEvent.UpdateProfileSuccess)
-                        } else {
-                            _profileEvent.send(
-                                ProfileEvent.Failure(
-                                    updateAvatarResult.exceptionOrNull()
-                                        ?.getErrorMessage()
-                                        ?: UiText.StringResource(R.string.unknown_error)
-                                )
-                            )
-                        }
-                    }
-
-                    isInfoChanged -> {
-                        val updateInfoResult = updateProfileUseCase(current.fullName, current.email)
-                        if (updateInfoResult.isSuccess) {
-                            val updatedUser = updateInfoResult.getOrNull()
-
-                            _profileState.update {
-                                it.copy(
-                                    fullName = updatedUser?.fullName ?: original.fullName,
-                                    email = updatedUser?.email ?: original.email
-                                )
-                            }
-                            _profileEvent.send(ProfileEvent.UpdateProfileSuccess)
-                        } else {
-                            _profileEvent.send(
-                                ProfileEvent.Failure(
-                                    updateInfoResult.exceptionOrNull()
-                                        ?.getErrorMessage()
-                                        ?: UiText.StringResource(R.string.unknown_error)
-                                )
-                            )
-                        }
-                    }
+            updateProfileResult.onSuccess { updatedUser ->
+                _profileState.update {
+                    it.copy(
+                        avatar = updatedUser.avatar,
+                        fullName = updatedUser.fullName,
+                        email = updatedUser.email
+                    )
                 }
-            } catch (e: Exception) {
-                _profileEvent.send(ProfileEvent.Failure(e.getErrorMessage()))
-            } finally {
-                _updateProfileState.update { it.copy(isUpdating = false) }
+
+                _profileEvent.send(ProfileEvent.UpdateProfileSuccess)
+            }.onFailure { exception ->
+                _profileEvent.send(ProfileEvent.Failure(exception.getErrorMessage()))
             }
+
+            _updateProfileState.update { it.copy(isUpdating = false) }
         }
     }
 
