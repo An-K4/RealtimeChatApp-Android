@@ -19,6 +19,9 @@ class MediaRepositoryImpl @Inject constructor(
     private val networkChecker: NetworkChecker,
     @ApplicationContext private val context: Context
 ) : MediaRepository {
+    // need to separate 2 functions if they are different in future development
+    // in present, they are the same although upload fun calls api endpoint which needs token
+    // but AuthInterceptor did that for it
     override suspend fun upload(file: Uri): Result<String> =
         performUpload(file = file, isPublic = false)
 
