@@ -7,9 +7,8 @@ import java.io.File
 
 object NetworkUtils {
 
-    fun createPartFromFile(partName: String, file: File): MultipartBody.Part{
-        // auto detect image
-        val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
+    fun createPartFromFile(partName: String, file: File, mimeType: String = "image/jpeg"): MultipartBody.Part {
+        val requestBody = file.asRequestBody(mimeType.toMediaTypeOrNull())
         return MultipartBody.Part.createFormData(partName, file.name, requestBody)
     }
 }
