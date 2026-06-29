@@ -39,5 +39,10 @@ sealed class Screen(
         fun createRoute(groupId: String) = "group_message_action/$groupId"
     }
 
+    object MemberManagement: Screen("member_management/{groupId}", UiText.StringResource(R.string.member)){
+        const val ARG_GROUP_ID = "groupId"
+        fun createRoute(groupId: String) = "member_management/$groupId"
+    }
+
     object CreateGroup: Screen("create_group", UiText.StringResource(R.string.create_group))
 }

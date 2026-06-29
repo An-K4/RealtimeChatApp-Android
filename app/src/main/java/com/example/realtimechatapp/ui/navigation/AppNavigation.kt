@@ -35,6 +35,7 @@ import com.example.realtimechatapp.ui.screens.groups.crud.CreateGroupScreen
 import com.example.realtimechatapp.ui.screens.groups.DetailGroupScreen
 import com.example.realtimechatapp.ui.screens.groups.GroupScreen
 import com.example.realtimechatapp.ui.screens.groups.crud.GroupMessageActionScreen
+import com.example.realtimechatapp.ui.screens.groups.crud.MemberManagementScreen
 import com.example.realtimechatapp.ui.screens.messages.DetailMessageScreen
 import com.example.realtimechatapp.ui.screens.messages.MessageActionScreen
 import com.example.realtimechatapp.ui.screens.messages.MessageScreen
@@ -64,6 +65,7 @@ fun AppNavigation() {
     val showNormalTopBar = currentRoute in listOf(
         Screen.MessageAction.route,
         Screen.GroupMessageAction.route,
+        Screen.MemberManagement.route,
         Screen.CreateGroup.route
     )
 
@@ -133,6 +135,9 @@ fun AppNavigation() {
 
                         Screen.GroupMessageAction.route -> Screen.GroupMessageAction.title?.asString()
                             ?: UiText.StringResource(R.string.actions).asString()
+
+                        Screen.MemberManagement.route -> Screen.MemberManagement.title?.asString()
+                            ?: UiText.StringResource(R.string.member).asString()
 
                         Screen.CreateGroup.route -> Screen.CreateGroup.title?.asString()
                             ?: UiText.StringResource(R.string.create_group).asString()
@@ -234,6 +239,17 @@ fun AppNavigation() {
                 )
             ) {
                 GroupMessageActionScreen(navController)
+            }
+
+            composable(
+                Screen.MemberManagement.route,
+                arguments = listOf(
+                    navArgument(Screen.MemberManagement.ARG_GROUP_ID) {
+                        type = NavType.StringType
+                    }
+                )
+            ) {
+                MemberManagementScreen(navController)
             }
 
             composable(Screen.CreateGroup.route) {
