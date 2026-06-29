@@ -111,4 +111,7 @@
     <string name="edit_group">Edit Group</string>
     <string name="leave_group">Leave Group</string>
     <string name="in_development">In development</string>
+    <string name="retry">Retry</string>
+    <string name="something_went_wrong">Oops, something went wrong.</string>
+    <string name="try_again_later">Please try again later.</string>
 </resources>
