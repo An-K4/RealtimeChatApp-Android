@@ -8,6 +8,7 @@ import com.example.realtimechatapp.data.local.entity.UserEntity
 import com.example.realtimechatapp.data.local.entity.toRole
 import com.example.realtimechatapp.data.local.entity.toUser
 import com.example.realtimechatapp.domain.model.Member
+import com.example.realtimechatapp.domain.model.Role
 
 class MemberWithDetails(
     @Embedded val member: MemberEntity,
@@ -19,9 +20,13 @@ class MemberWithDetails(
     val user: UserEntity?
 )
 
-fun MemberWithDetails.toMember() = Member(
+fun MemberWithDetails.toMember(ownerId: String) = Member(
     userId = user?.toUser(),
-    role = member.toRole(),
+    role = if (member.userId == ownerId) {
+        Role.OWNER
+    } else {
+        member.toRole()
+    },
     joinedAt = member.joinedAt.formatToTime(false)
 )
 

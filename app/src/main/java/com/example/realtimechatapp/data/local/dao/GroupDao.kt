@@ -25,6 +25,9 @@ interface GroupDao {
     @Query("SELECT * FROM `groups` WHERE id = :groupId")
     suspend fun getGroupById(groupId: String): GroupWithDetails?
 
+    @Query("SELECT owner_id FROM `groups` WHERE id = :groupId")
+    suspend fun getOwnerIdOfGroup(groupId: String): String?
+
     @Transaction
     @Query("""
         SELECT * FROM `groups`
