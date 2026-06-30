@@ -9,6 +9,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 
@@ -19,16 +20,17 @@ fun CustomClickableText(
     clickableTextTag: String,
     clickableTextAnnotation: String?,
     endText: String,
+    textSize: TextUnit = 16.sp,
     onTextClicked: () -> Unit
 ) {
     val annotatedText = buildAnnotatedString {
         withStyle(
             style = SpanStyle(
                 color = MaterialTheme.colorScheme.onBackground,
-                fontSize = 16.sp
+                fontSize = textSize
             )
         ) {
-            append(startText)
+            append("$startText ")
         }
 
         pushStringAnnotation(
@@ -39,7 +41,7 @@ fun CustomClickableText(
             style = SpanStyle(
                 color = MaterialTheme.colorScheme.primary, // bright color
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
+                fontSize = textSize
             )
         ) {
             append(clickableText)
@@ -48,7 +50,7 @@ fun CustomClickableText(
         withStyle(
             style = SpanStyle(
                 color = MaterialTheme.colorScheme.onBackground,
-                fontSize = 16.sp
+                fontSize = textSize
             )
         ) {
             append(endText)
