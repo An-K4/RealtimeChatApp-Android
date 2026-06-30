@@ -50,7 +50,6 @@ class DetailGroupViewModel @Inject constructor(
 ) : ViewModel() {
     data class DetailGroupState(
         val currentUserId: String = "",
-        val groupId: String = "",
         val groupName: String? = null,
         val groupStatus: UiText? = null,
         val groupTypingStatus: UiText? = null,
@@ -117,7 +116,6 @@ class DetailGroupViewModel @Inject constructor(
 
         DetailGroupState(
             currentUserId = detailGroupContext.currentUserId,
-            groupId = groupId,
             groupName = detailGroupContext.groupHeaderInfo?.name,
             groupStatus = UiText.StringResource(
                 R.string.group_status,

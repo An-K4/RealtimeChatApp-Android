@@ -18,7 +18,6 @@ class GroupMessageActionViewModel @Inject constructor(
     private val getGroupInfoUseCase: GetGroupInfoUseCase
 ) : ViewModel() {
     data class GroupMessageActionState(
-        val groupId: String = "",
         val groupName: String? = null,
         val groupDescription: String? = null,
         val groupAvatar: String? = null,
@@ -30,11 +29,7 @@ class GroupMessageActionViewModel @Inject constructor(
     private val groupId: String =
         checkNotNull(savedStateHandle[Screen.GroupMessageAction.ARG_GROUP_ID])
 
-    private val _groupMessageActionState = MutableStateFlow(
-        GroupMessageActionState(
-            groupId = groupId
-        )
-    )
+    private val _groupMessageActionState = MutableStateFlow(GroupMessageActionState())
     val groupMessageActionState = _groupMessageActionState.asStateFlow()
 
     init {
