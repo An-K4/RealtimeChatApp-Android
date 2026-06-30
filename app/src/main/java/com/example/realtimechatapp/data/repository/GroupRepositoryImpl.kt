@@ -13,6 +13,7 @@ import com.example.realtimechatapp.data.local.entity.GroupEntity
 import com.example.realtimechatapp.data.local.entity.MessageEntity
 import com.example.realtimechatapp.data.local.entity.toGroupMessageContact
 import com.example.realtimechatapp.data.local.pojo.toGroup
+import com.example.realtimechatapp.data.local.pojo.toMember
 import com.example.realtimechatapp.data.local.pojo.toMessage
 import com.example.realtimechatapp.data.remote.api.GroupApi
 import com.example.realtimechatapp.data.remote.safeApiCall
@@ -25,6 +26,7 @@ import com.example.realtimechatapp.di.ApplicationScope
 import com.example.realtimechatapp.domain.exception.DatabaseException
 import com.example.realtimechatapp.domain.model.Group
 import com.example.realtimechatapp.domain.model.GroupMessageContact
+import com.example.realtimechatapp.domain.model.Member
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.repository.GroupCrudEvents
@@ -276,6 +278,32 @@ class GroupRepositoryImpl @Inject constructor(
 
             Timber.e(e, "Lỗi khi tạo nhóm")
             Result.failure(e)
+        }
+    }
+
+    override suspend fun getMembers(groupId: String): Result<List<Member>> {
+        return try {
+            val response = safeApiCall(networkChecker) { groupApi.getMembers(groupId) }
+            val responseMembers = response.members
+            safeDbCall {
+                memberDao.insertAllMember(responseMembers.map { it.toMemberEntity(groupId) })
+                userDao.insertAllUsers(responseMembers.map { it.userId.toUserEntity() })
+            }
+
+            val ownerId = safeDbCall { groupDao.getOwnerIdOfGroup(groupId) }.orEmpty()
+
+            val memberWithDetails = safeDbCall { memberDao.getGroupMembers(groupId) }
+            val members = memberWithDetails.map { it.toMember(ownerId) }
+            Result.success(members)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
+            Timber.e(e, "Lỗi khi lấy danh sách thành viên nhóm")
+
+            val cachedMemberWithDetails = safeDbCall { memberDao.getGroupMembers(groupId) }
+            val cachedOwnerId = safeDbCall { groupDao.getOwnerIdOfGroup(groupId) }.orEmpty()
+            val cachedMembers = cachedMemberWithDetails.map { it.toMember(cachedOwnerId) }
+            Result.success(cachedMembers)
         }
     }
 

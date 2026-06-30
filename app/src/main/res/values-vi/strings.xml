@@ -115,4 +115,9 @@
     <string name="retry">Thử Lại</string>
     <string name="something_went_wrong">Đã có lỗi xảy ra.</string>
     <string name="try_again_later">Vui lòng thử lại sau.</string>
+    <string name="note_incomplete_member_list">Lưu ý: Danh sách chưa đầy đủ.</string>
+    <string name="owner">Trưởng Nhóm</string>
+    <string name="admin">Quản Trị Viên</string>
+    <string name="member_role">Thành Viên</string>
+    <string name="reload">Tải lại</string>
 </resources>

@@ -45,6 +45,7 @@ import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.ui.components.ActionItem
 import com.example.realtimechatapp.ui.components.ToggleSettingItem
+import com.example.realtimechatapp.ui.navigation.Screen
 import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 
 @Composable
@@ -104,11 +105,7 @@ fun GroupMessageActionScreen(
                     groupMessageActionState.groupMemberSize
                 ).asString(),
                 onClick = {
-                    Toast.makeText(
-                        context,
-                        UiText.StringResource(R.string.in_development).asString(context),
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    navController.navigate(Screen.MemberManagement.createRoute(groupMessageActionState.groupId))
                 },
             )
         }

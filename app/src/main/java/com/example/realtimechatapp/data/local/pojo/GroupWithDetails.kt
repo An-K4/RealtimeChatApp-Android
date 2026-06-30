@@ -33,6 +33,6 @@ fun GroupWithDetails.toGroup() = Group(
     avatar = group.avatar,
     description = group.description,
     owner = owner.toUser(),
-    members = members.map { it.toMember() },
+    members = members.map { it.toMember(owner.id) },
     createdAt = group.createdAt.formatToTime(false)
 )

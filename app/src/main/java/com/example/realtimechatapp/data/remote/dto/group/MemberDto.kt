@@ -9,13 +9,11 @@ import com.example.realtimechatapp.domain.model.Role
 import com.google.gson.annotations.SerializedName
 
 enum class RoleDto{
-    @SerializedName("owner") OWNER,
     @SerializedName("admin") ADMIN,
     @SerializedName("member") MEMBER;
 
     fun toMemberRole(): MemberRole{
         return when(this){
-            OWNER -> MemberRole.OWNER
             ADMIN -> MemberRole.ADMIN
             MEMBER -> MemberRole.MEMBER
         }
@@ -23,7 +21,6 @@ enum class RoleDto{
 
     fun toRole(): Role {
         return when(this){
-            OWNER -> Role.OWNER
             ADMIN -> Role.ADMIN
             MEMBER -> Role.MEMBER
         }

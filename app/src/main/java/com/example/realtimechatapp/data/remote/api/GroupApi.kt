@@ -5,6 +5,7 @@ import com.example.realtimechatapp.data.remote.dto.group.CreateGroupResponseDto
 import com.example.realtimechatapp.data.remote.dto.group.GetGroupInfoResponseDto
 import com.example.realtimechatapp.data.remote.dto.group.GetGroupMessageResponseDto
 import com.example.realtimechatapp.data.remote.dto.group.GetGroupResponseDto
+import com.example.realtimechatapp.data.remote.dto.group.GetMembersResponseDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -22,4 +23,7 @@ interface GroupApi {
 
     @POST("/groups/create")
     suspend fun createGroup(@Body request: CreateGroupRequestDto): CreateGroupResponseDto
+
+    @GET("groups/{id}/getMembers")
+    suspend fun getMembers(@Path("id") groupId: String): GetMembersResponseDto
 }

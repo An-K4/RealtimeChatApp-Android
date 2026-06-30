@@ -114,4 +114,9 @@
     <string name="retry">Retry</string>
     <string name="something_went_wrong">Oops, something went wrong.</string>
     <string name="try_again_later">Please try again later.</string>
+    <string name="note_incomplete_member_list">Note: The member list is incomplete.</string>
+    <string name="owner">Owner</string>
+    <string name="admin">Admin</string>
+    <string name="member_role">Member</string>
+    <string name="reload">Reload</string>
 </resources>

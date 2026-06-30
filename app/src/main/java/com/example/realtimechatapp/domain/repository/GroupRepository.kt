@@ -2,6 +2,7 @@ package com.example.realtimechatapp.domain.repository
 
 import com.example.realtimechatapp.domain.model.Group
 import com.example.realtimechatapp.domain.model.GroupMessageContact
+import com.example.realtimechatapp.domain.model.Member
 import com.example.realtimechatapp.domain.model.Message
 import kotlinx.coroutines.flow.Flow
 
@@ -15,4 +16,6 @@ interface GroupRepository {
     suspend fun markGroupMessageAsSeen(groupId: String, userId: String)
 
     suspend fun createGroup(name: String, members: List<String>): Result<String>
+
+    suspend fun getMembers(groupId: String): Result<List<Member>>
 }

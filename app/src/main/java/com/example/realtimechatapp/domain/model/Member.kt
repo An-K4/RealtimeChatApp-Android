@@ -1,10 +1,9 @@
 package com.example.realtimechatapp.domain.model
 
 enum class Role{
-    // OWNER,
+    OWNER,
     ADMIN,
     MEMBER,
-    OWNER
 }
 data class Member(
     val userId: User?,

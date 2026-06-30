@@ -26,7 +26,7 @@ interface MemberDao {
 
     @Transaction
     @Query("SELECT * FROM members WHERE group_id = :groupId")
-    suspend fun getGroupMember(groupId: String): List<MemberWithDetails>
+    suspend fun getGroupMembers(groupId: String): List<MemberWithDetails>
 
 //    @Query("SELECT * FROM members WHERE user_id = :userId")
 //    suspend fun getGroupByUserId(userId: String): List<MemberEntity>
