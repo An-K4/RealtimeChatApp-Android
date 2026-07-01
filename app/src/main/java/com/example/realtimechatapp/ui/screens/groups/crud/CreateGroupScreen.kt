@@ -74,7 +74,6 @@ fun CreateGroupScreen(
     val createGroupState by createGroupViewModel.createGroupState.collectAsStateWithLifecycle()
     val addMemberState by createGroupViewModel.addMemberState.collectAsStateWithLifecycle()
     val memberListState = rememberLazyListState()
-    val groupMemberListState = rememberLazyListState()
 
     val uiScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -276,7 +275,6 @@ fun CreateGroupScreen(
 
                 LazyColumn(
                     modifier = Modifier.weight(1f),
-                    state = groupMemberListState,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(
