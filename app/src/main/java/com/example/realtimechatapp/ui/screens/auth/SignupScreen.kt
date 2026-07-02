@@ -39,7 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.R
-import com.example.realtimechatapp.ui.components.AvatarPicker
+import com.example.realtimechatapp.ui.components.AvatarPreviewWithAction
 import com.example.realtimechatapp.ui.components.CustomClickableText
 import com.example.realtimechatapp.ui.components.NotificationDialog
 import com.example.realtimechatapp.ui.navigation.Screen
@@ -88,7 +88,7 @@ fun SignupScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        AvatarPicker(
+        AvatarPreviewWithAction(
             currentAvatar = signupState.avatar,
             onAvatarPickerClick = {
                 photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
@@ -259,7 +259,7 @@ fun SignupUI() {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                AvatarPicker(null, onAvatarPickerClick = {})
+                AvatarPreviewWithAction(currentAvatar = null, onAvatarPickerClick = {})
 
                 Spacer(modifier = Modifier.size(20.dp))
 
