@@ -1,3 +1,3 @@
 package com.example.realtimechatapp.data.remote.dto
 
-data class SimpleResponseDto(val message: String)
+data class MessageResponseDto(val message: String)

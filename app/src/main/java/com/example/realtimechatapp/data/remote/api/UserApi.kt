@@ -1,7 +1,7 @@
 package com.example.realtimechatapp.data.remote.api
 
 import com.example.realtimechatapp.data.remote.dto.user.ChangePasswordRequestDto
-import com.example.realtimechatapp.data.remote.dto.SimpleResponseDto
+import com.example.realtimechatapp.data.remote.dto.MessageResponseDto
 import com.example.realtimechatapp.data.remote.dto.user.SearchResponseDto
 import com.example.realtimechatapp.data.remote.dto.user.UpdateProfileRequestDto
 import com.example.realtimechatapp.data.remote.dto.user.UserResponseDto
@@ -16,7 +16,7 @@ interface UserApi {
     suspend fun updateProfile(@Body requestBody: UpdateProfileRequestDto): UserResponseDto
 
     @POST("/users/change-password")
-    suspend fun changePassword(@Body requestBody: ChangePasswordRequestDto): SimpleResponseDto
+    suspend fun changePassword(@Body requestBody: ChangePasswordRequestDto): MessageResponseDto
 
     @GET("/users/search")
     suspend fun performSearch(@Query("keyword") keyword: String): SearchResponseDto
