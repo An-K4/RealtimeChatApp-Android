@@ -64,7 +64,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
-import com.example.realtimechatapp.ui.components.AvatarPreviewWithAction
+import com.example.realtimechatapp.ui.components.BadgedAvatar
 import com.example.realtimechatapp.ui.components.ConfirmationDialog
 import com.example.realtimechatapp.ui.components.NotificationDialog
 import com.example.realtimechatapp.ui.components.ProfileInfoItem
@@ -285,9 +285,9 @@ fun ProfileScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                AvatarPreviewWithAction(
+                BadgedAvatar(
                     currentAvatar = updateProfileState.avatar,
-                    onAvatarPickerClick = {
+                    onBadgeClick = {
                         photoPickerLauncher.launch(
                             PickVisualMediaRequest(
                                 ActivityResultContracts.PickVisualMedia.ImageOnly

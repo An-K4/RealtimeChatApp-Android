@@ -27,11 +27,11 @@ import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
 
 @Composable
-fun AvatarPreviewWithAction(
+fun BadgedAvatar(
     size: Dp = 150.dp,
     currentAvatar: Any?,
     icon: ImageVector = Icons.Default.Edit,
-    onAvatarPickerClick: () -> Unit
+    onBadgeClick: () -> Unit
 ) {
     val badgeSize = size * 0.3f          // 45/150 = 0.3
     val badgeOffset = size * 0.333f      // 50/150 ≈ 0.333
@@ -64,7 +64,7 @@ fun AvatarPreviewWithAction(
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.background)
                 .border(actionBorder, MaterialTheme.colorScheme.primaryContainer, CircleShape)
-                .clickable { onAvatarPickerClick() }
+                .clickable { onBadgeClick() }
         ) {
             Icon(
                 imageVector = icon,
@@ -79,7 +79,7 @@ fun AvatarPreviewWithAction(
 @Preview(showBackground = true)
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun AvatarPickerUI() {
+fun BadgedAvatar() {
     val size = 150.dp
     val badgeSize = size * 0.3f          // 45/150 = 0.3
     val badgeOffset = size * 0.333f      // 50/150 ≈ 0.333
