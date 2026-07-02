@@ -28,8 +28,12 @@ interface UserDao {
     @Query("SELECT * FROM users")
     suspend fun getAllUsers(): List<UserEntity>
 
-    @Query("SELECT * FROM users WHERE id != :id")
-    suspend fun getAllUsersExcept(id: String): List<UserEntity>
+    @Query("""
+        SELECT * FROM users 
+        WHERE id != :id 
+        AND id IN (SELECT id FROM contacts WHERE is_group = 0)
+    """)
+    suspend fun getAllContactUsersExcept(id: String): List<UserEntity>
 
     @Query("SELECT * FROM users WHERE id = :id")
     suspend fun getUserById(id: String): UserEntity?
