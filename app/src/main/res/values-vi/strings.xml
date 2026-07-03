@@ -120,4 +120,10 @@
     <string name="admin">Quản Trị Viên</string>
     <string name="member_role">Thành Viên</string>
     <string name="reload">Tải lại</string>
+    <plurals name="new_members_added">
+        <item quantity="other">Đã thêm %1$d thành viên!</item>
+    </plurals>
+    <plurals name="new_members_added_confirm">
+        <item quantity="other">Xác nhận thêm thành viên?</item>
+    </plurals>
 </resources>

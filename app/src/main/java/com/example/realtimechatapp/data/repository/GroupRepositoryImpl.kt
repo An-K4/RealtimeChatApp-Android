@@ -18,6 +18,7 @@ import com.example.realtimechatapp.data.local.pojo.toMessage
 import com.example.realtimechatapp.data.remote.api.GroupApi
 import com.example.realtimechatapp.data.remote.safeApiCall
 import com.example.realtimechatapp.data.local.safeDbCall
+import com.example.realtimechatapp.data.remote.dto.group.AddMembersRequestDto
 import com.example.realtimechatapp.data.remote.dto.group.CreateGroupRequestDto
 import com.example.realtimechatapp.data.remote.dto.group.GroupMessageSeenDto
 import com.example.realtimechatapp.data.remote.dto.group.MemberDto
@@ -120,7 +121,11 @@ class GroupRepositoryImpl @Inject constructor(
                     is GroupCrudEvents.Created -> {
                         val groupDto = event.group
 
-                        saveGroupToLocalDatabase(groupDto.toGroupEntity(), groupDto.owner, groupDto.members)
+                        saveGroupToLocalDatabase(
+                            groupDto.toGroupEntity(),
+                            groupDto.owner,
+                            groupDto.members
+                        )
                         socketRepository.joinGroup(groupDto.id)
                     }
 
@@ -304,6 +309,26 @@ class GroupRepositoryImpl @Inject constructor(
             val cachedOwnerId = safeDbCall { groupDao.getOwnerIdOfGroup(groupId) }.orEmpty()
             val cachedMembers = cachedMemberWithDetails.map { it.toMember(cachedOwnerId) }
             Result.success(cachedMembers)
+        }
+    }
+
+    override suspend fun addMembers(
+        groupId: String,
+        newMembers: List<String>
+    ): Result<Unit> {
+        return try {
+            safeApiCall(networkChecker) {
+                groupApi.addMembers(
+                    groupId,
+                    AddMembersRequestDto(newMembers)
+                )
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
+            Timber.e(e, "Lỗi khi thêm thành viên")
+            Result.failure(e)
         }
     }
 

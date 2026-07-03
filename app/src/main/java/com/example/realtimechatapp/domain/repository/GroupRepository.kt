@@ -18,4 +18,5 @@ interface GroupRepository {
     suspend fun createGroup(name: String, members: List<String>): Result<String>
 
     suspend fun getMembers(groupId: String): Result<List<Member>>
+    suspend fun addMembers(groupId: String, newMembers: List<String>): Result<Unit>
 }

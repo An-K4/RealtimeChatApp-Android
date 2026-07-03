@@ -119,4 +119,12 @@
     <string name="admin">Admin</string>
     <string name="member_role">Member</string>
     <string name="reload">Reload</string>
+    <plurals name="new_members_added">
+        <item quantity="one">%1$d new member added successfully!</item>
+        <item quantity="other">%1$d new members added successfully!</item>
+    </plurals>
+    <plurals name="new_members_added_confirm">
+        <item quantity="one">Are you sure you want to add this user?</item>
+        <item quantity="other">Are you sure you want to add these %1$d users?</item>
+    </plurals>
 </resources>

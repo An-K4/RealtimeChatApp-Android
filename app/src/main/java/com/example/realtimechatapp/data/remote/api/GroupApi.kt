@@ -1,5 +1,7 @@
 package com.example.realtimechatapp.data.remote.api
 
+import com.example.realtimechatapp.data.remote.dto.MessageResponseDto
+import com.example.realtimechatapp.data.remote.dto.group.AddMembersRequestDto
 import com.example.realtimechatapp.data.remote.dto.group.CreateGroupRequestDto
 import com.example.realtimechatapp.data.remote.dto.group.CreateGroupResponseDto
 import com.example.realtimechatapp.data.remote.dto.group.GetGroupInfoResponseDto
@@ -26,4 +28,7 @@ interface GroupApi {
 
     @GET("groups/{id}/getMembers")
     suspend fun getMembers(@Path("id") groupId: String): GetMembersResponseDto
+
+    @POST("groups/{id}/addMembers")
+    suspend fun addMembers(@Path("id") groupId: String, @Body request: AddMembersRequestDto): MessageResponseDto
 }
