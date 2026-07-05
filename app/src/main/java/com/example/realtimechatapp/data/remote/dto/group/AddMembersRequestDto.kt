@@ -1,5 +1,5 @@
 package com.example.realtimechatapp.data.remote.dto.group
 
-import kotlinx.serialization.SerialName
+import com.google.gson.annotations.SerializedName
 
-data class AddMembersRequestDto(@SerialName("memberIds") val memberIds: List<String>)
+data class AddMembersRequestDto(@SerializedName("memberIds") val memberIds: List<String>)
