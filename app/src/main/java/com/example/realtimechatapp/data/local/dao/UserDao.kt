@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.example.realtimechatapp.data.local.entity.UserEntity
 import kotlinx.coroutines.flow.Flow
@@ -13,17 +14,11 @@ interface UserDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUser(user: UserEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAllUsers(users: List<UserEntity>)
-
     @Query("SELECT COUNT(*) FROM users")
     suspend fun getUserCount(): Int
 
     @Update
     suspend fun updateUser(newUser: UserEntity)
-
-    @Query("UPDATE users SET avatar = :newAvatar WHERE id = :userId")
-    suspend fun updateAvatar(newAvatar: String?, userId: String)
 
     @Query("SELECT * FROM users")
     suspend fun getAllUsers(): List<UserEntity>
@@ -50,8 +45,33 @@ interface UserDao {
             SELECT user_id FROM members WHERE group_id = :groupId
         )"""
     )
-    suspend fun getGroupMember(groupId: String): List<UserEntity>
+    suspend fun getUsersInGroup(groupId: String): List<UserEntity>
 
     @Query("SELECT * FROM users ORDER BY fullName ASC")
-    fun observeAllUser(): Flow<List<UserEntity>>
+    fun observeAllUsers(): Flow<List<UserEntity>>
+
+    @Transaction
+    suspend fun upsertUser(newUser: UserEntity) {
+        val existingUser = getUserById(newUser.id)
+
+        if (existingUser == null) {
+            insertUser(newUser)
+        } else {
+            val mergedUser = existingUser.copy(
+                username = newUser.username.takeIf { it.isNotEmpty() } ?: existingUser.username,
+                fullName = newUser.fullName.takeIf { it.isNotEmpty() } ?: existingUser.fullName,
+                avatar = newUser.avatar ?: existingUser.avatar,
+                email = newUser.email.takeIf { it.isNotEmpty() } ?: existingUser.email,
+                updatedAt = System.currentTimeMillis() // Update modification time
+            )
+            updateUser(mergedUser)
+        }
+    }
+
+    @Transaction
+    suspend fun upsertUsers(users: List<UserEntity>) {
+        users.forEach { user ->
+            upsertUser(user)
+        }
+    }
 }

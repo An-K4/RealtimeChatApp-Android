@@ -95,7 +95,7 @@ class MessageRepositoryImpl @Inject constructor(
 
             Timber.d(users.toString())
             safeDbCall {
-                userDao.insertAllUsers(users)
+                userDao.upsertUsers(users)
                 messageContactDao.insertAllContact(messageContacts)
             }
             Result.success(Unit)

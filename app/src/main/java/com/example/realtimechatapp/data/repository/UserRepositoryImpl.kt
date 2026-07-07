@@ -101,7 +101,7 @@ class UserRepositoryImpl @Inject constructor(
                 createdAt = newUser.createdAt.isoToLong()
             )
 
-            safeDbCall { userDao.insertUser(newUserEntity) }
+            safeDbCall { userDao.upsertUser(newUserEntity) }
             Result.success(Unit)
         } catch (e: Exception){
             if (e is CancellationException) throw e

@@ -164,7 +164,7 @@ class GroupRepositoryImpl @Inject constructor(
                 result.groupMessages.map { it.senderId.toUserEntity() }.distinctBy { it.id }
 
             safeDbCall {
-                userDao.insertAllUsers(responseSender)
+                userDao.upsertUsers(responseSender)
                 groupMessageDao.insertAllMessages(responseGroupMessages.map { it.toMessageEntity() })
             }
             Result.success(Unit)
@@ -292,7 +292,7 @@ class GroupRepositoryImpl @Inject constructor(
             val responseMembers = response.members
             safeDbCall {
                 memberDao.insertAllMember(responseMembers.map { it.toMemberEntity(groupId) })
-                userDao.insertAllUsers(responseMembers.map { it.userId.toUserEntity() })
+                userDao.upsertUsers(responseMembers.map { it.userId.toUserEntity() })
             }
 
             val ownerId = safeDbCall { groupDao.getOwnerIdOfGroup(groupId) }.orEmpty()
@@ -353,7 +353,7 @@ class GroupRepositoryImpl @Inject constructor(
                         contactAvatar = groupEntity.avatar
                     )
                 )
-                userDao.insertUser(owner.toUserEntity())
+                userDao.upsertUser(owner.toUserEntity())
                 memberDao.insertAllMember(members.map { it.toMemberEntity(groupEntity.id) })
             }
         }
