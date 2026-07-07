@@ -283,7 +283,7 @@ fun MemberManagementScreen(
                                 avatar = user.avatar ?: "",
                                 name = user.fullName,
                                 additionalInfo = user.email,
-                                onItemClicked = { checkAction() },
+                                onItemClicked = { if (!isInMemberList) checkAction() },
                                 modifier = Modifier.weight(1f)
                             )
                         }
