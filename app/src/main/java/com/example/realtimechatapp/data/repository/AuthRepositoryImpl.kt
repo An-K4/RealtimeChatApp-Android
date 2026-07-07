@@ -43,7 +43,7 @@ class AuthRepositoryImpl @Inject constructor(
             val user = response.user.toUser()
             tokenManager.saveToken(response.token)
             currentUserManager.switchUser(response.user.id)
-            Timber.e("Chuẩn bị chèn người dùng vào db")
+            Timber.d("Chuẩn bị chèn người dùng vào db")
             safeDbCall { userDao.insertUser(response.user.toUserEntity()) }
             Result.success(user)
         } catch (e: Exception) {
