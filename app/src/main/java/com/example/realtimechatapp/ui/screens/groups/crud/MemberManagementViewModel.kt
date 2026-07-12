@@ -23,7 +23,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @OptIn(FlowPreview::class)
@@ -45,7 +44,7 @@ class MemberManagementViewModel @Inject constructor(
 
     data class AddMemberState(
         val querySearch: String = "",
-        val localUsers: List<User> = emptyList(),
+        val localUsers: List<User>? = null,
         val searchResult: List<User>? = null,
         val selectedUser: Set<User> = emptySet(),
         val isSearching: Boolean = false
@@ -155,12 +154,11 @@ class MemberManagementViewModel @Inject constructor(
                 )
             }
 
-            if (_addMemberState.value.localUsers.isEmpty()) {
+            if (_addMemberState.value.localUsers == null) {
                 getLocalUserUseCase().onSuccess { localUsers ->
                     _addMemberState.update {
                         it.copy(localUsers = localUsers, isSearching = false)
                     }
-                    Timber.d("$localUsers")
                 }.onFailure { message ->
                     _memberManagementEvent.send(MemberManagementEvent.Failure(message.getErrorMessage()))
                     _addMemberState.update { it.copy(isSearching = false) }

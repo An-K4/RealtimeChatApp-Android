@@ -249,7 +249,7 @@ fun MemberManagementScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(
-                        items = addMemberState.searchResult ?: addMemberState.localUsers,
+                        items = addMemberState.searchResult ?: addMemberState.localUsers ?: emptyList(),
                         key = { member -> member.id }
                     ) { user ->
                         val isChecked = addMemberState.selectedUser.any { it.id == user.id }
