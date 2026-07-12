@@ -17,7 +17,7 @@ import com.example.realtimechatapp.domain.usecase.socket.message.ObserveOnlineUs
 import com.example.realtimechatapp.domain.usecase.socket.message.ObserveTypingUseCase
 import com.example.realtimechatapp.domain.usecase.socket.message.SeenMessageUseCase
 import com.example.realtimechatapp.domain.usecase.socket.message.SendMessageUseCase
-import com.example.realtimechatapp.domain.usecase.user.ObserveCurrentUserIdUseCase
+import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import com.example.realtimechatapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -35,7 +36,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DetailMessageViewModel @Inject constructor(
-    private val observeCurrentUserIdUseCase: ObserveCurrentUserIdUseCase,
+    private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase,
     private val savedStateHandle: SavedStateHandle,
     private val getMessageUseCase: GetMessageUseCase,
     private val getHeaderInfoUseCase: GetHeaderInfoUseCase,
@@ -80,7 +81,7 @@ class DetailMessageViewModel @Inject constructor(
         val isLoading: Boolean
     )
 
-    private val currentUserId = observeCurrentUserIdUseCase().catch { exception ->
+    private val currentUserId = flow { emit(getCurrentUserIdUseCase()) }.catch { exception ->
         Timber.e(exception, "Lỗi lấy id người dùng hiện tại")
     }
     private val friendId: String =

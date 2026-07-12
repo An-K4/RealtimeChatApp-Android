@@ -17,7 +17,7 @@ import com.example.realtimechatapp.domain.usecase.socket.group.ObserveGroupMessa
 import com.example.realtimechatapp.domain.usecase.socket.group.ObserveGroupTypingUseCase
 import com.example.realtimechatapp.domain.usecase.socket.group.SeenGroupMessageUseCase
 import com.example.realtimechatapp.domain.usecase.socket.group.SendGroupMessageUseCase
-import com.example.realtimechatapp.domain.usecase.user.ObserveCurrentUserIdUseCase
+import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import com.example.realtimechatapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -37,7 +38,7 @@ import kotlin.String
 @HiltViewModel
 class DetailGroupViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    private val observeCurrentUserIdUseCase: ObserveCurrentUserIdUseCase,
+    private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase,
     private val getGroupMessageUseCase: GetGroupMessageUseCase,
     private val getGroupInfoUseCase: GetGroupInfoUseCase,
     private val observeGroupMessageUseCase: ObserveGroupMessageUseCase,
@@ -74,8 +75,8 @@ class DetailGroupViewModel @Inject constructor(
         val isLoading: Boolean
     )
 
-    private val currentUserId = observeCurrentUserIdUseCase().catch { exception ->
-        Timber.d(exception, "Lỗi lấy id người dùng hiện tại")
+    private val currentUserId = flow { emit(getCurrentUserIdUseCase()) }.catch { exception ->
+        Timber.e(exception, "Lỗi lấy id người dùng hiện tại")
     }
 
     private val groupId: String = checkNotNull(savedStateHandle[Screen.DetailGroup.ARG_GROUP_ID])
@@ -111,7 +112,8 @@ class DetailGroupViewModel @Inject constructor(
         },
         inputAndLoadingStateFlow
     ) { detailGroupContext, groupMessages, groupTypingUsers, inputAndLoadingState ->
-        val otherTypingUsers = groupTypingUsers.filter { it.senderId != detailGroupContext.currentUserId }
+        val otherTypingUsers =
+            groupTypingUsers.filter { it.senderId != detailGroupContext.currentUserId }
 
         DetailGroupState(
             currentUserId = detailGroupContext.currentUserId,
