@@ -3,12 +3,16 @@ package com.example.realtimechatapp.ui.screens.groups.crud
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.model.Member
+import com.example.realtimechatapp.domain.model.Role
 import com.example.realtimechatapp.domain.model.User
 import com.example.realtimechatapp.domain.usecase.group.AddMembersUseCase
+import com.example.realtimechatapp.domain.usecase.group.ChangeRoleUseCase
 import com.example.realtimechatapp.domain.usecase.group.GetGroupMembersUseCase
+import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import com.example.realtimechatapp.domain.usecase.user.GetLocalUserUseCase
 import com.example.realtimechatapp.domain.usecase.user.PerformSearchUsersUseCase
 import com.example.realtimechatapp.ui.navigation.Screen
@@ -29,10 +33,12 @@ import javax.inject.Inject
 @HiltViewModel
 class MemberManagementViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
+    private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase,
     private val getGroupMembersUseCase: GetGroupMembersUseCase,
     private val performSearchUsersUseCase: PerformSearchUsersUseCase,
     private val getLocalUserUseCase: GetLocalUserUseCase,
-    private val addMembersUseCase: AddMembersUseCase
+    private val addMembersUseCase: AddMembersUseCase,
+    private val changeRoleUseCase: ChangeRoleUseCase
 ) : ViewModel() {
     data class MemberManagementState(
         val members: List<Member> = emptyList(),
@@ -50,10 +56,25 @@ class MemberManagementViewModel @Inject constructor(
         val isSearching: Boolean = false
     )
 
+    data class MemberActionState(
+        val currentUserId: String = "",
+        val selectedMemberInfo: User? = null,
+        val selectedMemberRole: Role = Role.MEMBER,
+        val isDirectMessageVisible: Boolean = false,
+        val isTransferOwnerVisible: Boolean = false,
+        val isPromoteToAdminVisible: Boolean = false,
+        val isDemoteToMemberVisible: Boolean = false,
+        val isDeleteMemberVisible: Boolean = false,
+        val isFetchingInfo: Boolean = false,
+    )
+
     sealed class MemberManagementEvent {
         object AddMemberSuccess : MemberManagementEvent()
-        data class AddMemberFailure(val message: UiText) : MemberManagementEvent()
         object AddMemberConfirm : MemberManagementEvent()
+        object ChangeRoleSuccess: MemberManagementEvent()
+        object PromoteConfirm: MemberManagementEvent()
+        object DemoteConfirm: MemberManagementEvent()
+        data class ShowFailureDialog(val message: UiText) : MemberManagementEvent()
         data class Failure(val message: UiText) : MemberManagementEvent()
     }
 
@@ -64,6 +85,9 @@ class MemberManagementViewModel @Inject constructor(
 
     private val _addMemberState = MutableStateFlow(AddMemberState())
     val addMemberState = _addMemberState.asStateFlow()
+
+    private val _memberActionState = MutableStateFlow(MemberActionState())
+    val memberActionState = _memberActionState.asStateFlow()
 
     private val _memberManagementEvent = Channel<MemberManagementEvent>()
     val memberManagementEvent = _memberManagementEvent.receiveAsFlow()
@@ -179,13 +203,118 @@ class MemberManagementViewModel @Inject constructor(
         viewModelScope.launch {
             _memberManagementState.update { it.copy(isMemberAdding = true) }
 
-            addMembersUseCase(groupId, _addMemberState.value.selectedUser.map { it.id }).onSuccess {
+            addMembersUseCase(
+                groupId,
+                _addMemberState.value.selectedUser.map { it.id }).onSuccess {
                 _memberManagementEvent.send(MemberManagementEvent.AddMemberSuccess)
             }.onFailure { message ->
-                _memberManagementEvent.send(MemberManagementEvent.AddMemberFailure(message.getErrorMessage()))
+                _memberManagementEvent.send(MemberManagementEvent.ShowFailureDialog(message.getErrorMessage()))
             }
 
             _memberManagementState.update { it.copy(isMemberAdding = false) }
+        }
+    }
+
+    fun prepareMemberActionFlow(memberId: String) {
+        viewModelScope.launch {
+            _memberActionState.update { it.copy(isFetchingInfo = true) }
+
+            val currentUserId = _memberActionState.value.currentUserId.ifEmpty {
+                getCurrentUserIdUseCase()
+            }
+
+            val selectedMember =
+                memberManagementState.value.members.find { it.userId?.id == memberId }
+            if (selectedMember == null) {
+                _memberManagementEvent.send(
+                    MemberManagementEvent.Failure(UiText.StringResource(R.string.member_info_not_found))
+                )
+                _memberActionState.update { it.copy(isFetchingInfo = false) }
+                return@launch
+            }
+
+            val currentUserRole = memberManagementState.value.members
+                .find { it.userId?.id == currentUserId }?.role ?: Role.MEMBER
+
+            val isCurrentUserOwner = currentUserRole == Role.OWNER
+            val isCurrentUserAdmin = currentUserRole == Role.ADMIN
+
+            val isSelectedMemberSelf = selectedMember.userId?.id == currentUserId
+            val isSelectedMemberOwner = selectedMember.role == Role.OWNER
+            val isSelectedMemberAdmin = selectedMember.role == Role.ADMIN
+            val isSelectedMemberMember = selectedMember.role == Role.MEMBER
+
+            _memberActionState.update {
+                it.copy(
+                    currentUserId = currentUserId,
+                    selectedMemberInfo = selectedMember.userId,
+                    selectedMemberRole = selectedMember.role,
+
+                    /**
+                     * Group member role hierarchy and permissions:
+                     * - OWNER: Holds absolute control; can transfer ownership, promote/demote admins, and kick any member.
+                     * - ADMIN: Holds moderate control; can kick standard MEMBERS, but cannot modify roles or kick other ADMINS/OWNERS.
+                     * - MEMBER: Has standard view-only access with no administrative or moderation privileges.
+                     */
+                    isDirectMessageVisible = !isSelectedMemberSelf,
+                    isTransferOwnerVisible = isCurrentUserOwner && !isSelectedMemberSelf,
+                    isPromoteToAdminVisible = isCurrentUserOwner && isSelectedMemberMember && !isSelectedMemberSelf,
+                    isDemoteToMemberVisible = isCurrentUserOwner && isSelectedMemberAdmin && !isSelectedMemberSelf,
+                    isDeleteMemberVisible = !isSelectedMemberOwner && !isSelectedMemberSelf && (
+                            isCurrentUserOwner || (isCurrentUserAdmin && isSelectedMemberMember)
+                            ),
+                    isFetchingInfo = false
+                )
+            }
+        }
+    }
+
+    fun clearMemberActionFlow() {
+        _memberActionState.update {
+            it.copy(
+                selectedMemberInfo = null,
+                selectedMemberRole = Role.MEMBER,
+                isDirectMessageVisible = false,
+                isTransferOwnerVisible = false,
+                isPromoteToAdminVisible = false,
+                isDemoteToMemberVisible = false,
+                isDeleteMemberVisible = false,
+                isFetchingInfo = false
+            )
+        }
+    }
+
+    fun showPromoteConfirmDialog() {
+        viewModelScope.launch {
+            _memberManagementEvent.send(MemberManagementEvent.PromoteConfirm)
+        }
+    }
+
+    fun showDemoteConfirmDialog() {
+        viewModelScope.launch {
+            _memberManagementEvent.send(MemberManagementEvent.DemoteConfirm)
+        }
+    }
+
+    private suspend fun changeRole(newRole: Role) {
+        _memberActionState.value.selectedMemberInfo?.let {
+            changeRoleUseCase(groupId, it.id, newRole).onSuccess {
+                _memberManagementEvent.send(MemberManagementEvent.ChangeRoleSuccess)
+            }.onFailure { message ->
+                _memberManagementEvent.send(MemberManagementEvent.ShowFailureDialog(message.getErrorMessage()))
+            }
+        }
+    }
+
+    fun promoteMemberToAdmin() {
+        viewModelScope.launch {
+            changeRole(Role.ADMIN)
+        }
+    }
+
+    fun demoteMemberToMember() {
+        viewModelScope.launch {
+            changeRole(Role.MEMBER)
         }
     }
 }

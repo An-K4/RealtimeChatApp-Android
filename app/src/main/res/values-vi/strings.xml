@@ -96,7 +96,7 @@
     <string name="create_group">Tạo nhóm</string>
     <string name="new_group">Nhóm mới</string>
     <string name="group_name">Tên Nhóm</string>
-    <string name="member">Thành Viên</string>
+    <string name="member_plural">Thành Viên</string>
     <string name="add_member_to_group">Thêm thành viên</string>
     <string name="database_corrupted">Dữ liệu cục bộ bị hỏng</string>
     <string name="database_constraint_violation">Dữ liệu bị trùng lặp hoặc không hợp lệ</string>
@@ -118,8 +118,17 @@
     <string name="note_incomplete_member_list">Lưu ý: Danh sách chưa đầy đủ.</string>
     <string name="owner">Trưởng Nhóm</string>
     <string name="admin">Quản Trị Viên</string>
-    <string name="member_role">Thành Viên</string>
+    <string name="member">Thành Viên</string>
     <string name="reload">Tải lại</string>
+    <string name="direct_message">Nhắn tin riêng</string>
+    <string name="transfer_group_ownership">Chuyển quyền Trưởng Nhóm</string>
+    <string name="promote_as_admin">Cấp quyền Quản Trị Viên</string>
+    <string name="demote_to_member">Giáng quyền xuống Thành Viên</string>
+    <string name="delete_member">Xóa thành viên</string>
+    <string name="member_info_not_found">Không tìm thấy thông tin thành viên</string>
+    <string name="promote_admin_confirm">Bạn có chắc chắn muốn cấp quyền Quản Trị Viên cho thành viên này?</string>
+    <string name="demote_member_confirm">Bạn có chắc chắn muốn thu hồi quyền Quản Trị Viên của thành viên này?</string>
+    <string name="change_role_success">Thay đổi quyền thành công!</string>
     <plurals name="new_members_added">
         <item quantity="other">Đã thêm %1$d thành viên!</item>
     </plurals>

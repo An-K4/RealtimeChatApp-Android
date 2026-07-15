@@ -137,7 +137,7 @@ fun AppNavigation() {
                             ?: UiText.StringResource(R.string.actions).asString()
 
                         Screen.MemberManagement.route -> Screen.MemberManagement.title?.asString()
-                            ?: UiText.StringResource(R.string.member).asString()
+                            ?: UiText.StringResource(R.string.member_plural).asString()
 
                         Screen.CreateGroup.route -> Screen.CreateGroup.title?.asString()
                             ?: UiText.StringResource(R.string.create_group).asString()

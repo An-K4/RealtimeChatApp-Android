@@ -19,6 +19,7 @@ import com.example.realtimechatapp.data.remote.api.GroupApi
 import com.example.realtimechatapp.data.remote.safeApiCall
 import com.example.realtimechatapp.data.local.safeDbCall
 import com.example.realtimechatapp.data.remote.dto.group.AddMembersRequestDto
+import com.example.realtimechatapp.data.remote.dto.group.ChangeRoleRequestDto
 import com.example.realtimechatapp.data.remote.dto.group.CreateGroupRequestDto
 import com.example.realtimechatapp.data.remote.dto.group.GroupMessageSeenDto
 import com.example.realtimechatapp.data.remote.dto.group.MemberDto
@@ -29,6 +30,7 @@ import com.example.realtimechatapp.domain.model.Group
 import com.example.realtimechatapp.domain.model.GroupMessageContact
 import com.example.realtimechatapp.domain.model.Member
 import com.example.realtimechatapp.domain.model.Message
+import com.example.realtimechatapp.domain.model.Role
 import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.repository.GroupCrudEvents
 import com.example.realtimechatapp.domain.repository.GroupRepository
@@ -295,7 +297,7 @@ class GroupRepositoryImpl @Inject constructor(
                 userDao.upsertUsers(responseMembers.map { it.userId.toUserEntity() })
             }
 
-            val ownerId = safeDbCall { groupDao.getOwnerIdOfGroup(groupId) }.orEmpty()
+            val ownerId = getOwnerIdOfGroup(groupId)
 
             val memberWithDetails = safeDbCall { memberDao.getGroupMembers(groupId) }
             val members = memberWithDetails.map { it.toMember(ownerId) }
@@ -306,10 +308,14 @@ class GroupRepositoryImpl @Inject constructor(
             Timber.e(e, "Lỗi khi lấy danh sách thành viên nhóm")
 
             val cachedMemberWithDetails = safeDbCall { memberDao.getGroupMembers(groupId) }
-            val cachedOwnerId = safeDbCall { groupDao.getOwnerIdOfGroup(groupId) }.orEmpty()
+            val cachedOwnerId = getOwnerIdOfGroup(groupId)
             val cachedMembers = cachedMemberWithDetails.map { it.toMember(cachedOwnerId) }
             Result.success(cachedMembers)
         }
+    }
+
+    private suspend fun getOwnerIdOfGroup(groupId: String): String {
+        return safeDbCall { groupDao.getOwnerIdOfGroup(groupId) }.orEmpty()
     }
 
     override suspend fun addMembers(
@@ -328,6 +334,28 @@ class GroupRepositoryImpl @Inject constructor(
             if (e is CancellationException) throw e
 
             Timber.e(e, "Lỗi khi thêm thành viên")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun changeRole(
+        groupId: String,
+        memberId: String,
+        newRole: Role
+    ): Result<Unit> {
+        return try {
+            safeApiCall(networkChecker) {
+                groupApi.changeRole(
+                    groupId,
+                    memberId,
+                    ChangeRoleRequestDto(newRole.rawValue)
+                )
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
+            Timber.e(e, "Lỗi khi thay đổi quyền thành viên")
             Result.failure(e)
         }
     }

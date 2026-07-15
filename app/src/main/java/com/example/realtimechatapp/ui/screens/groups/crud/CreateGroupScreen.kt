@@ -128,7 +128,7 @@ fun CreateGroupScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = UiText.StringResource(R.string.member).asString(),
+            text = UiText.StringResource(R.string.member_plural).asString(),
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
@@ -393,7 +393,7 @@ fun CreateGroupScreen() {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = UiText.StringResource(R.string.member).asString(),
+                text = UiText.StringResource(R.string.member_plural).asString(),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
