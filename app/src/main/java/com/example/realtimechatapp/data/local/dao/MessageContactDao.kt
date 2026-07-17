@@ -4,15 +4,11 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
-import com.example.realtimechatapp.common.isoToLong
 import com.example.realtimechatapp.data.local.entity.ContactEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MessageContactDao {
-    @Query("SELECT * FROM contacts WHERE is_group=0 ORDER BY last_time_stamp DESC")
-    fun getMessageContacts(): List<ContactEntity>
-
     @Query("SELECT * FROM contacts WHERE id = :contactId")
     fun getMessageContactById(contactId: String): ContactEntity?
 
@@ -30,25 +26,6 @@ interface MessageContactDao {
 
     @Query("UPDATE contacts SET unread_count = 0 WHERE id = :contactId")
     suspend fun resetUnreadCount(contactId: String)
-
-    @Query("""
-        UPDATE contacts
-        SET last_message = :lastMessage,
-            last_sender_name = :lastSenderName,
-            is_mine = :isMine,
-            last_time_stamp = :lastTimeStamp
-        WHERE id = :contactId
-    """)
-    suspend fun updateLastMessage(
-        contactId: String,
-        lastMessage: String?,
-        lastSenderName: String?,
-        isMine: Boolean,
-        lastTimeStamp: Long
-    )
-
-    @Query("DELETE FROM contacts WHERE id = :contactId")
-    suspend fun deleteContact(contactId: String)
 
     @Transaction
     suspend fun upsertMessageContact(
