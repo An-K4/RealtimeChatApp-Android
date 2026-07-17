@@ -28,18 +28,12 @@ interface MemberDao {
     @Query("SELECT * FROM members WHERE group_id = :groupId")
     suspend fun getGroupMembers(groupId: String): List<MemberWithDetails>
 
-//    @Query("SELECT * FROM members WHERE user_id = :userId")
-//    suspend fun getGroupByUserId(userId: String): List<MemberEntity>
+    @Query("DELETE FROM members WHERE group_id = :groupId")
+    suspend fun deleteGroupMembers(groupId: String)
 
-    @Query(
-        """
-            UPDATE members
-            SET last_read_timestamp = :timestamp
-            WHERE group_id = :groupId AND user_id = :userId
-        """
-    )
-    suspend fun updateLastRead(groupId: String, userId: String, timestamp: Long)
-
-    @Query("DELETE FROM members WHERE group_id = :groupId AND user_id = :userId")
-    suspend fun deleteMember(groupId: String, userId: String)
+    @Transaction
+    suspend fun syncGroupMembers(groupId: String, newMembers: List<MemberEntity>) {
+        deleteGroupMembers(groupId)
+        insertAllMember(newMembers)
+    }
 }

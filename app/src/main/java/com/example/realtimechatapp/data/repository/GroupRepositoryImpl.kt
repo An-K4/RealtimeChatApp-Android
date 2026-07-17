@@ -192,7 +192,7 @@ class GroupRepositoryImpl @Inject constructor(
             // save to db
             safeDbCall {
                 groupDao.insertGroup(responseGroup)
-                memberDao.insertAllMember(responseMembers)
+                memberDao.syncGroupMembers(groupId, responseMembers)
             }
 
             val groupInfo = safeDbCall { groupDao.getGroupById(groupId)?.toGroup() }
@@ -293,7 +293,10 @@ class GroupRepositoryImpl @Inject constructor(
             val response = safeApiCall(networkChecker) { groupApi.getMembers(groupId) }
             val responseMembers = response.members
             safeDbCall {
-                memberDao.insertAllMember(responseMembers.map { it.toMemberEntity(groupId) })
+                memberDao.syncGroupMembers(
+                    groupId,
+                    responseMembers.map { it.toMemberEntity(groupId) }
+                )
                 userDao.upsertUsers(responseMembers.map { it.userId.toUserEntity() })
             }
 
