@@ -3,7 +3,6 @@ package com.example.realtimechatapp.data.remote.api
 import com.example.realtimechatapp.data.remote.dto.MessageResponseDto
 import com.example.realtimechatapp.data.remote.dto.group.AddMembersRequestDto
 import com.example.realtimechatapp.data.remote.dto.group.ChangeRoleRequestDto
-import com.example.realtimechatapp.data.remote.dto.group.ChangeRoleResponseDto
 import com.example.realtimechatapp.data.remote.dto.group.CreateGroupRequestDto
 import com.example.realtimechatapp.data.remote.dto.group.CreateGroupResponseDto
 import com.example.realtimechatapp.data.remote.dto.group.GetGroupInfoResponseDto
@@ -36,5 +35,5 @@ interface GroupApi {
     suspend fun addMembers(@Path("id") groupId: String, @Body request: AddMembersRequestDto): MessageResponseDto
 
     @PATCH("/groups/{id}/changeRole/{memberId}")
-    suspend fun changeRole(@Path("id") groupId: String, @Path("memberId") memberId: String, @Body request: ChangeRoleRequestDto): ChangeRoleResponseDto
+    suspend fun changeRole(@Path("id") groupId: String, @Path("memberId") memberId: String, @Body request: ChangeRoleRequestDto): MessageResponseDto
 }
