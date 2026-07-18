@@ -10,6 +10,7 @@ import com.example.realtimechatapp.data.remote.dto.group.GetGroupMessageResponse
 import com.example.realtimechatapp.data.remote.dto.group.GetGroupResponseDto
 import com.example.realtimechatapp.data.remote.dto.group.GetMembersResponseDto
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
@@ -36,4 +37,7 @@ interface GroupApi {
 
     @PATCH("/groups/{id}/changeRole/{memberId}")
     suspend fun changeRole(@Path("id") groupId: String, @Path("memberId") memberId: String, @Body request: ChangeRoleRequestDto): MessageResponseDto
+
+    @DELETE("/groups/{id}/deleteMembers/{memberId}")
+    suspend fun deleteMember(@Path("id") groupId: String, @Path("memberId") memberId: String): MessageResponseDto
 }

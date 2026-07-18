@@ -129,6 +129,8 @@
     <string name="promote_admin_confirm">Bạn có chắc chắn muốn cấp quyền Quản Trị Viên cho thành viên này?</string>
     <string name="demote_member_confirm">Bạn có chắc chắn muốn thu hồi quyền Quản Trị Viên của thành viên này?</string>
     <string name="change_role_success">Thay đổi quyền thành công!</string>
+    <string name="delete_member_confirm">Bạn có chắc chắn muốn xóa thành viên này?</string>
+    <string name="delete_member_success">Đã xóa thành viên!</string>
     <plurals name="new_members_added">
         <item quantity="other">Đã thêm %1$d thành viên!</item>
     </plurals>

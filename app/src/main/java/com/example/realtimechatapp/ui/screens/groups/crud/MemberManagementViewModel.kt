@@ -11,6 +11,7 @@ import com.example.realtimechatapp.domain.model.Role
 import com.example.realtimechatapp.domain.model.User
 import com.example.realtimechatapp.domain.usecase.group.AddMembersUseCase
 import com.example.realtimechatapp.domain.usecase.group.ChangeRoleUseCase
+import com.example.realtimechatapp.domain.usecase.group.DeleteMemberUseCase
 import com.example.realtimechatapp.domain.usecase.group.GetGroupMembersUseCase
 import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import com.example.realtimechatapp.domain.usecase.user.GetLocalUserUseCase
@@ -38,7 +39,8 @@ class MemberManagementViewModel @Inject constructor(
     private val performSearchUsersUseCase: PerformSearchUsersUseCase,
     private val getLocalUserUseCase: GetLocalUserUseCase,
     private val addMembersUseCase: AddMembersUseCase,
-    private val changeRoleUseCase: ChangeRoleUseCase
+    private val changeRoleUseCase: ChangeRoleUseCase,
+    private val deleteMemberUseCase: DeleteMemberUseCase
 ) : ViewModel() {
     data class MemberManagementState(
         val members: List<Member> = emptyList(),
@@ -71,9 +73,11 @@ class MemberManagementViewModel @Inject constructor(
     sealed class MemberManagementEvent {
         object AddMemberSuccess : MemberManagementEvent()
         object AddMemberConfirm : MemberManagementEvent()
-        object ChangeRoleSuccess: MemberManagementEvent()
-        object PromoteConfirm: MemberManagementEvent()
-        object DemoteConfirm: MemberManagementEvent()
+        object DeleteMemberSuccess : MemberManagementEvent()
+        object ChangeRoleSuccess : MemberManagementEvent()
+        object PromoteConfirm : MemberManagementEvent()
+        object DemoteConfirm : MemberManagementEvent()
+        object DeleteMemberConfirm : MemberManagementEvent()
         data class ShowFailureDialog(val message: UiText) : MemberManagementEvent()
         data class Failure(val message: UiText) : MemberManagementEvent()
     }
@@ -315,6 +319,24 @@ class MemberManagementViewModel @Inject constructor(
     fun demoteMemberToMember() {
         viewModelScope.launch {
             changeRole(Role.MEMBER)
+        }
+    }
+
+    fun showDeleteMemberConfirmDialog() {
+        viewModelScope.launch {
+            _memberManagementEvent.send(MemberManagementEvent.DeleteMemberConfirm)
+        }
+    }
+
+    fun deleteMember() {
+        viewModelScope.launch {
+            _memberActionState.value.selectedMemberInfo?.let {
+                deleteMemberUseCase(groupId, it.id).onSuccess {
+                    _memberManagementEvent.send(MemberManagementEvent.DeleteMemberSuccess)
+                }.onFailure { message ->
+                    _memberManagementEvent.send(MemberManagementEvent.ShowFailureDialog(message.getErrorMessage()))
+                }
+            }
         }
     }
 }

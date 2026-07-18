@@ -100,9 +100,11 @@ fun MemberManagementScreen(
             when (event) {
                 is MemberManagementViewModel.MemberManagementEvent.AddMemberSuccess,
                 MemberManagementViewModel.MemberManagementEvent.AddMemberConfirm,
+                MemberManagementViewModel.MemberManagementEvent.DeleteMemberSuccess,
                 MemberManagementViewModel.MemberManagementEvent.ChangeRoleSuccess,
                 MemberManagementViewModel.MemberManagementEvent.PromoteConfirm,
                 MemberManagementViewModel.MemberManagementEvent.DemoteConfirm,
+                MemberManagementViewModel.MemberManagementEvent.DeleteMemberConfirm,
                     -> dialogState = event
 
                 is MemberManagementViewModel.MemberManagementEvent.ShowFailureDialog
@@ -509,7 +511,9 @@ fun MemberManagementScreen(
                                     icon = Icons.Default.PersonOff,
                                     title = StringResource(R.string.delete_member).asString(),
                                     isDangerAction = true,
-                                    onClick = {},
+                                    onClick = {
+                                        memberManagementViewModel.showDeleteMemberConfirmDialog()
+                                    },
                                     trailingContent = {}
                                 )
                             }
@@ -604,10 +608,42 @@ fun MemberManagementScreen(
             )
         }
 
+        is MemberManagementViewModel.MemberManagementEvent.DeleteMemberConfirm -> {
+            ConfirmationDialog(
+                title = StringResource(R.string.confirm).asString(),
+                message = StringResource(R.string.delete_member_confirm).asString(),
+                dismissText = StringResource(R.string.cancel).asString(),
+                confirmText = StringResource(R.string.confirm).asString(),
+                isDangerConfirm = true,
+                onConfirm = {
+                    uiScope.launch { memberActionSheetState.hide() }
+                        .invokeOnCompletion {
+                            if (!memberActionSheetState.isVisible) showMemberActionSheet = false
+                        }
+                    memberManagementViewModel.deleteMember()
+                },
+                onDismiss = {
+                    dialogState = null
+                }
+            )
+        }
+
         is MemberManagementViewModel.MemberManagementEvent.ChangeRoleSuccess -> {
             NotificationDialog(
                 title = StringResource(R.string.success).asString(),
                 message = StringResource(R.string.change_role_success).asString(),
+                isSuccess = true,
+                onDismiss = {
+                    memberManagementViewModel.reloadMemberList()
+                    dialogState = null
+                }
+            )
+        }
+
+        is MemberManagementViewModel.MemberManagementEvent.DeleteMemberSuccess -> {
+            NotificationDialog(
+                title = StringResource(R.string.success).asString(),
+                message = StringResource(R.string.delete_member_success).asString(),
                 isSuccess = true,
                 onDismiss = {
                     memberManagementViewModel.reloadMemberList()

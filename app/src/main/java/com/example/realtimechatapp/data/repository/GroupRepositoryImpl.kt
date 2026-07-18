@@ -363,6 +363,26 @@ class GroupRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun deleteMember(
+        groupId: String,
+        memberId: String
+    ): Result<Unit> {
+        return try {
+            safeApiCall(networkChecker) {
+                groupApi.deleteMember(
+                    groupId,
+                    memberId
+                )
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
+            Timber.e(e, "Lỗi khi xóa thành viên")
+            Result.failure(e)
+        }
+    }
+
     private suspend fun saveGroupToLocalDatabase(
         groupEntity: GroupEntity,
         owner: UserDto,

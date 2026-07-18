@@ -128,6 +128,8 @@
     <string name="promote_admin_confirm">Are you sure you want to promote this member to Admin?</string>
     <string name="demote_member_confirm">Are you sure you want to demote this member?</string>
     <string name="change_role_success">Change role successfully!</string>
+    <string name="delete_member_confirm">Are you sure you want to delete this member?</string>
+    <string name="delete_member_success">Delete member successfully!</string>
     <plurals name="new_members_added">
         <item quantity="one">%1$d new member added successfully!</item>
         <item quantity="other">%1$d new members added successfully!</item>
