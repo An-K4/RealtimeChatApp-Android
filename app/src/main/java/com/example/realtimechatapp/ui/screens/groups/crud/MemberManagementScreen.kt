@@ -98,13 +98,15 @@ fun MemberManagementScreen(
     LaunchedEffect(Unit) {
         memberManagementViewModel.memberManagementEvent.collect { event ->
             when (event) {
-                is MemberManagementViewModel.MemberManagementEvent.AddMemberSuccess,
-                MemberManagementViewModel.MemberManagementEvent.AddMemberConfirm,
-                MemberManagementViewModel.MemberManagementEvent.DeleteMemberSuccess,
+                is MemberManagementViewModel.MemberManagementEvent.DeleteMemberSuccess,
                 MemberManagementViewModel.MemberManagementEvent.ChangeRoleSuccess,
+                MemberManagementViewModel.MemberManagementEvent.AddMemberSuccess,
+                MemberManagementViewModel.MemberManagementEvent.AddMemberConfirm,
+                MemberManagementViewModel.MemberManagementEvent.TransferOwnerSuccess,
                 MemberManagementViewModel.MemberManagementEvent.PromoteConfirm,
                 MemberManagementViewModel.MemberManagementEvent.DemoteConfirm,
                 MemberManagementViewModel.MemberManagementEvent.DeleteMemberConfirm,
+                MemberManagementViewModel.MemberManagementEvent.TransferOwnerConfirm
                     -> dialogState = event
 
                 is MemberManagementViewModel.MemberManagementEvent.ShowFailureDialog
@@ -454,7 +456,7 @@ fun MemberManagementScreen(
                                     icon = Icons.Default.Key,
                                     title = StringResource(R.string.transfer_group_ownership).asString(),
                                     onClick = {
-                                        // in development
+                                        memberManagementViewModel.showTransferOwnerConfirmDialog()
                                     },
                                     trailingContent = {}
                                 )
@@ -628,6 +630,26 @@ fun MemberManagementScreen(
             )
         }
 
+        is MemberManagementViewModel.MemberManagementEvent.TransferOwnerConfirm -> {
+            ConfirmationDialog(
+                title = StringResource(R.string.confirm).asString(),
+                message = StringResource(R.string.transfer_owner_confirm).asString(),
+                dismissText = StringResource(R.string.cancel).asString(),
+                confirmText = StringResource(R.string.confirm).asString(),
+                isDangerConfirm = true,
+                onConfirm = {
+                    uiScope.launch { memberActionSheetState.hide() }
+                        .invokeOnCompletion {
+                            if (!memberActionSheetState.isVisible) showMemberActionSheet = false
+                        }
+                    memberManagementViewModel.transferOwner()
+                },
+                onDismiss = {
+                    dialogState = null
+                }
+            )
+        }
+
         is MemberManagementViewModel.MemberManagementEvent.ChangeRoleSuccess -> {
             NotificationDialog(
                 title = StringResource(R.string.success).asString(),
@@ -635,6 +657,7 @@ fun MemberManagementScreen(
                 isSuccess = true,
                 onDismiss = {
                     memberManagementViewModel.reloadMemberList()
+                    memberManagementViewModel.clearMemberActionFlow()
                     dialogState = null
                 }
             )
@@ -647,6 +670,19 @@ fun MemberManagementScreen(
                 isSuccess = true,
                 onDismiss = {
                     memberManagementViewModel.reloadMemberList()
+                    memberManagementViewModel.clearMemberActionFlow()
+                    dialogState = null
+                }
+            )
+        }
+
+        is MemberManagementViewModel.MemberManagementEvent.TransferOwnerSuccess -> {
+            NotificationDialog(
+                title = StringResource(R.string.success).asString(),
+                message = StringResource(R.string.transfer_owner_success).asString(),
+                isSuccess = true,
+                onDismiss = {
+                    memberManagementViewModel.clearMemberActionFlow()
                     dialogState = null
                 }
             )

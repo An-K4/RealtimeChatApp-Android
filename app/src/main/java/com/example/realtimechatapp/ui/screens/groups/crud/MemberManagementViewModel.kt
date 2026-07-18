@@ -13,6 +13,7 @@ import com.example.realtimechatapp.domain.usecase.group.AddMembersUseCase
 import com.example.realtimechatapp.domain.usecase.group.ChangeRoleUseCase
 import com.example.realtimechatapp.domain.usecase.group.DeleteMemberUseCase
 import com.example.realtimechatapp.domain.usecase.group.GetGroupMembersUseCase
+import com.example.realtimechatapp.domain.usecase.group.TransferOwnerUseCase
 import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import com.example.realtimechatapp.domain.usecase.user.GetLocalUserUseCase
 import com.example.realtimechatapp.domain.usecase.user.PerformSearchUsersUseCase
@@ -40,7 +41,8 @@ class MemberManagementViewModel @Inject constructor(
     private val getLocalUserUseCase: GetLocalUserUseCase,
     private val addMembersUseCase: AddMembersUseCase,
     private val changeRoleUseCase: ChangeRoleUseCase,
-    private val deleteMemberUseCase: DeleteMemberUseCase
+    private val deleteMemberUseCase: DeleteMemberUseCase,
+    private val transferOwnerUseCase: TransferOwnerUseCase
 ) : ViewModel() {
     data class MemberManagementState(
         val members: List<Member> = emptyList(),
@@ -72,12 +74,14 @@ class MemberManagementViewModel @Inject constructor(
 
     sealed class MemberManagementEvent {
         object AddMemberSuccess : MemberManagementEvent()
-        object AddMemberConfirm : MemberManagementEvent()
         object DeleteMemberSuccess : MemberManagementEvent()
         object ChangeRoleSuccess : MemberManagementEvent()
+        object TransferOwnerSuccess : MemberManagementEvent()
+        object AddMemberConfirm : MemberManagementEvent()
         object PromoteConfirm : MemberManagementEvent()
         object DemoteConfirm : MemberManagementEvent()
         object DeleteMemberConfirm : MemberManagementEvent()
+        object TransferOwnerConfirm: MemberManagementEvent()
         data class ShowFailureDialog(val message: UiText) : MemberManagementEvent()
         data class Failure(val message: UiText) : MemberManagementEvent()
     }
@@ -117,19 +121,23 @@ class MemberManagementViewModel @Inject constructor(
             _memberManagementState.update { it.copy(isLoading = true) }
 
             getGroupMembersUseCase(groupId).onSuccess { members ->
-                val memberSize = members.size
-                val cleanMemberList = members.filter { it.userId != null }.sortedBy { it.role }
-                val cleanMemberSize = cleanMemberList.size
-
-                _memberManagementState.update {
-                    it.copy(
-                        members = cleanMemberList,
-                        isIncompleteList = memberSize > cleanMemberSize && cleanMemberSize > 0,
-                        isEmptyMemberList = cleanMemberSize == 0,
-                        isLoading = false
-                    )
-                }
+                cleanAndUpdateMemberListState(members)
             }
+        }
+    }
+
+    private fun cleanAndUpdateMemberListState(members: List<Member>) {
+        val memberSize = members.size
+        val cleanMemberList = members.filter { it.userId != null }.sortedBy { it.role }
+        val cleanMemberSize = cleanMemberList.size
+
+        _memberManagementState.update {
+            it.copy(
+                members = cleanMemberList,
+                isIncompleteList = memberSize > cleanMemberSize && cleanMemberSize > 0,
+                isEmptyMemberList = cleanMemberSize == 0,
+                isLoading = false
+            )
         }
     }
 
@@ -333,6 +341,25 @@ class MemberManagementViewModel @Inject constructor(
             _memberActionState.value.selectedMemberInfo?.let {
                 deleteMemberUseCase(groupId, it.id).onSuccess {
                     _memberManagementEvent.send(MemberManagementEvent.DeleteMemberSuccess)
+                }.onFailure { message ->
+                    _memberManagementEvent.send(MemberManagementEvent.ShowFailureDialog(message.getErrorMessage()))
+                }
+            }
+        }
+    }
+
+    fun showTransferOwnerConfirmDialog() {
+        viewModelScope.launch {
+            _memberManagementEvent.send(MemberManagementEvent.TransferOwnerConfirm)
+        }
+    }
+
+    fun transferOwner() {
+        viewModelScope.launch {
+            _memberActionState.value.selectedMemberInfo?.let {
+                transferOwnerUseCase(groupId, it.id).onSuccess { members ->
+                    cleanAndUpdateMemberListState(members)
+                    _memberManagementEvent.send(MemberManagementEvent.TransferOwnerSuccess)
                 }.onFailure { message ->
                     _memberManagementEvent.send(MemberManagementEvent.ShowFailureDialog(message.getErrorMessage()))
                 }

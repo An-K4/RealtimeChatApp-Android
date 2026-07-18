@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import com.example.realtimechatapp.data.local.entity.GroupEntity
 import com.example.realtimechatapp.data.local.pojo.GroupWithDetails
 
@@ -12,6 +13,9 @@ import com.example.realtimechatapp.data.local.pojo.GroupWithDetails
 interface GroupDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertGroup(group: GroupEntity)
+
+    @Update
+    suspend fun updateGroup(group: GroupEntity)
 
     @Transaction
     @Query("SELECT * FROM `groups` WHERE id = :groupId")

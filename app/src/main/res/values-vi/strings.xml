@@ -131,6 +131,8 @@
     <string name="change_role_success">Thay đổi quyền thành công!</string>
     <string name="delete_member_confirm">Bạn có chắc chắn muốn xóa thành viên này?</string>
     <string name="delete_member_success">Đã xóa thành viên!</string>
+    <string name="transfer_owner_confirm">Bạn có chắc chắn muốn chuyển quyền sở hữu nhóm cho thành viên này không?</string>
+    <string name="transfer_owner_success">Chuyển quyền sở hữu nhóm thành công!</string>
     <plurals name="new_members_added">
         <item quantity="other">Đã thêm %1$d thành viên!</item>
     </plurals>

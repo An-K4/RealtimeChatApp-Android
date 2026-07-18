@@ -23,6 +23,7 @@ import com.example.realtimechatapp.data.remote.dto.group.ChangeRoleRequestDto
 import com.example.realtimechatapp.data.remote.dto.group.CreateGroupRequestDto
 import com.example.realtimechatapp.data.remote.dto.group.GroupMessageSeenDto
 import com.example.realtimechatapp.data.remote.dto.group.MemberDto
+import com.example.realtimechatapp.data.remote.dto.group.TransferOwnerRequestDto
 import com.example.realtimechatapp.data.remote.dto.user.UserDto
 import com.example.realtimechatapp.di.ApplicationScope
 import com.example.realtimechatapp.domain.exception.DatabaseException
@@ -379,6 +380,36 @@ class GroupRepositoryImpl @Inject constructor(
             if (e is CancellationException) throw e
 
             Timber.e(e, "Lỗi khi xóa thành viên")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun transferOwner(
+        groupId: String,
+        newOwnerId: String
+    ): Result<List<Member>> {
+        return try {
+            val response = safeApiCall(networkChecker) {
+                groupApi.transferOwner(
+                    groupId,
+                    TransferOwnerRequestDto(newOwnerId)
+                )
+            }
+
+            localDatabase.withTransaction {
+                groupDao.updateGroup(response.updatedGroup.toGroupEntity())
+                memberDao.insertAllMember(response.updatedGroup.members.map { it.toMemberEntity(groupId) })
+            }
+
+            val ownerId = getOwnerIdOfGroup(groupId)
+
+            val memberWithDetails = safeDbCall { memberDao.getGroupMembers(groupId) }
+            val members = memberWithDetails.map { it.toMember(ownerId) }
+            Result.success(members)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
+            Timber.e(e, "Lỗi khi chuyển quyền chủ nhóm")
             Result.failure(e)
         }
     }
