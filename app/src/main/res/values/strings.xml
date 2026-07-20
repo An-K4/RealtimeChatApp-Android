@@ -60,7 +60,8 @@
     <string name="participate_day_colon">Join date:</string>
     <string name="record_not_found">Record not found</string>
     <string name="out_of_space">Not enough storage space</string>
-    <string name="local_data_write_error">Error saving data</string>
+    <string name="local_data_write_error">Write data error</string>
+    <string name="local_data_read_error">Read data error</string>
     <string name="group_id_not_exist">Group does not exist</string>
     <string name="contact_id_not_exist">Conversation does not exist</string>
     <string name="file_not_found">File not found</string>

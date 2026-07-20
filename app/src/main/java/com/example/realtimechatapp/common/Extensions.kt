@@ -2,7 +2,7 @@ package com.example.realtimechatapp.common
 
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.domain.exception.AuthException
-import com.example.realtimechatapp.domain.exception.DatabaseException
+import com.example.realtimechatapp.domain.exception.LocalStorageException
 import com.example.realtimechatapp.domain.exception.FileException
 import com.example.realtimechatapp.domain.exception.GroupException
 import com.example.realtimechatapp.domain.exception.MessageException
@@ -39,12 +39,13 @@ fun Throwable.getErrorMessage(): UiText {
         is AuthException.MissingAuthInfoException -> UiText.StringResource(R.string.missing_auth_info)
         is AuthException.PasswordNotMatchException -> UiText.StringResource(R.string.passwords_not_match)
 
-        // database exceptions
-        is DatabaseException.RecordNotFoundException -> UiText.StringResource(R.string.record_not_found)
-        is DatabaseException.OutOfSpaceException -> UiText.StringResource(R.string.out_of_space)
-        is DatabaseException.LocalDataWriteException -> UiText.StringResource(R.string.local_data_write_error)
-        is DatabaseException.DataCorruptedException -> UiText.StringResource(R.string.database_corrupted)
-        is DatabaseException.ConstraintViolationException -> UiText.StringResource(R.string.database_constraint_violation)
+        // local storage exceptions
+        is LocalStorageException.RecordNotFoundException -> UiText.StringResource(R.string.record_not_found)
+        is LocalStorageException.OutOfSpaceException -> UiText.StringResource(R.string.out_of_space)
+        is LocalStorageException.LocalDataWriteException -> UiText.StringResource(R.string.local_data_write_error)
+        is LocalStorageException.LocalDataReadException -> UiText.StringResource(R.string.local_data_read_error)
+        is LocalStorageException.DataCorruptedException -> UiText.StringResource(R.string.database_corrupted)
+        is LocalStorageException.ConstraintViolationException -> UiText.StringResource(R.string.database_constraint_violation)
 
         // group exceptions
         is GroupException.GroupIdNotExistException -> UiText.StringResource(R.string.group_id_not_exist)

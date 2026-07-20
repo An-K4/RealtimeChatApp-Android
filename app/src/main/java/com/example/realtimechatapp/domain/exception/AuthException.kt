@@ -8,6 +8,7 @@ sealed class AuthException: Exception() {
     data class UsernameLengthException(val min: Int, val max: Int): AuthException()
     data class PasswordLengthException(val minLength: Int): AuthException()
     object InvalidEmailException: AuthException()
+    object InvalidCurrentUserIdException: AuthException()
     object MissingAuthInfoException: AuthException()
     object PasswordNotMatchException: AuthException()
 }

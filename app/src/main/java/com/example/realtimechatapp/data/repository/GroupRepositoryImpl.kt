@@ -26,7 +26,7 @@ import com.example.realtimechatapp.data.remote.dto.group.MemberDto
 import com.example.realtimechatapp.data.remote.dto.group.TransferOwnerRequestDto
 import com.example.realtimechatapp.data.remote.dto.user.UserDto
 import com.example.realtimechatapp.di.ApplicationScope
-import com.example.realtimechatapp.domain.exception.DatabaseException
+import com.example.realtimechatapp.domain.exception.LocalStorageException
 import com.example.realtimechatapp.domain.model.Group
 import com.example.realtimechatapp.domain.model.GroupMessageContact
 import com.example.realtimechatapp.domain.model.Member
@@ -203,7 +203,7 @@ class GroupRepositoryImpl @Inject constructor(
                 Result.success(groupInfo)
             } else {
                 Timber.d("Lỗi khi lưu db")
-                Result.failure(DatabaseException.RecordNotFoundException)
+                Result.failure(LocalStorageException.RecordNotFoundException)
             }
         } catch (e: Exception) {
             if (e is CancellationException) throw e

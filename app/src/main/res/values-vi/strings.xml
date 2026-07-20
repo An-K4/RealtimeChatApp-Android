@@ -61,7 +61,8 @@
     <string name="participate_day_colon">Ngày tham gia:</string>
     <string name="record_not_found">Không tìm thấy dữ liệu</string>
     <string name="out_of_space">Không đủ dung lượng lưu trữ</string>
-    <string name="local_data_write_error">Lỗi khi lưu dữ liệu</string>
+    <string name="local_data_write_error">Lỗi khi ghi dữ liệu</string>
+    <string name="local_data_read_error">Lỗi khi đọc dữ liệu</string>
     <string name="group_id_not_exist">Nhóm không tồn tại</string>
     <string name="contact_id_not_exist">Cuộc trò chuyện không tồn tại</string>
     <string name="file_not_found">Không tìm thấy file</string>

@@ -13,7 +13,7 @@ import com.example.realtimechatapp.data.remote.dto.message.MessageSeenDto
 import com.example.realtimechatapp.data.remote.safeApiCall
 import com.example.realtimechatapp.data.local.safeDbCall
 import com.example.realtimechatapp.di.ApplicationScope
-import com.example.realtimechatapp.domain.exception.DatabaseException
+import com.example.realtimechatapp.domain.exception.LocalStorageException
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.model.MessageContact
 import com.example.realtimechatapp.domain.model.User
@@ -126,7 +126,7 @@ class MessageRepositoryImpl @Inject constructor(
         return try {
             val userInfo = safeDbCall { userDao.getUserById(friendId) }
             if (userInfo == null) {
-                Result.failure(DatabaseException.RecordNotFoundException)
+                Result.failure(LocalStorageException.RecordNotFoundException)
             } else {
                 Result.success(userInfo.toUser())
             }
