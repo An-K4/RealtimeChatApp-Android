@@ -396,9 +396,12 @@ class GroupRepositoryImpl @Inject constructor(
                 )
             }
 
-            localDatabase.withTransaction {
-                groupDao.updateGroup(response.updatedGroup.toGroupEntity())
-                memberDao.insertAllMember(response.updatedGroup.members.map { it.toMemberEntity(groupId) })
+            val updatedGroup = response.updatedGroup
+            safeDbCall {
+                localDatabase.withTransaction {
+                    groupDao.updateGroup(updatedGroup.toGroupEntity())
+                    memberDao.insertAllMember(updatedGroup.members.map { it.toMemberEntity(groupId) })
+                }
             }
 
             val ownerId = getOwnerIdOfGroup(groupId)
