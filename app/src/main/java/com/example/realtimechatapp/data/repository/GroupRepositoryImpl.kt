@@ -76,7 +76,7 @@ class GroupRepositoryImpl @Inject constructor(
         applicationScope.launch {
             socketRepository.observeGroupMessages().collect { messageDto ->
                 val messageEntity = messageDto.toMessageEntity()
-                val currentUserId = currentUserManager.getCurrentUserId()
+                val currentUserId = currentUserManager.getCurrentUserId() ?: return@collect
                 val contactId = messageDto.getMessageContactId(currentUserId)
                 val isMine = messageDto.senderId.id == currentUserId
 
@@ -232,7 +232,7 @@ class GroupRepositoryImpl @Inject constructor(
     }
 
     override suspend fun seenGroupMessage(groupId: String) {
-        val currentUserId = currentUserManager.getCurrentUserId()
+        val currentUserId = currentUserManager.getCurrentUserId() ?: return
 
         markGroupMessageAsSeen(groupId, currentUserId)
         safeDbCall { groupContactDao.resetUnreadCount(groupId) }

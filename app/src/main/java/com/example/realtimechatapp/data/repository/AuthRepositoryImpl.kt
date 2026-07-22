@@ -93,10 +93,6 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getMe(): Result<User> {
-        val currentUserId = currentUserManager.getCurrentUserId()
-        val cachedUser =
-            if (currentUserId.isNotEmpty()) userDao.getUserById(currentUserId) else null
-
         return try {
             val response = safeApiCall(networkChecker) {
                 authApi.getMe()
@@ -118,6 +114,9 @@ class AuthRepositoryImpl @Inject constructor(
 
             Timber.e(e, "Lấy thông tin cá nhân lỗi")
 
+            val currentUserId = currentUserManager.getCurrentUserId()
+            val cachedUser =
+                if (currentUserId != null) userDao.getUserById(currentUserId) else null
             if (cachedUser != null) {
                 Timber.d("Lấy thông tin cá nhân cũ")
                 Result.success(cachedUser.toUser())

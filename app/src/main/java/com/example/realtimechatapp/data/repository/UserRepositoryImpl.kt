@@ -9,6 +9,7 @@ import com.example.realtimechatapp.data.remote.dto.user.ChangePasswordRequestDto
 import com.example.realtimechatapp.data.remote.dto.user.UpdateProfileRequestDto
 import com.example.realtimechatapp.data.remote.safeApiCall
 import com.example.realtimechatapp.data.local.safeDbCall
+import com.example.realtimechatapp.domain.exception.AuthException
 import com.example.realtimechatapp.domain.model.SearchResult
 import com.example.realtimechatapp.domain.model.User
 import com.example.realtimechatapp.domain.repository.CurrentUserManager
@@ -103,7 +104,7 @@ class UserRepositoryImpl @Inject constructor(
 
             safeDbCall { userDao.upsertUser(newUserEntity) }
             Result.success(Unit)
-        } catch (e: Exception){
+        } catch (e: Exception) {
             if (e is CancellationException) throw e
 
             Timber.e(e, "Lỗi lưu thông tin người dùng mới")
@@ -113,7 +114,10 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun getOtherLocalUsers(): Result<List<User>> {
         return try {
-            val localUserEntity = safeDbCall { userDao.getAllContactUsersExcept(currentUserManager.getCurrentUserId()) }
+            val currentUserId = currentUserManager.getCurrentUserId() ?: return Result.failure(
+                AuthException.InvalidCurrentUserIdException
+            )
+            val localUserEntity = safeDbCall { userDao.getAllContactUsersExcept(currentUserId) }
             val localUsers = localUserEntity.map { it.toUser() }
             Result.success(localUsers)
         } catch (e: Exception) {

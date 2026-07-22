@@ -81,9 +81,7 @@ class DetailMessageViewModel @Inject constructor(
         val isLoading: Boolean
     )
 
-    private val currentUserId = flow { emit(getCurrentUserIdUseCase()) }.catch { exception ->
-        Timber.e(exception, "Lỗi lấy id người dùng hiện tại")
-    }
+    private val currentUserId = flow { emit(getCurrentUserIdUseCase().getOrThrow()) }
     private val friendId: String =
         checkNotNull(savedStateHandle[Screen.DetailMessage.ARG_FRIEND_ID])
     private val _messageInput = MutableStateFlow("")

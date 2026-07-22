@@ -46,9 +46,10 @@ class MessageRepositoryImpl @Inject constructor(
     init {
         applicationScope.launch {
             socketRepository.observeMessages().collect { messageDto ->
+                val currentUserId = currentUserManager.getCurrentUserId() ?: return@collect
                 val messageEntity = if (messageDto.receiverId == null) {
                     messageDto.toMessageEntity().copy(
-                        receiverId = currentUserManager.getCurrentUserId()
+                        receiverId = currentUserId
                     )
                 } else {
                     messageDto.toMessageEntity()
@@ -59,7 +60,7 @@ class MessageRepositoryImpl @Inject constructor(
 
         applicationScope.launch {
             socketRepository.observeMessageContacts().collect { messageDto ->
-                val currentUserId = currentUserManager.getCurrentUserId()
+                val currentUserId = currentUserManager.getCurrentUserId() ?: return@collect
                 val contactId = messageDto.getMessageContactId(currentUserId)
                 val isMine = messageDto.senderId.id == currentUserId
 
@@ -80,7 +81,7 @@ class MessageRepositoryImpl @Inject constructor(
         applicationScope.launch {
             socketRepository.observeMessageSeen().collect { messageSeenDto ->
                 val viewerId = messageSeenDto.viewerId
-                val senderId = currentUserManager.getCurrentUserId()
+                val senderId = currentUserManager.getCurrentUserId() ?: return@collect
 
                 viewerId?.let { markMessageAsSeen(senderId, viewerId) }
             }
@@ -138,7 +139,7 @@ class MessageRepositoryImpl @Inject constructor(
     }
 
     override fun observeMessages(friendId: String): Flow<List<Message>> = flow {
-        val currentUserId = currentUserManager.getCurrentUserId()
+        val currentUserId = currentUserManager.getCurrentUserId() ?: return@flow
         emitAll(
             messageDao.observeMessages(currentUserId, friendId).map { messageWithDetails ->
                 messageWithDetails.map { it.toMessage() }
@@ -156,7 +157,7 @@ class MessageRepositoryImpl @Inject constructor(
 
     override suspend fun seenMessage(friendId: String) {
         try {
-            val currentUserId = currentUserManager.getCurrentUserId()
+            val currentUserId = currentUserManager.getCurrentUserId() ?: return
 
             markMessageAsSeen(friendId, currentUserId)
             safeDbCall { messageContactDao.resetUnreadCount(friendId) }

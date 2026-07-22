@@ -75,9 +75,7 @@ class DetailGroupViewModel @Inject constructor(
         val isLoading: Boolean
     )
 
-    private val currentUserId = flow { emit(getCurrentUserIdUseCase()) }.catch { exception ->
-        Timber.e(exception, "Lỗi lấy id người dùng hiện tại")
-    }
+    private val currentUserId = flow { emit(getCurrentUserIdUseCase().getOrThrow()) }
 
     private val groupId: String = checkNotNull(savedStateHandle[Screen.DetailGroup.ARG_GROUP_ID])
     private val _messageInput = MutableStateFlow("")

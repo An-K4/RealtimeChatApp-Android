@@ -5,15 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
-import com.example.realtimechatapp.data.local.manager.TokenManagerImpl
-import com.example.realtimechatapp.domain.repository.CurrentUserManager
+import com.example.realtimechatapp.domain.usecase.auth.GetTokenUseCase
 import com.example.realtimechatapp.domain.usecase.auth.LoginUseCase
 import com.example.realtimechatapp.domain.usecase.auth.SignupUseCase
+import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -24,8 +23,8 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val signupUseCase: SignupUseCase,
-    private val tokenManagerImpl: TokenManagerImpl,
-    private val currentUserManager: CurrentUserManager
+    private val getTokenUseCase: GetTokenUseCase,
+    private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase
 ) : ViewModel() {
 
     data class LoginState(
@@ -98,16 +97,13 @@ class AuthViewModel @Inject constructor(
             _isLoading.value = true
 
             try {
-                val token = tokenManagerImpl.token.first()
-                val currentUserId = currentUserManager.getCurrentUserId()
+                val token = getTokenUseCase()
+                val currentUserId = getCurrentUserIdUseCase()
 
-                if (!token.isNullOrEmpty() && currentUserId.isNotEmpty()) {
+                if (token.isSuccess && currentUserId.isSuccess) {
                     _authEvent.send(AuthEvent.AuthSuccess)
-                } else {
-                    _isLoading.value = false
                 }
             } catch (e: Exception) {
-                _isLoading.value = false
                 Timber.d(e, "Lỗi đăng nhập bằng token")
             } finally {
                 _isLoading.value = false
@@ -131,7 +127,7 @@ class AuthViewModel @Inject constructor(
 
     fun signup() {
         viewModelScope.launch {
-            var compressAvatar: Uri? = _signupState.value.avatar
+            val compressAvatar: Uri? = _signupState.value.avatar
 
             _signupState.update { it.copy(isLoading = true) }
 

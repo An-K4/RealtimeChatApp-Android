@@ -232,7 +232,11 @@ class MemberManagementViewModel @Inject constructor(
             _memberActionState.update { it.copy(isFetchingInfo = true) }
 
             val currentUserId = _memberActionState.value.currentUserId.ifEmpty {
-                getCurrentUserIdUseCase()
+                getCurrentUserIdUseCase().getOrElse {
+                    _memberManagementEvent.send(MemberManagementEvent.Failure(it.getErrorMessage()))
+                    _memberActionState.update { state -> state.copy(isFetchingInfo = false) }
+                    return@launch
+                }
             }
 
             val selectedMember =
