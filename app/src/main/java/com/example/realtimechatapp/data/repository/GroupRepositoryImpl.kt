@@ -400,7 +400,7 @@ class GroupRepositoryImpl @Inject constructor(
             safeDbCall {
                 localDatabase.withTransaction {
                     groupDao.updateGroup(updatedGroup.toGroupEntity())
-                    memberDao.insertAllMember(updatedGroup.members.map { it.toMemberEntity(groupId) })
+                    memberDao.syncGroupMembers(groupId, updatedGroup.members.map { it.toMemberEntity(groupId) })
                 }
             }
 
