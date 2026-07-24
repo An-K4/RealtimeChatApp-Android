@@ -1,6 +1,5 @@
 package com.example.realtimechatapp.ui.screens.messages
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,20 +9,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
@@ -38,25 +29,6 @@ fun MessageScreen(
     messageViewModel: MessageViewModel = hiltViewModel()
 ) {
     val messageState by messageViewModel.messageState.collectAsStateWithLifecycle()
-    var dialogState by remember { mutableStateOf<MessageViewModel.MessageEvent?>(null) }
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val context = LocalContext.current
-
-    LaunchedEffect(Unit) {
-        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            messageViewModel.messageEvent.collect { event ->
-                when (event) {
-                    is MessageViewModel.MessageEvent.Unauthenticated, MessageViewModel.MessageEvent.Authenticated -> {
-                        dialogState = event
-                    }
-
-                    is MessageViewModel.MessageEvent.Failure -> {
-                        Toast.makeText(context, event.message.asString(context), Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-        }
-    }
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -92,11 +64,15 @@ fun MessageScreen(
                 }
             }
         }
+    }
 
-        if (dialogState is MessageViewModel.MessageEvent.Unauthenticated) {
+    when (val dialogState = messageState.messageDialogState) {
+        MessageViewModel.MessageDialogState.Dismiss -> {}
+        MessageViewModel.MessageDialogState.Unauthenticated -> {
             NotificationDialog(
                 title = UiText.StringResource(R.string.error).asString(),
-                message = UiText.StringResource(R.string.login_session_expired_notification).asString(),
+                message = UiText.StringResource(R.string.login_session_expired_notification)
+                    .asString(),
                 isSuccess = false,
                 onDismiss = {
                     navController.navigate(Screen.Login.route) {
@@ -104,6 +80,17 @@ fun MessageScreen(
                             inclusive = true
                         }
                     }
+                }
+            )
+        }
+
+        is MessageViewModel.MessageDialogState.Failure -> {
+            NotificationDialog(
+                title = UiText.StringResource(R.string.error).asString(),
+                message = dialogState.message.asString(),
+                isSuccess = false,
+                onDismiss = {
+                    messageViewModel.dismissDialog()
                 }
             )
         }

@@ -31,6 +31,7 @@ class CreateGroupViewModel @Inject constructor(
     data class CreateGroupState(
         val groupName: String = "",
         val groupMembers: Set<User> = emptySet(),
+        val sheetState: CreateGroupSheetState = CreateGroupSheetState.Dismiss,
         val isLoading: Boolean = false
     )
 
@@ -42,9 +43,14 @@ class CreateGroupViewModel @Inject constructor(
         val isSearching: Boolean = false
     )
 
-    sealed class CreateGroupEvent {
-        data class CreateGroupSuccess(val groupId: String) : CreateGroupEvent()
-        data class Failure(val message: UiText) : CreateGroupEvent()
+    sealed interface CreateGroupSheetState {
+        object Dismiss : CreateGroupSheetState
+        object AddMemberSheet : CreateGroupSheetState
+    }
+
+    sealed interface CreateGroupEvent {
+        data class CreateGroupSuccess(val groupId: String) : CreateGroupEvent
+        data class Failure(val message: UiText) : CreateGroupEvent
     }
 
     private var _createGroupState = MutableStateFlow(CreateGroupState())
@@ -131,6 +137,10 @@ class CreateGroupViewModel @Inject constructor(
         _createGroupState.update { it.copy(groupMembers = _addMemberState.value.selectedUser) }
     }
 
+    fun showAddMemberSheet() {
+        _createGroupState.update { it.copy(sheetState = CreateGroupSheetState.AddMemberSheet) }
+    }
+
     fun prepareAddMemberFlow() {
         _addMemberState.update {
             it.copy(
@@ -149,6 +159,10 @@ class CreateGroupViewModel @Inject constructor(
                 selectedUser = emptySet()
             )
         }
+    }
+
+    fun dismissSheet() {
+        _createGroupState.update { it.copy(sheetState = CreateGroupSheetState.Dismiss) }
     }
 
     fun createGroup() {

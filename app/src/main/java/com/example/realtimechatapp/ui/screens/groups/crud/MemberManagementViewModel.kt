@@ -20,15 +20,14 @@ import com.example.realtimechatapp.domain.usecase.user.PerformSearchUsersUseCase
 import com.example.realtimechatapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @OptIn(FlowPreview::class)
@@ -48,6 +47,8 @@ class MemberManagementViewModel @Inject constructor(
         val members: List<Member> = emptyList(),
         val isIncompleteList: Boolean = false,
         val isEmptyMemberList: Boolean = false,
+        val sheetState: MemberManagementSheetState = MemberManagementSheetState.Dismiss,
+        val dialogState: MemberManagementDialogState = MemberManagementDialogState.Dismiss,
         val isMemberAdding: Boolean = false,
         val isLoading: Boolean = false
     )
@@ -72,18 +73,24 @@ class MemberManagementViewModel @Inject constructor(
         val isFetchingInfo: Boolean = false,
     )
 
-    sealed class MemberManagementEvent {
-        object AddMemberSuccess : MemberManagementEvent()
-        object DeleteMemberSuccess : MemberManagementEvent()
-        object ChangeRoleSuccess : MemberManagementEvent()
-        object TransferOwnerSuccess : MemberManagementEvent()
-        object AddMemberConfirm : MemberManagementEvent()
-        object PromoteConfirm : MemberManagementEvent()
-        object DemoteConfirm : MemberManagementEvent()
-        object DeleteMemberConfirm : MemberManagementEvent()
-        object TransferOwnerConfirm: MemberManagementEvent()
-        data class ShowFailureDialog(val message: UiText) : MemberManagementEvent()
-        data class Failure(val message: UiText) : MemberManagementEvent()
+    sealed interface MemberManagementSheetState {
+        object Dismiss : MemberManagementSheetState
+        object AddMember : MemberManagementSheetState
+        object MemberAction : MemberManagementSheetState
+    }
+
+    sealed interface MemberManagementDialogState {
+        object Dismiss : MemberManagementDialogState
+        object AddMemberSuccess : MemberManagementDialogState
+        object DeleteMemberSuccess : MemberManagementDialogState
+        object ChangeRoleSuccess : MemberManagementDialogState
+        object TransferOwnerSuccess : MemberManagementDialogState
+        object AddMemberConfirm : MemberManagementDialogState
+        object PromoteConfirm : MemberManagementDialogState
+        object DemoteConfirm : MemberManagementDialogState
+        object DeleteMemberConfirm : MemberManagementDialogState
+        object TransferOwnerConfirm : MemberManagementDialogState
+        data class Failure(val message: UiText) : MemberManagementDialogState
     }
 
     val groupId: String = checkNotNull(savedStateHandle[Screen.MemberManagement.ARG_GROUP_ID])
@@ -96,9 +103,6 @@ class MemberManagementViewModel @Inject constructor(
 
     private val _memberActionState = MutableStateFlow(MemberActionState())
     val memberActionState = _memberActionState.asStateFlow()
-
-    private val _memberManagementEvent = Channel<MemberManagementEvent>()
-    val memberManagementEvent = _memberManagementEvent.receiveAsFlow()
 
     init {
         getGroupMembers()
@@ -150,14 +154,27 @@ class MemberManagementViewModel @Inject constructor(
         getGroupMembers()
     }
 
+    fun showAddMemberSheet() {
+        prepareAddMemberFlow()
+        viewModelScope.launch {
+            _memberManagementState.update { it.copy(sheetState = MemberManagementSheetState.AddMember) }
+        }
+    }
+
+    fun showMemberActionSheet() {
+        viewModelScope.launch {
+            _memberManagementState.update { it.copy(sheetState = MemberManagementSheetState.MemberAction) }
+        }
+    }
+
     private fun performUserSearch(query: String) {
         viewModelScope.launch {
             _addMemberState.update { it.copy(isSearching = true) }
 
             performSearchUsersUseCase(query).onSuccess { searchResult ->
                 _addMemberState.update { it.copy(searchResult = searchResult.users) }
-            }.onFailure { message ->
-                _memberManagementEvent.send(MemberManagementEvent.Failure(message.getErrorMessage()))
+            }.onFailure { exception ->
+                Timber.e(exception, "Lỗi tìm kiếm người dùng")
             }
 
             _addMemberState.update { it.copy(isSearching = false) }
@@ -195,8 +212,14 @@ class MemberManagementViewModel @Inject constructor(
                     _addMemberState.update {
                         it.copy(localUsers = localUsers, isSearching = false)
                     }
-                }.onFailure { message ->
-                    _memberManagementEvent.send(MemberManagementEvent.Failure(message.getErrorMessage()))
+                }.onFailure { exception ->
+                    _memberManagementState.update {
+                        it.copy(
+                            dialogState = MemberManagementDialogState.Failure(
+                                exception.getErrorMessage()
+                            )
+                        )
+                    }
                     _addMemberState.update { it.copy(isSearching = false) }
                 }
             } else {
@@ -207,7 +230,7 @@ class MemberManagementViewModel @Inject constructor(
 
     fun showAddMemberConfirmDialog() {
         viewModelScope.launch {
-            _memberManagementEvent.send(MemberManagementEvent.AddMemberConfirm)
+            _memberManagementState.update { it.copy(dialogState = MemberManagementDialogState.AddMemberConfirm) }
         }
     }
 
@@ -218,9 +241,15 @@ class MemberManagementViewModel @Inject constructor(
             addMembersUseCase(
                 groupId,
                 _addMemberState.value.selectedUser.map { it.id }).onSuccess {
-                _memberManagementEvent.send(MemberManagementEvent.AddMemberSuccess)
-            }.onFailure { message ->
-                _memberManagementEvent.send(MemberManagementEvent.ShowFailureDialog(message.getErrorMessage()))
+                _memberManagementState.update { it.copy(dialogState = MemberManagementDialogState.AddMemberSuccess) }
+            }.onFailure { exception ->
+                _memberManagementState.update {
+                    it.copy(
+                        dialogState = MemberManagementDialogState.Failure(
+                            exception.getErrorMessage()
+                        )
+                    )
+                }
             }
 
             _memberManagementState.update { it.copy(isMemberAdding = false) }
@@ -232,8 +261,14 @@ class MemberManagementViewModel @Inject constructor(
             _memberActionState.update { it.copy(isFetchingInfo = true) }
 
             val currentUserId = _memberActionState.value.currentUserId.ifEmpty {
-                getCurrentUserIdUseCase().getOrElse {
-                    _memberManagementEvent.send(MemberManagementEvent.Failure(it.getErrorMessage()))
+                getCurrentUserIdUseCase().getOrElse { exception ->
+                    _memberManagementState.update {
+                        it.copy(
+                            dialogState = MemberManagementDialogState.Failure(
+                                exception.getErrorMessage()
+                            )
+                        )
+                    }
                     _memberActionState.update { state -> state.copy(isFetchingInfo = false) }
                     return@launch
                 }
@@ -242,9 +277,13 @@ class MemberManagementViewModel @Inject constructor(
             val selectedMember =
                 memberManagementState.value.members.find { it.userId?.id == memberId }
             if (selectedMember == null) {
-                _memberManagementEvent.send(
-                    MemberManagementEvent.Failure(UiText.StringResource(R.string.member_info_not_found))
-                )
+                _memberManagementState.update {
+                    it.copy(
+                        dialogState = MemberManagementDialogState.Failure(
+                            UiText.StringResource(R.string.member_info_not_found)
+                        )
+                    )
+                }
                 _memberActionState.update { it.copy(isFetchingInfo = false) }
                 return@launch
             }
@@ -302,22 +341,28 @@ class MemberManagementViewModel @Inject constructor(
 
     fun showPromoteConfirmDialog() {
         viewModelScope.launch {
-            _memberManagementEvent.send(MemberManagementEvent.PromoteConfirm)
+            _memberManagementState.update { it.copy(dialogState = MemberManagementDialogState.PromoteConfirm) }
         }
     }
 
     fun showDemoteConfirmDialog() {
         viewModelScope.launch {
-            _memberManagementEvent.send(MemberManagementEvent.DemoteConfirm)
+            _memberManagementState.update { it.copy(dialogState = MemberManagementDialogState.DemoteConfirm) }
         }
     }
 
     private suspend fun changeRole(newRole: Role) {
         _memberActionState.value.selectedMemberInfo?.let {
             changeRoleUseCase(groupId, it.id, newRole).onSuccess {
-                _memberManagementEvent.send(MemberManagementEvent.ChangeRoleSuccess)
-            }.onFailure { message ->
-                _memberManagementEvent.send(MemberManagementEvent.ShowFailureDialog(message.getErrorMessage()))
+                _memberManagementState.update { it.copy(dialogState = MemberManagementDialogState.ChangeRoleSuccess) }
+            }.onFailure { exception ->
+                _memberManagementState.update {
+                    it.copy(
+                        dialogState = MemberManagementDialogState.Failure(
+                            exception.getErrorMessage()
+                        )
+                    )
+                }
             }
         }
     }
@@ -336,7 +381,7 @@ class MemberManagementViewModel @Inject constructor(
 
     fun showDeleteMemberConfirmDialog() {
         viewModelScope.launch {
-            _memberManagementEvent.send(MemberManagementEvent.DeleteMemberConfirm)
+            _memberManagementState.update { it.copy(dialogState = MemberManagementDialogState.DeleteMemberConfirm) }
         }
     }
 
@@ -344,9 +389,15 @@ class MemberManagementViewModel @Inject constructor(
         viewModelScope.launch {
             _memberActionState.value.selectedMemberInfo?.let {
                 deleteMemberUseCase(groupId, it.id).onSuccess {
-                    _memberManagementEvent.send(MemberManagementEvent.DeleteMemberSuccess)
-                }.onFailure { message ->
-                    _memberManagementEvent.send(MemberManagementEvent.ShowFailureDialog(message.getErrorMessage()))
+                    _memberManagementState.update { it.copy(dialogState = MemberManagementDialogState.DeleteMemberSuccess) }
+                }.onFailure { exception ->
+                    _memberManagementState.update {
+                        it.copy(
+                            dialogState = MemberManagementDialogState.Failure(
+                                exception.getErrorMessage()
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -354,7 +405,7 @@ class MemberManagementViewModel @Inject constructor(
 
     fun showTransferOwnerConfirmDialog() {
         viewModelScope.launch {
-            _memberManagementEvent.send(MemberManagementEvent.TransferOwnerConfirm)
+            _memberManagementState.update { it.copy(dialogState = MemberManagementDialogState.TransferOwnerConfirm) }
         }
     }
 
@@ -363,11 +414,29 @@ class MemberManagementViewModel @Inject constructor(
             _memberActionState.value.selectedMemberInfo?.let {
                 transferOwnerUseCase(groupId, it.id).onSuccess { members ->
                     cleanAndUpdateMemberListState(members)
-                    _memberManagementEvent.send(MemberManagementEvent.TransferOwnerSuccess)
-                }.onFailure { message ->
-                    _memberManagementEvent.send(MemberManagementEvent.ShowFailureDialog(message.getErrorMessage()))
+                    _memberManagementState.update { it.copy(dialogState = MemberManagementDialogState.TransferOwnerSuccess) }
+                }.onFailure { exception ->
+                    _memberManagementState.update {
+                        it.copy(
+                            dialogState = MemberManagementDialogState.Failure(
+                                exception.getErrorMessage()
+                            )
+                        )
+                    }
                 }
             }
+        }
+    }
+
+    fun dismissSheet() {
+        viewModelScope.launch {
+            _memberManagementState.update { it.copy(sheetState = MemberManagementSheetState.Dismiss) }
+        }
+    }
+
+    fun dismissDialog() {
+        viewModelScope.launch {
+            _memberManagementState.update { it.copy(dialogState = MemberManagementDialogState.Dismiss) }
         }
     }
 }

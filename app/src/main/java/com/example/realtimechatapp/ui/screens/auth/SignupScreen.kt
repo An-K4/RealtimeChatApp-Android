@@ -1,6 +1,7 @@
 package com.example.realtimechatapp.ui.screens.auth
 
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -35,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -60,12 +62,12 @@ fun SignupScreen(
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val signupState by authViewModel.signupState.collectAsStateWithLifecycle()
-    var dialogState by remember { mutableStateOf<AuthViewModel.AuthEvent?>(null) }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
     val lifecycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
@@ -81,11 +83,11 @@ fun SignupScreen(
             authViewModel.authEvent.collect { event ->
                 when (event) {
                     is AuthViewModel.AuthEvent.AuthSuccess -> {
-                        dialogState = event
+                        // do nothing, delegate to notification dialog
                     }
 
                     is AuthViewModel.AuthEvent.Failure -> {
-                        dialogState = event
+                        Toast.makeText(context, event.message.asString(context), Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -260,28 +262,33 @@ fun SignupScreen(
         )
     }
 
-    if (dialogState is AuthViewModel.AuthEvent.AuthSuccess) {
-        NotificationDialog(
-            title = stringResource(R.string.success),
-            message = stringResource(R.string.log_in_success_notification),
-            isSuccess = true,
-            onDismiss = {
-                dialogState = null
-                navController.navigate(Screen.Login.route) {
-                    popUpTo(Screen.Signup.route) { inclusive = true }
+    when (val dialog = signupState.authDialogState) {
+        AuthViewModel.AuthDialogState.AuthSuccess -> {
+            NotificationDialog(
+                title = stringResource(R.string.success),
+                message = stringResource(R.string.log_in_success_notification),
+                isSuccess = true,
+                onDismiss = {
+                    authViewModel.dismissSignupDialog()
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Signup.route) { inclusive = true }
+                    }
                 }
-            }
-        )
-    }
+            )
+        }
 
-    if (dialogState is AuthViewModel.AuthEvent.Failure) {
-        val msg = (dialogState as AuthViewModel.AuthEvent.Failure).message
-        NotificationDialog(
-            title = stringResource(R.string.login_error),
-            message = msg.asString(),
-            isSuccess = false,
-            onDismiss = { dialogState = null }
-        )
+        is AuthViewModel.AuthDialogState.Failure -> {
+            NotificationDialog(
+                title = stringResource(R.string.login_error),
+                message = dialog.message.asString(),
+                isSuccess = false,
+                onDismiss = { authViewModel.dismissSignupDialog() }
+            )
+        }
+
+        AuthViewModel.AuthDialogState.Dismiss -> {
+            // do nothing
+        }
     }
 }
 

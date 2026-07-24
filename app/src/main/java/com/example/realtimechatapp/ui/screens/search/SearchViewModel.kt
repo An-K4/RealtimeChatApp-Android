@@ -35,9 +35,9 @@ class SearchViewModel @Inject constructor(
         val isLoading: Boolean = false
     )
 
-    sealed class SearchEvents {
-        data class SaveNewUserSuccess(val newUserId: String) : SearchEvents()
-        data class Failure(val message: UiText) : SearchEvents()
+    sealed interface SearchEvents {
+        data class SaveNewUserSuccess(val newUserId: String) : SearchEvents
+        data class Failure(val message: UiText) : SearchEvents
     }
 
     private var _searchState = MutableStateFlow(SearchState())

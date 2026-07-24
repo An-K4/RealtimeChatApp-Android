@@ -38,10 +38,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -79,7 +76,6 @@ fun CreateGroupScreen(
     val context = LocalContext.current
     val lifeCycleOwner = LocalLifecycleOwner.current
 
-    var showAddMemberSheet by remember { mutableStateOf(false) }
     val addMemberSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(Unit) {
@@ -138,8 +134,10 @@ fun CreateGroupScreen(
 
         Button(
             onClick = {
-                createGroupViewModel.prepareAddMemberFlow()
-                showAddMemberSheet = true
+                with (createGroupViewModel) {
+                    prepareAddMemberFlow()
+                    showAddMemberSheet()
+                }
             },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
@@ -221,146 +219,151 @@ fun CreateGroupScreen(
         }
     }
 
-    if (showAddMemberSheet) {
-        ModalBottomSheet(
-            sheetState = addMemberSheetState,
-            onDismissRequest = {
-                showAddMemberSheet = false
-                createGroupViewModel.clearAddMemberFlow()
-            }
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.85f)
-                    .padding(vertical = 4.dp, horizontal = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = UiText.StringResource(R.string.add_member_to_group).asString(),
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                OutlinedTextField(
-                    value = addMemberState.querySearch,
-                    onValueChange = { createGroupViewModel.onQuerySearchChange(it) },
-                    placeholder = {
-                        Text(
-                            text = UiText.StringResource(R.string.type_a_keyword).asString(),
-                            color = MaterialTheme.colorScheme.surface
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "search",
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        cursorColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(
-                        items = addMemberState.searchResult ?: addMemberState.localUsers,
-                        key = { member -> member.id }
-                    ) { user ->
-                        val isChecked = addMemberState.selectedUser.any { it.id == user.id }
-                        val checkAction = {
-                            if (!isChecked) {
-                                createGroupViewModel.onSelectedMemberAdd(user)
-                            } else {
-                                createGroupViewModel.onSelectedMemberRemove(user)
-                            }
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Checkbox(
-                                checked = isChecked,
-                                onCheckedChange = { checkAction() }
-                            )
-
-                            ContactListItem(
-                                avatar = user.avatar ?: "",
-                                name = user.fullName,
-                                additionalInfo = user.email,
-                                onItemClicked = { checkAction() },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
+    when (createGroupState.sheetState) {
+        CreateGroupViewModel.CreateGroupSheetState.Dismiss -> {}
+        CreateGroupViewModel.CreateGroupSheetState.AddMemberSheet -> {
+            ModalBottomSheet(
+                sheetState = addMemberSheetState,
+                onDismissRequest = {
+                    with (createGroupViewModel) {
+                        dismissSheet()
+                        clearAddMemberFlow()
                     }
                 }
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.85f)
+                        .padding(vertical = 4.dp, horizontal = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = UiText.StringResource(R.string.add_member_to_group).asString(),
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
 
-                Row {
-                    OutlinedButton(
-                        onClick = {
-                            uiScope.launch { addMemberSheetState.hide() }
-                                .invokeOnCompletion {
-                                    if (!addMemberSheetState.isVisible) showAddMemberSheet = false
-                                }
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    OutlinedTextField(
+                        value = addMemberState.querySearch,
+                        onValueChange = { createGroupViewModel.onQuerySearchChange(it) },
+                        placeholder = {
+                            Text(
+                                text = UiText.StringResource(R.string.type_a_keyword).asString(),
+                                color = MaterialTheme.colorScheme.surface
+                            )
                         },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(10.dp)
-                    ) {
-                        Text(
-                            text = UiText.StringResource(R.string.cancel).asString(),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "search",
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            cursorColor = MaterialTheme.colorScheme.primary
                         )
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(
+                            items = addMemberState.searchResult ?: addMemberState.localUsers,
+                            key = { member -> member.id }
+                        ) { user ->
+                            val isChecked = addMemberState.selectedUser.any { it.id == user.id }
+                            val checkAction = {
+                                if (!isChecked) {
+                                    createGroupViewModel.onSelectedMemberAdd(user)
+                                } else {
+                                    createGroupViewModel.onSelectedMemberRemove(user)
+                                }
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Checkbox(
+                                    checked = isChecked,
+                                    onCheckedChange = { checkAction() }
+                                )
+
+                                ContactListItem(
+                                    avatar = user.avatar ?: "",
+                                    name = user.fullName,
+                                    additionalInfo = user.email,
+                                    onItemClicked = { checkAction() },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
                     }
 
-                    Button(
-                        onClick = {
-                            uiScope.launch { addMemberSheetState.hide() }
-                                .invokeOnCompletion {
-                                    if (!addMemberSheetState.isVisible) showAddMemberSheet = false
+                    Row {
+                        OutlinedButton(
+                            onClick = {
+                                uiScope.launch { addMemberSheetState.hide() }
+                                    .invokeOnCompletion {
+                                        if (!addMemberSheetState.isVisible) createGroupViewModel.dismissSheet()
+                                    }
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(10.dp)
+                        ) {
+                            Text(
+                                text = UiText.StringResource(R.string.cancel).asString(),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                            )
+                        }
+
+                        Button(
+                            onClick = {
+                                uiScope.launch { addMemberSheetState.hide() }
+                                    .invokeOnCompletion {
+                                        if (!addMemberSheetState.isVisible) createGroupViewModel.dismissSheet()
+                                    }
+                                with(createGroupViewModel) {
+                                    onNewMemberAdded()
+                                    clearAddMemberFlow()
                                 }
-                            with(createGroupViewModel) {
-                                onNewMemberAdded()
-                                clearAddMemberFlow()
-                            }
-                        },
-                        enabled = !addMemberState.selectedUser.isEmpty(),
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(10.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = RealtimeGreen,
-                            contentColor = Color.White,
-                            disabledContainerColor = RealtimeGreen.copy(alpha = 0.5f),
-                            disabledContentColor = Color.White.copy(alpha = 0.7f)
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 8.dp,
-                            pressedElevation = 4.dp
-                        )
-                    ) {
-                        Text(
-                            text = UiText.StringResource(R.string.add).asString(),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                        )
+                            },
+                            enabled = !addMemberState.selectedUser.isEmpty(),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = RealtimeGreen,
+                                contentColor = Color.White,
+                                disabledContainerColor = RealtimeGreen.copy(alpha = 0.5f),
+                                disabledContentColor = Color.White.copy(alpha = 0.7f)
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 8.dp,
+                                pressedElevation = 4.dp
+                            )
+                        ) {
+                            Text(
+                                text = UiText.StringResource(R.string.add).asString(),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                            )
+                        }
                     }
                 }
             }

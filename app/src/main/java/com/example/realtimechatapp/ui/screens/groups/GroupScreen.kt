@@ -25,15 +25,15 @@ fun GroupScreen(
     navController: NavController,
     groupViewModel: GroupViewModel = hiltViewModel()
 ){
-    val uiState by groupViewModel.groupState.collectAsStateWithLifecycle()
+    val groupState by groupViewModel.groupState.collectAsStateWithLifecycle()
 
     Box(
         modifier = Modifier.fillMaxSize()
     ){
-        if (uiState.isLoading){
+        if (groupState.isLoading){
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
-            if (uiState.groups.isEmpty()){
+            if (groupState.groups.isEmpty()){
                 WelcomePlaceholder(isGroup = true, inDetailScreen = false)
             } else {
                 LazyColumn(
@@ -42,7 +42,7 @@ fun GroupScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(
-                        items = uiState.groups,
+                        items = groupState.groups,
                         key = { group -> group.id}
                     ){ group ->
                         ChatItem(

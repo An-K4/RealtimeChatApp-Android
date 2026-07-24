@@ -1,5 +1,6 @@
 package com.example.realtimechatapp.ui.screens.profile
 
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -54,6 +55,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -70,7 +72,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
-import com.example.realtimechatapp.common.UiText
+import com.example.realtimechatapp.common.UiText.*
 import com.example.realtimechatapp.ui.components.BadgedAvatar
 import com.example.realtimechatapp.ui.components.ConfirmationDialog
 import com.example.realtimechatapp.ui.components.NotificationDialog
@@ -91,15 +93,13 @@ fun ProfileScreen(
     val profileState by profileViewModel.profileState.collectAsStateWithLifecycle()
     val updateProfileState by profileViewModel.updateProfileState.collectAsState()
     val changePasswordState by profileViewModel.changePasswordState.collectAsState()
-    var dialogState by remember { mutableStateOf<ProfileViewModel.ProfileEvent?>(null) }
-    var showUpdateSheet by remember { mutableStateOf(false) }
-    var showChangePasswordSheet by remember { mutableStateOf(false) }
     var oldPasswordVisible by remember { mutableStateOf(false) }
     var newPasswordVisible by remember { mutableStateOf(false) }
     var confirmNewPasswordVisible by remember { mutableStateOf(false) }
     val updateSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val changePasswordSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    val context = LocalContext.current
     val lifeCycleOwner = LocalLifecycleOwner.current
     val uiScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
@@ -116,7 +116,23 @@ fun ProfileScreen(
     LaunchedEffect(Unit) {
         lifeCycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             profileViewModel.profileEvent.collect { event ->
-                dialogState = event
+                when (event) {
+                    ProfileViewModel.ProfileEvent.NavigateToLogin -> {
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(0) {
+                                navController.clearBackStack(Screen.Groups.route)
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+
+                    is ProfileViewModel.ProfileEvent.Failure -> Toast.makeText(
+                        context,
+                        event.message.asString(context),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         }
     }
@@ -169,15 +185,15 @@ fun ProfileScreen(
                         .padding(horizontal = 10.dp)
                 ) {
                     ProfileInfoItem(
-                        UiText.StringResource(R.string.username_colon).asString(),
+                        StringResource(R.string.username_colon).asString(),
                         profileState.username
                     )
                     ProfileInfoItem(
-                        UiText.StringResource(R.string.email_colon).asString(),
+                        StringResource(R.string.email_colon).asString(),
                         profileState.email
                     )
                     ProfileInfoItem(
-                        UiText.StringResource(R.string.participate_day_colon).asString(),
+                        StringResource(R.string.participate_day_colon).asString(),
                         profileState.createdAt
                     )
                 }
@@ -192,11 +208,10 @@ fun ProfileScreen(
                     ) {
                         Button(
                             onClick = {
-                                profileViewModel.initUpdateSheet()
-                                showUpdateSheet = true
+                                profileViewModel.showUpdateProfileSheet()
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            enabled = !updateProfileState.isUpdating,
+                            enabled = !profileState.isUpdating,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = LightBlue,
                                 contentColor = Color.White
@@ -206,7 +221,7 @@ fun ProfileScreen(
                                 pressedElevation = 3.dp
                             )
                         ) {
-                            if (updateProfileState.isUpdating) {
+                            if (profileState.isUpdating) {
                                 CircularProgressIndicator(modifier = Modifier.size(24.dp))
                             } else {
                                 Icon(
@@ -215,7 +230,7 @@ fun ProfileScreen(
                                     modifier = Modifier.padding(end = 10.dp)
                                 )
                                 Text(
-                                    text = UiText.StringResource(R.string.update_profile)
+                                    text = StringResource(R.string.update_profile)
                                         .asString(),
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp,
@@ -223,8 +238,9 @@ fun ProfileScreen(
                             }
                         }
                         Button(
-                            onClick = { showChangePasswordSheet = true },
+                            onClick = { profileViewModel.showChangePasswordSheet() },
                             modifier = Modifier.fillMaxWidth(),
+                            enabled = !profileState.isChanging,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = LightRed,
                                 contentColor = Color.White
@@ -234,16 +250,20 @@ fun ProfileScreen(
                                 pressedElevation = 3.dp
                             )
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = "change password",
-                                modifier = Modifier.padding(end = 10.dp)
-                            )
-                            Text(
-                                text = UiText.StringResource(R.string.change_password).asString(),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                            )
+                            if (profileState.isChanging) {
+                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = "change password",
+                                    modifier = Modifier.padding(end = 10.dp)
+                                )
+                                Text(
+                                    text = StringResource(R.string.change_password).asString(),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                )
+                            }
                         }
                         Button(
                             onClick = { profileViewModel.showLogoutConfirmDialog() },
@@ -266,7 +286,7 @@ fun ProfileScreen(
                                 modifier = Modifier.padding(end = 10.dp)
                             )
                             Text(
-                                text = UiText.StringResource(R.string.log_out).asString(),
+                                text = StringResource(R.string.log_out).asString(),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp,
                             )
@@ -277,376 +297,380 @@ fun ProfileScreen(
         }
     }
 
-    if (showUpdateSheet) {
-        ModalBottomSheet(
-            sheetState = updateSheetState,
-            onDismissRequest = {
-                uiScope.launch { updateSheetState.hide() }.invokeOnCompletion {
-                    if (!updateSheetState.isVisible) showUpdateSheet = false
+    when (profileState.sheetState) {
+        ProfileViewModel.ProfileSheetState.Dismiss -> {}
+        ProfileViewModel.ProfileSheetState.UpdateProfile -> {
+            ModalBottomSheet(
+                sheetState = updateSheetState,
+                onDismissRequest = {
+                    uiScope.launch { updateSheetState.hide() }.invokeOnCompletion {
+                        if (!updateSheetState.isVisible) profileViewModel.dismissSheet()
+                    }
                 }
-            }
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(32.dp)
-                    .imePadding()
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
             ) {
-                BadgedAvatar(
-                    currentAvatar = updateProfileState.avatar,
-                    onBadgeClick = {
-                        photoPickerLauncher.launch(
-                            PickVisualMediaRequest(
-                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp)
+                        .imePadding()
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    BadgedAvatar(
+                        currentAvatar = updateProfileState.avatar,
+                        onBadgeClick = {
+                            photoPickerLauncher.launch(
+                                PickVisualMediaRequest(
+                                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                                )
                             )
-                        )
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                OutlinedTextField(
-                    value = updateProfileState.fullName,
-                    onValueChange = { profileViewModel.onUpdateFullNameChange(it) },
-                    label = { Text(UiText.StringResource(R.string.fullname).asString()) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        focusedBorderColor = RealtimeGreen,
-                        cursorColor = Color.Gray
+                        }
                     )
-                )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                OutlinedTextField(
-                    value = updateProfileState.email,
-                    onValueChange = { profileViewModel.onUpdateEmailChange(it) },
-                    label = { Text(UiText.StringResource(R.string.email).asString()) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        focusedBorderColor = RealtimeGreen,
-                        cursorColor = Color.Gray
+                    OutlinedTextField(
+                        value = updateProfileState.fullName,
+                        onValueChange = { profileViewModel.onUpdateFullNameChange(it) },
+                        label = { Text(StringResource(R.string.fullname).asString()) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            focusedBorderColor = RealtimeGreen,
+                            cursorColor = Color.Gray
+                        )
                     )
-                )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                Row {
-                    OutlinedButton(
-                        onClick = {
-                            uiScope.launch { updateSheetState.hide() }
-                                .invokeOnCompletion {
-                                    if (!updateSheetState.isVisible) showUpdateSheet =
-                                        false
-                                }
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(10.dp)
-                    ) {
-                        Text(
-                            text = UiText.StringResource(R.string.cancel).asString(),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
+                    OutlinedTextField(
+                        value = updateProfileState.email,
+                        onValueChange = { profileViewModel.onUpdateEmailChange(it) },
+                        label = { Text(StringResource(R.string.email).asString()) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            focusedBorderColor = RealtimeGreen,
+                            cursorColor = Color.Gray
                         )
-                    }
+                    )
 
-                    Button(
-                        onClick = {
-                            uiScope.launch { updateSheetState.hide() }
-                                .invokeOnCompletion {
-                                    if (!updateSheetState.isVisible) showUpdateSheet =
-                                        false
-                                }
-                            profileViewModel.showUpdateProfileConfirmDialog()
-                        },
-                        enabled = updateProfileState.isUpdateEnable,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(10.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = RealtimeGreen,
-                            contentColor = Color.White,
-                            disabledContainerColor = RealtimeGreen.copy(alpha = 0.5f),
-                            disabledContentColor = Color.White.copy(alpha = 0.7f)
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 8.dp,
-                            pressedElevation = 4.dp
-                        )
-                    ) {
-                        Text(
-                            text = UiText.StringResource(R.string.save).asString(),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                        )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row {
+                        OutlinedButton(
+                            onClick = {
+                                uiScope.launch { updateSheetState.hide() }
+                                    .invokeOnCompletion {
+                                        if (!updateSheetState.isVisible) profileViewModel.dismissSheet()
+                                    }
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(10.dp)
+                        ) {
+                            Text(
+                                text = StringResource(R.string.cancel).asString(),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                            )
+                        }
+
+                        Button(
+                            onClick = {
+                                profileViewModel.showUpdateProfileConfirmDialog()
+                            },
+                            enabled = updateProfileState.isUpdateEnable,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = RealtimeGreen,
+                                contentColor = Color.White,
+                                disabledContainerColor = RealtimeGreen.copy(alpha = 0.5f),
+                                disabledContentColor = Color.White.copy(alpha = 0.7f)
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 8.dp,
+                                pressedElevation = 4.dp
+                            )
+                        ) {
+                            Text(
+                                text = StringResource(R.string.save).asString(),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                            )
+                        }
                     }
                 }
             }
         }
-    }
 
-    if (showChangePasswordSheet) {
-        ModalBottomSheet(
-            sheetState = changePasswordSheetState,
-            onDismissRequest = {
-                uiScope.launch { changePasswordSheetState.hide() }.invokeOnCompletion {
-                    if (!changePasswordSheetState.isVisible) showChangePasswordSheet =
-                        false
+        ProfileViewModel.ProfileSheetState.ChangePassword -> {
+            ModalBottomSheet(
+                sheetState = changePasswordSheetState,
+                onDismissRequest = {
+                    uiScope.launch { changePasswordSheetState.hide() }.invokeOnCompletion {
+                        if (!changePasswordSheetState.isVisible) profileViewModel.dismissSheet()
+                    }
                 }
-            }
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(32.dp)
-                    .imePadding()
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
             ) {
-                OutlinedTextField(
-                    value = changePasswordState.oldPassword,
-                    onValueChange = { profileViewModel.onOldPasswordChange(it) },
-                    label = { Text(UiText.StringResource(R.string.old_password).asString()) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    visualTransformation = if (oldPasswordVisible) {
-                        VisualTransformation.None
-                    } else {
-                        PasswordVisualTransformation()
-                    },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    trailingIcon = {
-                        val image =
-                            if (oldPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                        val description = if (oldPasswordVisible) "hide" else "show"
-
-                        IconButton(onClick = { oldPasswordVisible = !oldPasswordVisible }) {
-                            Icon(imageVector = image, contentDescription = description)
-                        }
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        focusedBorderColor = RealtimeGreen,
-                        cursorColor = Color.Gray
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                OutlinedTextField(
-                    value = changePasswordState.newPassword,
-                    onValueChange = { profileViewModel.onNewPasswordChange(it) },
-                    label = { Text(UiText.StringResource(R.string.new_password).asString()) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    visualTransformation = if (newPasswordVisible) {
-                        VisualTransformation.None
-                    } else {
-                        PasswordVisualTransformation()
-                    },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    trailingIcon = {
-                        val image =
-                            if (newPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                        val description = if (newPasswordVisible) "hide" else "show"
-
-                        IconButton(onClick = { newPasswordVisible = !newPasswordVisible }) {
-                            Icon(imageVector = image, contentDescription = description)
-                        }
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        focusedBorderColor = RealtimeGreen,
-                        cursorColor = Color.Gray
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                OutlinedTextField(
-                    value = changePasswordState.confirmNewPassword,
-                    onValueChange = { profileViewModel.onConfirmNewPasswordChange(it) },
-                    label = {
-                        Text(
-                            UiText.StringResource(R.string.confirm_new_password).asString()
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    visualTransformation = if (confirmNewPasswordVisible) {
-                        VisualTransformation.None
-                    } else {
-                        PasswordVisualTransformation()
-                    },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    trailingIcon = {
-                        val image =
-                            if (confirmNewPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                        val description = if (confirmNewPasswordVisible) "hide" else "show"
-
-                        IconButton(onClick = {
-                            confirmNewPasswordVisible = !confirmNewPasswordVisible
-                        }) {
-                            Icon(imageVector = image, contentDescription = description)
-                        }
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        focusedBorderColor = RealtimeGreen,
-                        cursorColor = Color.Gray
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row {
-                    OutlinedButton(
-                        onClick = {
-                            uiScope.launch { changePasswordSheetState.hide() }
-                                .invokeOnCompletion {
-                                    if (!changePasswordSheetState.isVisible) {
-                                        showChangePasswordSheet = false
-                                    }
-                                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp)
+                        .imePadding()
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    OutlinedTextField(
+                        value = changePasswordState.oldPassword,
+                        onValueChange = { profileViewModel.onOldPasswordChange(it) },
+                        label = { Text(StringResource(R.string.old_password).asString()) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        visualTransformation = if (oldPasswordVisible) {
+                            VisualTransformation.None
+                        } else {
+                            PasswordVisualTransformation()
                         },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(10.dp)
-                    ) {
-                        Text(
-                            text = UiText.StringResource(R.string.cancel).asString(),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                        )
-                    }
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        trailingIcon = {
+                            val image =
+                                if (oldPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                            val description = if (oldPasswordVisible) "hide" else "show"
 
-                    Button(
-                        onClick = {
-                            uiScope.launch { changePasswordSheetState.hide() }
-                                .invokeOnCompletion {
-                                    if (!changePasswordSheetState.isVisible) {
-                                        showChangePasswordSheet = false
-                                    }
-                                }
-                            profileViewModel.showChangePasswordConfirmDialog()
+                            IconButton(onClick = { oldPasswordVisible = !oldPasswordVisible }) {
+                                Icon(imageVector = image, contentDescription = description)
+                            }
                         },
-                        enabled = changePasswordState.isChangePasswordEnable,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(10.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = RealtimeGreen,
-                            contentColor = Color.White,
-                            disabledContainerColor = RealtimeGreen.copy(alpha = 0.5f),
-                            disabledContentColor = Color.White.copy(alpha = 0.7f)
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 8.dp,
-                            pressedElevation = 4.dp
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            focusedBorderColor = RealtimeGreen,
+                            cursorColor = Color.Gray
                         )
-                    ) {
-                        Text(
-                            text = UiText.StringResource(R.string.save).asString(),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = changePasswordState.newPassword,
+                        onValueChange = { profileViewModel.onNewPasswordChange(it) },
+                        label = { Text(StringResource(R.string.new_password).asString()) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        visualTransformation = if (newPasswordVisible) {
+                            VisualTransformation.None
+                        } else {
+                            PasswordVisualTransformation()
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        trailingIcon = {
+                            val image =
+                                if (newPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                            val description = if (newPasswordVisible) "hide" else "show"
+
+                            IconButton(onClick = { newPasswordVisible = !newPasswordVisible }) {
+                                Icon(imageVector = image, contentDescription = description)
+                            }
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            focusedBorderColor = RealtimeGreen,
+                            cursorColor = Color.Gray
                         )
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = changePasswordState.confirmNewPassword,
+                        onValueChange = { profileViewModel.onConfirmNewPasswordChange(it) },
+                        label = {
+                            Text(
+                                StringResource(R.string.confirm_new_password).asString()
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        visualTransformation = if (confirmNewPasswordVisible) {
+                            VisualTransformation.None
+                        } else {
+                            PasswordVisualTransformation()
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        trailingIcon = {
+                            val image =
+                                if (confirmNewPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                            val description = if (confirmNewPasswordVisible) "hide" else "show"
+
+                            IconButton(onClick = {
+                                confirmNewPasswordVisible = !confirmNewPasswordVisible
+                            }) {
+                                Icon(imageVector = image, contentDescription = description)
+                            }
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            focusedBorderColor = RealtimeGreen,
+                            cursorColor = Color.Gray
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row {
+                        OutlinedButton(
+                            onClick = {
+                                uiScope.launch { changePasswordSheetState.hide() }
+                                    .invokeOnCompletion {
+                                        if (!changePasswordSheetState.isVisible) {
+                                            profileViewModel.dismissSheet()
+                                        }
+                                    }
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(10.dp)
+                        ) {
+                            Text(
+                                text = StringResource(R.string.cancel).asString(),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                            )
+                        }
+
+                        Button(
+                            onClick = {
+                                profileViewModel.showChangePasswordConfirmDialog()
+                            },
+                            enabled = changePasswordState.isChangePasswordEnable,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = RealtimeGreen,
+                                contentColor = Color.White,
+                                disabledContainerColor = RealtimeGreen.copy(alpha = 0.5f),
+                                disabledContentColor = Color.White.copy(alpha = 0.7f)
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 8.dp,
+                                pressedElevation = 4.dp
+                            )
+                        ) {
+                            Text(
+                                text = StringResource(R.string.save).asString(),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                            )
+                        }
                     }
                 }
             }
         }
     }
 
-    when (dialogState) {
-        is ProfileViewModel.ProfileEvent.UpdateProfileConfirm -> {
+    when (val dialogState = profileState.dialogState) {
+        is ProfileViewModel.ProfileDialogState.UpdateProfileConfirm -> {
             ConfirmationDialog(
-                title = UiText.StringResource(R.string.notification).asString(),
-                message = UiText.StringResource(R.string.update_profile_confirm_warning).asString(),
-                dismissText = UiText.StringResource(R.string.cancel).asString(),
-                confirmText = UiText.StringResource(R.string.confirm).asString(),
+                title = StringResource(R.string.notification).asString(),
+                message = StringResource(R.string.update_profile_confirm_warning).asString(),
+                dismissText = StringResource(R.string.cancel).asString(),
+                confirmText = StringResource(R.string.confirm).asString(),
                 isDangerConfirm = false,
-                onDismiss = { dialogState = null },
+                onDismiss = { profileViewModel.dismissDialog() },
                 onConfirm = {
-                    dialogState = null
-                    profileViewModel.updateProfile()
+                    with(profileViewModel) {
+                        dismissDialog()
+                        uiScope.launch { updateSheetState.hide() }.invokeOnCompletion {
+                            dismissSheet()
+                            updateProfile()
+                        }
+                    }
                 }
             )
         }
 
-        is ProfileViewModel.ProfileEvent.UpdateProfileSuccess -> {
+        is ProfileViewModel.ProfileDialogState.UpdateProfileSuccess -> {
             NotificationDialog(
-                title = UiText.StringResource(R.string.success).asString(),
-                message = UiText.StringResource(R.string.update_profile_success_notification)
+                title = StringResource(R.string.success).asString(),
+                message = StringResource(R.string.update_profile_success_notification)
                     .asString(),
                 isSuccess = true,
-                onDismiss = { dialogState = null }
+                onDismiss = { profileViewModel.dismissDialog() }
             )
         }
 
-        is ProfileViewModel.ProfileEvent.ChangePasswordConfirm -> {
+        is ProfileViewModel.ProfileDialogState.ChangePasswordConfirm -> {
             ConfirmationDialog(
-                title = UiText.StringResource(R.string.notification).asString(),
-                message = UiText.StringResource(R.string.change_password_confirm_warning)
+                title = StringResource(R.string.notification).asString(),
+                message = StringResource(R.string.change_password_confirm_warning)
                     .asString(),
-                dismissText = UiText.StringResource(R.string.cancel).asString(),
-                confirmText = UiText.StringResource(R.string.confirm).asString(),
+                dismissText = StringResource(R.string.cancel).asString(),
+                confirmText = StringResource(R.string.confirm).asString(),
                 isDangerConfirm = true,
-                onDismiss = { dialogState = null },
+                onDismiss = { profileViewModel.dismissDialog() },
                 onConfirm = {
-                    dialogState = null
-                    profileViewModel.changePassword()
+                    with(profileViewModel) {
+                        dismissDialog()
+                        uiScope.launch { changePasswordSheetState.hide() }.invokeOnCompletion {
+                            dismissSheet()
+                            changePassword()
+                        }
+                    }
                 }
             )
         }
 
-        is ProfileViewModel.ProfileEvent.ChangePasswordSuccess -> {
+        is ProfileViewModel.ProfileDialogState.ChangePasswordSuccess -> {
             NotificationDialog(
-                title = UiText.StringResource(R.string.success).asString(),
-                message = UiText.StringResource(R.string.change_password_success_notification)
+                title = StringResource(R.string.success).asString(),
+                message = StringResource(R.string.change_password_success_notification)
                     .asString(),
                 isSuccess = true,
                 onDismiss = {
-                    dialogState = null
-                    profileViewModel.logout(false)
+                    with(profileViewModel) {
+                        dismissDialog()
+                        logout(showLogoutSuccessDialog = false)
+                    }
                 }
             )
         }
 
-        is ProfileViewModel.ProfileEvent.LogoutConfirm -> {
+        is ProfileViewModel.ProfileDialogState.LogoutConfirm -> {
             ConfirmationDialog(
-                title = UiText.StringResource(R.string.warning).asString(),
-                message = UiText.StringResource(R.string.logout_confirm_warning).asString(),
-                dismissText = UiText.StringResource(R.string.cancel).asString(),
-                confirmText = UiText.StringResource(R.string.log_out).asString(),
+                title = StringResource(R.string.warning).asString(),
+                message = StringResource(R.string.logout_confirm_warning).asString(),
+                dismissText = StringResource(R.string.cancel).asString(),
+                confirmText = StringResource(R.string.log_out).asString(),
                 isDangerConfirm = true,
-                onDismiss = { dialogState = null },
+                onDismiss = { profileViewModel.dismissDialog() },
                 onConfirm = {
-                    dialogState = null
-                    profileViewModel.logout(true)
+                    with(profileViewModel) {
+                        dismissDialog()
+                        logout(showLogoutSuccessDialog = true)
+                    }
                 }
             )
         }
 
-        is ProfileViewModel.ProfileEvent.LogoutSuccess -> {
+        is ProfileViewModel.ProfileDialogState.LogoutSuccess -> {
             NotificationDialog(
-                title = UiText.StringResource(R.string.success).asString(),
-                message = UiText.StringResource(R.string.logged_out_successfully).asString(),
+                title = StringResource(R.string.success).asString(),
+                message = StringResource(R.string.logged_out_successfully).asString(),
                 isSuccess = true,
                 onDismiss = {
-                    dialogState = null
+                    profileViewModel.dismissDialog()
                     navController.navigate(Screen.Login.route) {
                         popUpTo(navController.graph.id) {
                             // "group" tab state is saved by BottomNavBar (saveState=true) and not present
@@ -663,26 +687,16 @@ fun ProfileScreen(
             )
         }
 
-        is ProfileViewModel.ProfileEvent.NavigateToLogin -> {
-            navController.navigate(Screen.Login.route) {
-                popUpTo(0) {
-                    navController.clearBackStack(Screen.Groups.route)
-                    inclusive = true
-                }
-                launchSingleTop = true
-            }
-        }
-
-        is ProfileViewModel.ProfileEvent.Failure -> {
+        is ProfileViewModel.ProfileDialogState.Failure -> {
             NotificationDialog(
-                title = UiText.StringResource(R.string.error).asString(),
-                message = (dialogState as ProfileViewModel.ProfileEvent.Failure).message.asString(),
+                title = StringResource(R.string.error).asString(),
+                message = dialogState.message.asString(),
                 isSuccess = false,
-                onDismiss = { dialogState = null }
+                onDismiss = { profileViewModel.dismissDialog() }
             )
         }
 
-        else -> {}
+        ProfileViewModel.ProfileDialogState.Dismiss -> {}
     }
 }
 

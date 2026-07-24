@@ -1,6 +1,7 @@
 package com.example.realtimechatapp.ui.screens.auth
 
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -64,10 +66,10 @@ fun LoginScreen(
 ) {
     val loadingState by authViewModel.isLoading.collectAsStateWithLifecycle()
     val loginState by authViewModel.loginState.collectAsStateWithLifecycle()
-    var dialogState by remember { mutableStateOf<AuthViewModel.AuthEvent?>(null) }
     var passwordVisible by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     val lifeCycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         authViewModel.loginWithToken()
@@ -84,7 +86,7 @@ fun LoginScreen(
                     }
 
                     is AuthViewModel.AuthEvent.Failure -> {
-                        dialogState = event
+                        Toast.makeText(context, event.message.asString(context), Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -212,14 +214,23 @@ fun LoginScreen(
         }
     }
 
-    if (dialogState is AuthViewModel.AuthEvent.Failure) {
-        val msg = (dialogState as AuthViewModel.AuthEvent.Failure).message
-        NotificationDialog(
-            title = stringResource(R.string.login_error),
-            message = msg.asString(),
-            isSuccess = false,
-            onDismiss = { dialogState = null }
-        )
+    when (val dialog = loginState.authDialogState) {
+        AuthViewModel.AuthDialogState.AuthSuccess -> {
+            // do nothing, delegate to event to navigate immediately
+        }
+
+        is AuthViewModel.AuthDialogState.Failure -> {
+            NotificationDialog(
+                title = stringResource(R.string.login_error),
+                message = dialog.message.asString(),
+                isSuccess = false,
+                onDismiss = { authViewModel.dismissLoginDialog() }
+            )
+        }
+
+        AuthViewModel.AuthDialogState.Dismiss -> {
+            // do nothing
+        }
     }
 }
 

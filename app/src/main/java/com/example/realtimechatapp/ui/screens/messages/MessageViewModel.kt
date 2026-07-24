@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.data.local.manager.TokenManagerImpl
+import com.example.realtimechatapp.domain.exception.NetworkException
 import com.example.realtimechatapp.domain.model.MessageContact
 import com.example.realtimechatapp.domain.usecase.message.GetMessageContactUseCase
 import com.example.realtimechatapp.domain.usecase.socket.ConnectSocketUseCase
@@ -12,12 +13,12 @@ import com.example.realtimechatapp.domain.usecase.socket.message.ObserveMessageC
 import com.example.realtimechatapp.domain.usecase.socket.message.ObserveOnlineUserUseCase
 import com.example.realtimechatapp.domain.usecase.socket.message.ObserveTypingUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -33,17 +34,19 @@ class MessageViewModel @Inject constructor(
     private val tokenManager: TokenManagerImpl
 ) : ViewModel() {
     data class MessageState(
+        val messageDialogState: MessageDialogState = MessageDialogState.Dismiss,
         val isLoading: Boolean = false,
         val users: List<MessageContact> = emptyList()
     )
 
-    sealed class MessageEvent {
-        object Authenticated : MessageEvent()
-        object Unauthenticated : MessageEvent()
-        data class Failure(val message: UiText) : MessageEvent()
+    sealed interface MessageDialogState {
+        object Dismiss : MessageDialogState
+        object Unauthenticated : MessageDialogState
+        data class Failure(val message: UiText) : MessageDialogState
     }
 
     private val _isLoading = MutableStateFlow(false)
+    private val _messageDialogState = MutableStateFlow<MessageDialogState>(MessageDialogState.Dismiss)
     val messageState = combine(
         observeMessageContactUseCase().catch { exception ->
             Timber.e("Lỗi luồng lấy danh sách người dùng: ${exception.getErrorMessage()}")
@@ -57,9 +60,11 @@ class MessageViewModel @Inject constructor(
             Timber.e("Lỗi luồng user typing: ${exception.getErrorMessage()}")
             emit(emptySet())
         },
+        _messageDialogState,
         _isLoading
-    ) { messageContacts, onlineUserIds, typingUserIds, isLoading ->
+    ) { messageContacts, onlineUserIds, typingUserIds, dialogState, isLoading ->
         MessageState(
+            messageDialogState = dialogState,
             isLoading = isLoading && messageContacts.isEmpty(),
             users = messageContacts.map { contact ->
                 contact.copy(
@@ -69,30 +74,30 @@ class MessageViewModel @Inject constructor(
             }
         )
     }.catch { exception ->
+        if (exception is CancellationException) throw exception
         Timber.e("Lỗi luồng màn hình tin nhắn: ${exception.getErrorMessage()}")
-        _messageEvent.send(MessageEvent.Failure(exception.getErrorMessage()))
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = MessageState(isLoading = true)
     )
 
-    private val _messageEvent = Channel<MessageEvent>()
-    val messageEvent = _messageEvent.receiveAsFlow()
-
     init {
-        checkToken()
-        connectSocket()
-        getUsers() // auto load
+        viewModelScope.launch {
+            if (isTokenValid()) {
+                connectSocket()
+                getUsers() // auto load
+            }
+        }
     }
 
-    fun checkToken() {
-        viewModelScope.launch {
-            tokenManager.token.collect { token ->
-                if (token.isNullOrEmpty()) {
-                    _messageEvent.send(MessageEvent.Unauthenticated)
-                }
-            }
+    private suspend fun isTokenValid(): Boolean {
+        val token = tokenManager.token.firstOrNull()
+        return if (token.isNullOrEmpty()) {
+            _messageDialogState.value = MessageDialogState.Unauthenticated
+            false
+        } else {
+            true
         }
     }
 
@@ -109,10 +114,21 @@ class MessageViewModel @Inject constructor(
             getMessageContactUseCase().onSuccess {
                 // do nothing, delegate to observe fun
             }.onFailure { exception ->
-                _messageEvent.send(MessageEvent.Failure(exception.getErrorMessage()))
+                when (exception) {
+                    is NetworkException.NoInternetException,
+                    NetworkException.ServerUnreachableException -> {
+                        Timber.e("${exception.getErrorMessage()}")
+                    }
+
+                    else -> _messageDialogState.value = MessageDialogState.Failure(exception.getErrorMessage())
+                }
             }
 
             _isLoading.value = false
         }
+    }
+
+    fun dismissDialog() {
+        _messageDialogState.value = MessageDialogState.Dismiss
     }
 }

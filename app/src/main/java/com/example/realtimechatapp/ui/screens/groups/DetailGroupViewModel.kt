@@ -60,9 +60,9 @@ class DetailGroupViewModel @Inject constructor(
         val isLoading: Boolean = false
     )
 
-    sealed class DetailGroupEvent {
-        object Success : DetailGroupEvent()
-        data class Failure(val message: UiText) : DetailGroupEvent()
+    sealed interface DetailGroupEvent {
+        object Success : DetailGroupEvent
+        data class Failure(val message: UiText) : DetailGroupEvent
     }
 
     private data class DetailGroupContext(

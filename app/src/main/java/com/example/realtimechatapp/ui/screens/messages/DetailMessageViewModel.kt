@@ -60,9 +60,9 @@ class DetailMessageViewModel @Inject constructor(
         val isLoading: Boolean = false
     )
 
-    sealed class DetailMessageEvent {
-        object GetMessageSuccess : DetailMessageEvent()
-        data class Failure(val message: UiText) : DetailMessageEvent()
+    sealed interface DetailMessageEvent {
+        object GetMessageSuccess : DetailMessageEvent
+        data class Failure(val message: UiText) : DetailMessageEvent
     }
 
     private data class DetailMessageContext(

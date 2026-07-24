@@ -10,6 +10,7 @@ import com.example.realtimechatapp.domain.usecase.auth.LoginUseCase
 import com.example.realtimechatapp.domain.usecase.auth.SignupUseCase
 import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,11 +27,17 @@ class AuthViewModel @Inject constructor(
     private val getTokenUseCase: GetTokenUseCase,
     private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase
 ) : ViewModel() {
+    sealed interface AuthDialogState {
+        object Dismiss : AuthDialogState
+        object AuthSuccess : AuthDialogState
+        data class Failure(val message: UiText) : AuthDialogState
+    }
 
     data class LoginState(
         val username: String = "",
         val password: String = "",
-        val isLoading: Boolean = false
+        val isLoading: Boolean = false,
+        val authDialogState: AuthDialogState = AuthDialogState.Dismiss
     )
 
     data class SignupState(
@@ -40,12 +47,13 @@ class AuthViewModel @Inject constructor(
         val fullName: String = "",
         val email: String = "",
         val avatar: Uri? = null,
-        val isLoading: Boolean = false
+        val isLoading: Boolean = false,
+        val authDialogState: AuthDialogState = AuthDialogState.Dismiss
     )
 
-    sealed class AuthEvent {
-        object AuthSuccess : AuthEvent()
-        data class Failure(val message: UiText) : AuthEvent()
+    sealed interface AuthEvent {
+        object AuthSuccess : AuthEvent
+        data class Failure(val message: UiText) : AuthEvent
     }
 
     private var _isLoading = MutableStateFlow(true)
@@ -92,6 +100,14 @@ class AuthViewModel @Inject constructor(
         _signupState.update { it.copy(avatar = newValue) }
     }
 
+    fun dismissLoginDialog() {
+        _loginState.update { it.copy(authDialogState = AuthDialogState.Dismiss) }
+    }
+
+    fun dismissSignupDialog() {
+        _signupState.update { it.copy(authDialogState = AuthDialogState.Dismiss) }
+    }
+
     fun loginWithToken() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -104,6 +120,9 @@ class AuthViewModel @Inject constructor(
                     _authEvent.send(AuthEvent.AuthSuccess)
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
+
+                _authEvent.send(AuthEvent.Failure(e.getErrorMessage()))
                 Timber.d(e, "Lỗi đăng nhập bằng token")
             } finally {
                 _isLoading.value = false
@@ -120,26 +139,22 @@ class AuthViewModel @Inject constructor(
             result.onSuccess { user ->
                 _authEvent.send(AuthEvent.AuthSuccess)
             }.onFailure { exception ->
-                _authEvent.send(AuthEvent.Failure(exception.getErrorMessage()))
+                _loginState.update { it.copy(authDialogState = AuthDialogState.Failure(exception.getErrorMessage())) }
             }
         }
     }
 
     fun signup() {
         viewModelScope.launch {
-            val compressAvatar: Uri? = _signupState.value.avatar
-
             _signupState.update { it.copy(isLoading = true) }
 
             with(_signupState.value) {
-                signupUseCase(compressAvatar, username, password, passwordRetype, fullName, email)
+                signupUseCase(avatar, username, password, passwordRetype, fullName, email)
             }.onSuccess {
-                _authEvent.send(AuthEvent.AuthSuccess)
+                _signupState.update { it.copy(authDialogState = AuthDialogState.AuthSuccess, isLoading = false) }
             }.onFailure { exception ->
-                _authEvent.send(AuthEvent.Failure(exception.getErrorMessage()))
+                _signupState.update { it.copy(authDialogState = AuthDialogState.Failure(exception.getErrorMessage()), isLoading = false) }
             }
-
-            _signupState.update { it.copy(isLoading = false) }
         }
     }
 }

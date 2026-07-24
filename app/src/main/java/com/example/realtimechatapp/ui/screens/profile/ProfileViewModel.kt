@@ -33,6 +33,10 @@ class ProfileViewModel @Inject constructor(
         val username: String = "",
         val email: String = "",
         val createdAt: String = "",
+        val sheetState: ProfileSheetState = ProfileSheetState.Dismiss,
+        val dialogState: ProfileDialogState = ProfileDialogState.Dismiss,
+        val isUpdating: Boolean = false,
+        val isChanging: Boolean = false,
         val isLoading: Boolean = false
     )
 
@@ -40,27 +44,36 @@ class ProfileViewModel @Inject constructor(
         val avatar: Any? = null,
         val fullName: String = "",
         val email: String = "",
-        val isUpdateEnable: Boolean = false,
-        val isUpdating: Boolean = false
+        val isUpdateEnable: Boolean = false
     )
 
     data class ChangePasswordState(
         val oldPassword: String = "",
         val newPassword: String = "",
         val confirmNewPassword: String = "",
-        val isChangePasswordEnable: Boolean = false,
-        val isChanging: Boolean = false
+        val isChangePasswordEnable: Boolean = false
     )
 
-    sealed class ProfileEvent {
-        object UpdateProfileConfirm : ProfileEvent()
-        object UpdateProfileSuccess : ProfileEvent()
-        object ChangePasswordConfirm : ProfileEvent()
-        object ChangePasswordSuccess : ProfileEvent()
-        object LogoutConfirm : ProfileEvent()
-        object LogoutSuccess : ProfileEvent()
-        object NavigateToLogin : ProfileEvent()
-        data class Failure(val message: UiText) : ProfileEvent()
+    sealed interface ProfileSheetState {
+        object Dismiss : ProfileSheetState
+        object UpdateProfile : ProfileSheetState
+        object ChangePassword : ProfileSheetState
+    }
+
+    sealed interface ProfileDialogState {
+        object Dismiss : ProfileDialogState
+        object UpdateProfileConfirm : ProfileDialogState
+        object UpdateProfileSuccess : ProfileDialogState
+        object ChangePasswordConfirm : ProfileDialogState
+        object ChangePasswordSuccess : ProfileDialogState
+        object LogoutConfirm : ProfileDialogState
+        object LogoutSuccess : ProfileDialogState
+        data class Failure(val message: UiText) : ProfileDialogState
+    }
+
+    sealed interface ProfileEvent {
+        object NavigateToLogin : ProfileEvent
+        data class Failure(val message: UiText) : ProfileEvent
     }
 
     private val _profileState = MutableStateFlow(ProfileState())
@@ -112,13 +125,24 @@ class ProfileViewModel @Inject constructor(
         checkChangePasswordEnable()
     }
 
-    fun initUpdateSheet() {
+    private fun initUpdateProfileSheet() {
         _updateProfileState.update {
             it.copy(
                 avatar = profileState.value.avatar,
                 fullName = profileState.value.fullName,
                 email = profileState.value.email,
                 isUpdateEnable = false
+            )
+        }
+    }
+
+    private fun initChangePasswordSheet() {
+        _changePasswordState.update {
+            it.copy(
+                oldPassword = "",
+                newPassword = "",
+                confirmNewPassword = "",
+                isChangePasswordEnable = false
             )
         }
     }
@@ -168,9 +192,16 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun showUpdateProfileSheet() {
+        initUpdateProfileSheet()
+        viewModelScope.launch {
+            _profileState.update { it.copy(sheetState = ProfileSheetState.UpdateProfile) }
+        }
+    }
+
     fun showUpdateProfileConfirmDialog() {
         viewModelScope.launch {
-            _profileEvent.send(ProfileEvent.UpdateProfileConfirm)
+            _profileState.update { it.copy(dialogState = ProfileDialogState.UpdateProfileConfirm) }
         }
     }
 
@@ -180,7 +211,7 @@ class ProfileViewModel @Inject constructor(
         val isAvatarChanged = original.avatar != current.avatar
 
         viewModelScope.launch {
-            _updateProfileState.update { it.copy(isUpdating = true) }
+            _profileState.update { it.copy(isUpdating = true) }
             val updateProfileResult = updateProfileUseCase(
                 current.fullName,
                 current.email,
@@ -197,18 +228,35 @@ class ProfileViewModel @Inject constructor(
                     )
                 }
 
-                _profileEvent.send(ProfileEvent.UpdateProfileSuccess)
+                _profileState.update {
+                    it.copy(
+                        dialogState = ProfileDialogState.UpdateProfileSuccess,
+                        isUpdating = false
+                    )
+                }
             }.onFailure { exception ->
-                _profileEvent.send(ProfileEvent.Failure(exception.getErrorMessage()))
+                _profileState.update {
+                    it.copy(
+                        dialogState = ProfileDialogState.Failure(
+                            exception.getErrorMessage()
+                        ),
+                        isUpdating = false
+                    )
+                }
             }
+        }
+    }
 
-            _updateProfileState.update { it.copy(isUpdating = false) }
+    fun showChangePasswordSheet() {
+        initChangePasswordSheet()
+        viewModelScope.launch {
+            _profileState.update { it.copy(sheetState = ProfileSheetState.ChangePassword) }
         }
     }
 
     fun showChangePasswordConfirmDialog() {
         viewModelScope.launch {
-            _profileEvent.send(ProfileEvent.ChangePasswordConfirm)
+            _profileState.update { it.copy(dialogState = ProfileDialogState.ChangePasswordConfirm) }
         }
     }
 
@@ -218,19 +266,33 @@ class ProfileViewModel @Inject constructor(
         val confirmNewPassword = _changePasswordState.value.confirmNewPassword
 
         viewModelScope.launch {
-            _changePasswordState.update { it.copy(isChanging = true) }
+            _profileState.update { it.copy(isChanging = true) }
 
             changePasswordUseCase(oldPassword, newPassword, confirmNewPassword).onSuccess {
-                _profileEvent.send(ProfileEvent.ChangePasswordSuccess)
-            }.onFailure {
-                _profileEvent.send(ProfileEvent.Failure(it.getErrorMessage()))
+                _profileState.update {
+                    it.copy(
+                        dialogState = ProfileDialogState.ChangePasswordSuccess,
+                        isChanging = false
+                    )
+                }
+            }.onFailure { exception ->
+                _profileState.update {
+                    it.copy(
+                        dialogState = ProfileDialogState.Failure(
+                            exception.getErrorMessage()
+                        ),
+                        isChanging = false
+                    )
+                }
             }
         }
     }
 
     fun showLogoutConfirmDialog() {
         viewModelScope.launch {
-            _profileEvent.send(ProfileEvent.LogoutConfirm)
+            _profileState.update {
+                it.copy(dialogState = ProfileDialogState.LogoutConfirm)
+            }
         }
     }
 
@@ -239,17 +301,27 @@ class ProfileViewModel @Inject constructor(
             disconnectSocketUseCase()
             logoutUseCase().onSuccess {
                 if (showLogoutSuccessDialog) {
-                    _profileEvent.send(ProfileEvent.LogoutSuccess)
+                    _profileState.update { it.copy(dialogState = ProfileDialogState.LogoutSuccess) }
                 } else {
                     _profileEvent.send(ProfileEvent.NavigateToLogin)
                 }
             }.onFailure { exception ->
-                _profileEvent.send(
-                    ProfileEvent.Failure(
-                        exception.getErrorMessage()
+                _profileState.update {
+                    it.copy(
+                        dialogState = ProfileDialogState.Failure(
+                            exception.getErrorMessage()
+                        )
                     )
-                )
+                }
             }
         }
+    }
+
+    fun dismissSheet() {
+        _profileState.update { it.copy(sheetState = ProfileSheetState.Dismiss) }
+    }
+
+    fun dismissDialog() {
+        _profileState.update { it.copy(dialogState = ProfileDialogState.Dismiss) }
     }
 }
