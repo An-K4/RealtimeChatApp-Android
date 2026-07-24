@@ -92,15 +92,17 @@ fun ChatItem(
                 contentScale = ContentScale.Crop
             )
 
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .offset(x = 22.dp, y = 22.dp)
-                    .size(18.dp)
-                    .clip(CircleShape)
-                    .border(2.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape)
-                    .background(onlineColor, CircleShape)
-            ) {}
+            if (!isGroup) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .offset(x = 22.dp, y = 22.dp)
+                        .size(18.dp)
+                        .clip(CircleShape)
+                        .border(2.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape)
+                        .background(onlineColor, CircleShape)
+                ) {}
+            }
         }
 
         Spacer(modifier = Modifier.width(8.dp))
