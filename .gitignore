@@ -36,3 +36,7 @@ google-services.json
 # Backend (private deployed)
 backend/
 backend/.env
+
+# Docs
+doc/
+.doc
