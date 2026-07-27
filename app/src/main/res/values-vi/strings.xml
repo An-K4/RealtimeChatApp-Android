@@ -134,6 +134,10 @@
     <string name="delete_member_success">Đã xóa thành viên!</string>
     <string name="transfer_owner_confirm">Bạn có chắc chắn muốn chuyển quyền sở hữu nhóm cho thành viên này không?</string>
     <string name="transfer_owner_success">Chuyển quyền sở hữu nhóm thành công!</string>
+    <string name="delete_group">Xóa Nhóm</string>
+    <string name="group_name_cannot_be_blank">Tên nhóm không được để trống</string>
+    <string name="group_description">Mô tả nhóm</string>
+    <string name="update_group_success">Cập nhật thông tin nhóm thành công!</string>
     <plurals name="new_members_added">
         <item quantity="other">Đã thêm %1$d thành viên!</item>
     </plurals>

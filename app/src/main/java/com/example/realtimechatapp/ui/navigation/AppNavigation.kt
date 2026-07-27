@@ -34,6 +34,7 @@ import com.example.realtimechatapp.ui.screens.auth.SignupScreen
 import com.example.realtimechatapp.ui.screens.groups.crud.CreateGroupScreen
 import com.example.realtimechatapp.ui.screens.groups.DetailGroupScreen
 import com.example.realtimechatapp.ui.screens.groups.GroupScreen
+import com.example.realtimechatapp.ui.screens.groups.crud.EditGroupScreen
 import com.example.realtimechatapp.ui.screens.groups.crud.GroupMessageActionScreen
 import com.example.realtimechatapp.ui.screens.groups.crud.MemberManagementScreen
 import com.example.realtimechatapp.ui.screens.messages.DetailMessageScreen
@@ -66,7 +67,8 @@ fun AppNavigation() {
         Screen.MessageAction.route,
         Screen.GroupMessageAction.route,
         Screen.MemberManagement.route,
-        Screen.CreateGroup.route
+        Screen.CreateGroup.route,
+        Screen.EditGroup.route
     )
 
     Scaffold(
@@ -141,6 +143,9 @@ fun AppNavigation() {
 
                         Screen.CreateGroup.route -> Screen.CreateGroup.title?.asString()
                             ?: UiText.StringResource(R.string.create_group).asString()
+
+                        Screen.EditGroup.route -> Screen.EditGroup.title?.asString()
+                            ?: UiText.StringResource(R.string.edit_group).asString()
 
                         else -> ""
                     }
@@ -254,6 +259,16 @@ fun AppNavigation() {
 
             composable(Screen.CreateGroup.route) {
                 CreateGroupScreen(navController)
+            }
+
+            composable(
+                Screen.EditGroup.route, arguments = listOf(
+                    navArgument(Screen.EditGroup.ARG_GROUP_ID) {
+                        type = NavType.StringType
+                    }
+                )
+            ) {
+                EditGroupScreen(navController)
             }
 
             composable(Screen.Profile.route) {

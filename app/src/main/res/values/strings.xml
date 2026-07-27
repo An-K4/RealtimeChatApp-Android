@@ -133,6 +133,10 @@
     <string name="delete_member_success">Delete member successfully!</string>
     <string name="transfer_owner_confirm">Are you sure you want to transfer group ownership to this member?</string>
     <string name="transfer_owner_success">Group ownership transferred successfully!</string>
+    <string name="delete_group">Delete Group</string>
+    <string name="group_name_cannot_be_blank">Group name can not be blank</string>
+    <string name="group_description">Group Description</string>
+    <string name="update_group_success">Group info updated successfully!</string>
     <plurals name="new_members_added">
         <item quantity="one">%1$d new member added successfully!</item>
         <item quantity="other">%1$d new members added successfully!</item>

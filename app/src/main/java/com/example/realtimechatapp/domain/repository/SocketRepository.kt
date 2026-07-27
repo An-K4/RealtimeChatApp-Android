@@ -1,6 +1,7 @@
 package com.example.realtimechatapp.domain.repository
 
 import com.example.realtimechatapp.data.remote.dto.group.GroupDto
+import com.example.realtimechatapp.data.remote.dto.group.GroupInfoUpdatedDto
 import com.example.realtimechatapp.data.remote.dto.group.GroupMessageSeenDto
 import com.example.realtimechatapp.data.remote.dto.message.MessageDto
 import com.example.realtimechatapp.data.remote.dto.message.MessageSeenDto
@@ -38,7 +39,6 @@ interface SocketRepository {
     suspend fun seenGroupMessage(messageSeen: GroupMessageSeenDto)
     suspend fun emitGroupTypingStart(groupId: String)
     suspend fun emitGroupTypingStop(groupId: String)
-    suspend fun emitGroupCreated(group: GroupDto)
 }
 
 sealed class SocketConnectionState {
@@ -49,7 +49,7 @@ sealed class SocketConnectionState {
 
 sealed class GroupCrudEvents {
     data class Created(val group: GroupDto) : GroupCrudEvents()
-    data class Updated(val group: GroupDto) : GroupCrudEvents()
+    data class UpdatedInfo(val groupUpdatedInfo: GroupInfoUpdatedDto) : GroupCrudEvents()
     data class Deleted(val groupId: String) : GroupCrudEvents()
 }
 
@@ -72,6 +72,6 @@ object SocketEvents {
     const val SEND_GROUP_MESSAGE = "send-group-message"
     const val GROUP_TYPING_START = "group-typing-start"
     const val GROUP_TYPING_STOP = "group-typing-stop"
-    const val GROUP_CREATED = "group-created"
     const val NEW_GROUP_RECEIVED = "new-group-received"
+    const val NEW_GROUP_UPDATED = "new-group-updated"
 }

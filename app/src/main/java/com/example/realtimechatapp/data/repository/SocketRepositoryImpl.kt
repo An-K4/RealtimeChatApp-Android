@@ -1,6 +1,7 @@
 package com.example.realtimechatapp.data.repository
 
 import com.example.realtimechatapp.data.remote.dto.group.GroupDto
+import com.example.realtimechatapp.data.remote.dto.group.GroupInfoUpdatedDto
 import com.example.realtimechatapp.data.remote.dto.group.GroupMessageSeenDto
 import com.example.realtimechatapp.domain.repository.SocketEvents
 import com.example.realtimechatapp.data.remote.dto.message.MessageDto
@@ -303,6 +304,19 @@ class SocketRepositoryImpl @Inject constructor(
                 Timber.e(e, "Parse json thất bại")
             }
         }
+
+        socket?.on(SocketEvents.NEW_GROUP_UPDATED) { args ->
+            val rawJson = args[0].toString()
+
+            try {
+                val groupUpdatedInfoDto = gson.fromJson(rawJson, GroupInfoUpdatedDto::class.java)
+                scope.launch {
+                    _groupCrudEventsFlow.emit(GroupCrudEvents.UpdatedInfo(groupUpdatedInfoDto))
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Parse json thất bại")
+            }
+        }
     }
 
     private fun setupGroupMessageListener() {
@@ -428,12 +442,5 @@ class SocketRepositoryImpl @Inject constructor(
     override suspend fun emitGroupTypingStop(groupId: String) {
         val jsonObject = JSONObject().apply { put("groupId", groupId) }
         socket?.emit(SocketEvents.GROUP_TYPING_STOP, jsonObject)
-    }
-
-    override suspend fun emitGroupCreated(group: GroupDto) {
-        val jsonString = gson.toJson(group)
-        val jsonObject = JSONObject(jsonString)
-
-        socket?.emit(SocketEvents.GROUP_CREATED, jsonObject)
     }
 }

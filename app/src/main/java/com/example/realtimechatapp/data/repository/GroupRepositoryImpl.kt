@@ -24,9 +24,9 @@ import com.example.realtimechatapp.data.remote.dto.group.CreateGroupRequestDto
 import com.example.realtimechatapp.data.remote.dto.group.GroupMessageSeenDto
 import com.example.realtimechatapp.data.remote.dto.group.MemberDto
 import com.example.realtimechatapp.data.remote.dto.group.TransferOwnerRequestDto
+import com.example.realtimechatapp.data.remote.dto.group.UpdateGroupRequestDto
 import com.example.realtimechatapp.data.remote.dto.user.UserDto
 import com.example.realtimechatapp.di.ApplicationScope
-import com.example.realtimechatapp.domain.exception.LocalStorageException
 import com.example.realtimechatapp.domain.model.Group
 import com.example.realtimechatapp.domain.model.GroupMessageContact
 import com.example.realtimechatapp.domain.model.Member
@@ -132,8 +132,10 @@ class GroupRepositoryImpl @Inject constructor(
                         socketRepository.joinGroup(groupDto.id)
                     }
 
-                    is GroupCrudEvents.Updated -> {
-                        // in development
+                    is GroupCrudEvents.UpdatedInfo -> {
+                        with(event.groupUpdatedInfo) {
+                            groupDao.updateGroupInfo(id, name, avatar, description)
+                        }
                     }
 
                     is GroupCrudEvents.Deleted -> {
@@ -262,17 +264,39 @@ class GroupRepositoryImpl @Inject constructor(
             val members = response.group.members
 
             saveGroupToLocalDatabase(groupEntity, owner, members)
-
-            with(socketRepository) {
-                emitGroupCreated(response.group)
-                joinGroup(groupEntity.id)
-            }
+            socketRepository.joinGroup(groupEntity.id)
 
             Result.success(groupEntity.id)
         } catch (e: Exception) {
             if (e is CancellationException) throw e
 
             Timber.e(e, "Lỗi khi tạo nhóm")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateGroup(
+        id: String,
+        name: String,
+        avatar: String?,
+        description: String?
+    ): Result<Unit> {
+        return try {
+            val response = safeApiCall(networkChecker) {
+                groupApi.updateGroup(
+                    id,
+                    UpdateGroupRequestDto(name, avatar, description)
+                )
+            }
+
+            val groupEntity = response.group.toGroupEntity()
+            safeDbCall { groupDao.updateGroup(groupEntity) }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
+            Timber.e(e, "Lỗi khi cập nhật thông tin nhóm")
             Result.failure(e)
         }
     }
@@ -388,7 +412,9 @@ class GroupRepositoryImpl @Inject constructor(
             safeDbCall {
                 localDatabase.withTransaction {
                     groupDao.updateGroup(updatedGroup.toGroupEntity())
-                    memberDao.syncGroupMembers(groupId, updatedGroup.members.map { it.toMemberEntity(groupId) })
+                    memberDao.syncGroupMembers(
+                        groupId,
+                        updatedGroup.members.map { it.toMemberEntity(groupId) })
                 }
             }
 

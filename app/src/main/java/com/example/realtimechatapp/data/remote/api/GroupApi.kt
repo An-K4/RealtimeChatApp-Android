@@ -5,12 +5,13 @@ import com.example.realtimechatapp.data.remote.dto.group.AddMembersRequestDto
 import com.example.realtimechatapp.data.remote.dto.group.ChangeRoleRequestDto
 import com.example.realtimechatapp.data.remote.dto.group.CreateGroupRequestDto
 import com.example.realtimechatapp.data.remote.dto.group.CreateGroupResponseDto
-import com.example.realtimechatapp.data.remote.dto.group.GetGroupInfoResponseDto
+import com.example.realtimechatapp.data.remote.dto.group.GroupInfoResponseDto
 import com.example.realtimechatapp.data.remote.dto.group.GetGroupMessageResponseDto
 import com.example.realtimechatapp.data.remote.dto.group.GetGroupResponseDto
 import com.example.realtimechatapp.data.remote.dto.group.GetMembersResponseDto
 import com.example.realtimechatapp.data.remote.dto.group.TransferOwnerRequestDto
 import com.example.realtimechatapp.data.remote.dto.group.TransferOwnerResponseDto
+import com.example.realtimechatapp.data.remote.dto.group.UpdateGroupRequestDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -30,6 +31,9 @@ interface GroupApi {
 
     @POST("/groups/create")
     suspend fun createGroup(@Body request: CreateGroupRequestDto): CreateGroupResponseDto
+
+    @PATCH("/groups/update/{id}")
+    suspend fun updateGroup(@Path("id") groupId: String, @Body request: UpdateGroupRequestDto): GroupInfoResponseDto
 
     @GET("/groups/{id}/getMembers")
     suspend fun getMembers(@Path("id") groupId: String): GetMembersResponseDto

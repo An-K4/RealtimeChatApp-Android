@@ -18,6 +18,12 @@ interface GroupRepository {
     suspend fun markGroupMessageAsSeen(groupId: String, userId: String)
 
     suspend fun createGroup(name: String, members: List<String>): Result<String>
+    suspend fun updateGroup(
+        id: String,
+        name: String,
+        avatar: String?,
+        description: String?
+    ): Result<Unit>
 
     suspend fun getMembers(groupId: String): Result<List<Member>>
     suspend fun addMembers(groupId: String, newMembers: List<String>): Result<Unit>
