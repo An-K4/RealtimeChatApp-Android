@@ -49,6 +49,7 @@ fun Throwable.getErrorMessage(): UiText {
 
         // group exceptions
         is GroupException.GroupIdNotExistException -> UiText.StringResource(R.string.group_id_not_exist)
+        is GroupException.GroupNameBlankException -> UiText.StringResource(R.string.group_name_cannot_be_blank)
         is GroupException.GroupMemberSizeException -> UiText.StringResource(R.string.member_size_too_small)
 
         // message exceptions
