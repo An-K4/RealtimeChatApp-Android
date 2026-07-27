@@ -8,6 +8,7 @@ import androidx.room.Transaction
 import androidx.room.Update
 import com.example.realtimechatapp.data.local.entity.GroupEntity
 import com.example.realtimechatapp.data.local.pojo.GroupWithDetails
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface GroupDao {
@@ -16,6 +17,12 @@ interface GroupDao {
 
     @Update
     suspend fun updateGroup(group: GroupEntity)
+
+    @Query("UPDATE `groups` SET name = :groupName, avatar = :groupAvatar, description = :groupDescription WHERE id = :groupId")
+    suspend fun updateGroupInfo(groupId: String, groupName: String, groupAvatar: String?, groupDescription: String?)
+
+    @Query("SELECT * FROM `groups` WHERE id = :groupId")
+    fun observeGroupById(groupId: String): Flow<GroupWithDetails?>
 
     @Transaction
     @Query("SELECT * FROM `groups` WHERE id = :groupId")

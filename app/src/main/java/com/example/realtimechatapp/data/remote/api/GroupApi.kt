@@ -26,7 +26,7 @@ interface GroupApi {
     suspend fun getGroupMessage(@Path("id") groupId: String): GetGroupMessageResponseDto
 
     @GET("/groups/{id}")
-    suspend fun getGroupInfo(@Path("id") groupId: String): GetGroupInfoResponseDto
+    suspend fun getGroupInfo(@Path("id") groupId: String): GroupInfoResponseDto
 
     @POST("/groups/create")
     suspend fun createGroup(@Body request: CreateGroupRequestDto): CreateGroupResponseDto

@@ -179,9 +179,7 @@ class GroupRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getGroupInfo(groupId: String): Result<Group> {
-        val cachedGroupInfo = safeDbCall { groupDao.getGroupById(groupId)?.toGroup() }
-
+    override suspend fun getGroupInfo(groupId: String): Result<Unit> {
         return try {
             // call api
             val result = safeApiCall(networkChecker) {
@@ -196,27 +194,17 @@ class GroupRepositoryImpl @Inject constructor(
                 memberDao.syncGroupMembers(groupId, responseMembers)
             }
 
-            val groupInfo = safeDbCall { groupDao.getGroupById(groupId)?.toGroup() }
-
-            if (groupInfo != null) {
-                Timber.d(groupInfo.toString())
-                Result.success(groupInfo)
-            } else {
-                Timber.d("Lỗi khi lưu db")
-                Result.failure(LocalStorageException.RecordNotFoundException)
-            }
+            Result.success(Unit)
         } catch (e: Exception) {
             if (e is CancellationException) throw e
 
             Timber.e(e, "Lỗi lấy thông tin nhóm")
-
-            if (cachedGroupInfo != null) {
-                Timber.d("Có lỗi khi kết nối máy chủ, lấy dữ liệu trong cache")
-                Result.success(cachedGroupInfo)
-            } else {
-                Result.failure(e)
-            }
+            Result.failure(e)
         }
+    }
+
+    override fun observeGroupInfo(groupId: String): Flow<Group?> {
+        return groupDao.observeGroupById(groupId).map { it?.toGroup() }
     }
 
     override fun observeGroupMessages(groupId: String): Flow<List<Message>> {

@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.GroupOff
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.NotificationsOff
@@ -25,6 +26,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,12 +35,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
@@ -54,7 +60,26 @@ fun GroupMessageActionScreen(
     groupMessageActionViewModel: GroupMessageActionViewModel = hiltViewModel()
 ) {
     val groupMessageActionState by groupMessageActionViewModel.groupMessageActionState.collectAsStateWithLifecycle()
+    val lifeCycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        lifeCycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            groupMessageActionViewModel.groupMessageActionEvent.collect { event ->
+                when (event) {
+                    GroupMessageActionViewModel.GroupMessageActionEvent.Success -> {
+
+                    }
+
+                    is GroupMessageActionViewModel.GroupMessageActionEvent.Failure -> Toast.makeText(
+                        context,
+                        event.message.asString(context),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -88,6 +113,7 @@ fun GroupMessageActionScreen(
             text = groupMessageActionState.groupDescription ?: "",
             fontSize = 16.sp,
             color = MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Center,
             overflow = TextOverflow.Ellipsis,
             maxLines = 2
         )
@@ -151,18 +177,34 @@ fun GroupMessageActionScreen(
                 )
             }
 
-            item {
-                ActionItem(
-                    icon = Icons.Default.Edit,
-                    title = UiText.StringResource(R.string.edit_group).asString(),
-                    onClick = {
-                        Toast.makeText(
-                            context,
-                            UiText.StringResource(R.string.in_development).asString(context),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    },
-                )
+            if (groupMessageActionState.isEditGroupInfoVisible) {
+                item {
+                    ActionItem(
+                        icon = Icons.Default.Edit,
+                        title = UiText.StringResource(R.string.edit_group).asString(),
+                        onClick = {
+                            navController.navigate(Screen.EditGroup.createRoute(groupMessageActionState.groupId))
+                        },
+                    )
+                }
+            }
+
+            if (groupMessageActionState.isDeleteGroupVisible) {
+                item {
+                    ActionItem(
+                        icon = Icons.Default.GroupOff,
+                        title = UiText.StringResource(R.string.delete_group).asString(),
+                        isDangerAction = true,
+                        onClick = {
+                            Toast.makeText(
+                                context,
+                                UiText.StringResource(R.string.in_development).asString(context),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        trailingContent = {}
+                    )
+                }
             }
 
             item {
@@ -177,7 +219,7 @@ fun GroupMessageActionScreen(
                             Toast.LENGTH_SHORT
                         ).show()
                     },
-                    trailingContent = { Spacer(modifier = Modifier.weight(1f)) }
+                    trailingContent = {}
                 )
             }
         }
@@ -211,14 +253,14 @@ fun GroupMessageActionScreen() {
 
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "Nhóm Demo",
+                text = "Group Demo",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Đây là mô tả của nhóm demo",
+                text = "This is the description of Group Demo",
                 fontSize = 16.sp,
                 color = MaterialTheme.colorScheme.onBackground,
                 overflow = TextOverflow.Ellipsis,
@@ -276,11 +318,21 @@ fun GroupMessageActionScreen() {
 
                 item {
                     ActionItem(
+                        icon = Icons.Default.GroupOff,
+                        title = UiText.StringResource(R.string.delete_group).asString(),
+                        isDangerAction = true,
+                        onClick = {},
+                        trailingContent = {}
+                    )
+                }
+
+                item {
+                    ActionItem(
                         icon = Icons.AutoMirrored.Filled.ExitToApp,
                         title = UiText.StringResource(R.string.leave_group).asString(),
                         isDangerAction = true,
                         onClick = { },
-                        trailingContent = { Spacer(modifier = Modifier.weight(1f)) }
+                        trailingContent = {}
                     )
                 }
             }

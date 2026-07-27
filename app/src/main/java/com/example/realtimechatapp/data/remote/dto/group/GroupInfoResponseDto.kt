@@ -1,6 +1,6 @@
 package com.example.realtimechatapp.data.remote.dto.group
 
-data class GetGroupInfoResponseDto(
+data class GroupInfoResponseDto(
     val messages: String,
     val group: GroupDto
 )

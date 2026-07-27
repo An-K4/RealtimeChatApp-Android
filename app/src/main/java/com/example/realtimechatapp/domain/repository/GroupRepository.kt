@@ -10,7 +10,8 @@ import kotlinx.coroutines.flow.Flow
 interface GroupRepository {
     suspend fun getGroups(): Result<Unit>
     suspend fun getGroupMessage(groupId: String): Result<Unit>
-    suspend fun getGroupInfo(groupId: String): Result<Group>
+    suspend fun getGroupInfo(groupId: String): Result<Unit>
+    fun observeGroupInfo(groupId: String): Flow<Group?>
     fun observeGroupMessages(groupId: String): Flow<List<Message>>
     fun observeGroupMessageContacts(): Flow<List<GroupMessageContact>>
     suspend fun seenGroupMessage(groupId: String)

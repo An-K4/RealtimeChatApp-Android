@@ -11,6 +11,7 @@ import com.example.realtimechatapp.domain.model.Member
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.usecase.group.GetGroupInfoUseCase
 import com.example.realtimechatapp.domain.usecase.group.GetGroupMessageUseCase
+import com.example.realtimechatapp.domain.usecase.socket.group.ObserveGroupInfoUseCase
 import com.example.realtimechatapp.domain.usecase.socket.group.EmitGroupTypingStartUseCase
 import com.example.realtimechatapp.domain.usecase.socket.group.EmitGroupTypingStopUseCase
 import com.example.realtimechatapp.domain.usecase.socket.group.ObserveGroupMessageUseCase
@@ -41,6 +42,7 @@ class DetailGroupViewModel @Inject constructor(
     private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase,
     private val getGroupMessageUseCase: GetGroupMessageUseCase,
     private val getGroupInfoUseCase: GetGroupInfoUseCase,
+    private val observeGroupInfoUseCase: ObserveGroupInfoUseCase,
     private val observeGroupMessageUseCase: ObserveGroupMessageUseCase,
     private val observeGroupTypingUseCase: ObserveGroupTypingUseCase,
     private val sendGroupMessageUseCase: SendGroupMessageUseCase,
@@ -80,10 +82,9 @@ class DetailGroupViewModel @Inject constructor(
     private val groupId: String = checkNotNull(savedStateHandle[Screen.DetailGroup.ARG_GROUP_ID])
     private val _messageInput = MutableStateFlow("")
     private val _isLoading = MutableStateFlow(true)
-    private val _groupHeaderInfo = MutableStateFlow<Group?>(null)
 
     private val detailGroupContextFlow =
-        combine(currentUserId, _groupHeaderInfo) { currentUserId, groupHeaderInfo ->
+        combine(currentUserId, observeGroupInfoUseCase(groupId)) { currentUserId, groupHeaderInfo ->
             DetailGroupContext(
                 currentUserId = currentUserId,
                 groupHeaderInfo = groupHeaderInfo
@@ -99,7 +100,10 @@ class DetailGroupViewModel @Inject constructor(
         }
 
     val detailGroupState = combine(
-        detailGroupContextFlow,
+        detailGroupContextFlow.catch { exception ->
+            Timber.e("Lỗi luồng lấy thông tin nhóm: ${exception.getErrorMessage()}")
+            emit(DetailGroupContext("", null))
+        },
         observeGroupMessageUseCase(groupId).catch { exception ->
             Timber.e("Lỗi luồng lấy tin nhắn nhóm: ${exception.getErrorMessage()}")
             emit(emptyList())
@@ -191,8 +195,8 @@ class DetailGroupViewModel @Inject constructor(
 
     fun getGroupInfo() {
         viewModelScope.launch {
-            getGroupInfoUseCase(groupId).onSuccess { group ->
-                _groupHeaderInfo.value = group
+            getGroupInfoUseCase(groupId).onSuccess {
+                // do nothing, delegate to observe group info use case
             }.onFailure { exception ->
                 _detailGroupEvent.send(DetailGroupEvent.Failure(exception.getErrorMessage()))
             }
