@@ -9,6 +9,7 @@ class CreateGroupUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(name: String, members: List<String>): Result<String> {
         return try {
+            GroupValidator.validateGroupNameBlank(name)
             GroupValidator.validateGroupMemberSize(members)
             groupRepository.createGroup(name, members)
         } catch (e: Exception) {
