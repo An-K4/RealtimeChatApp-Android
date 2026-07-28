@@ -3,10 +3,12 @@ package com.example.realtimechatapp.ui.screens.groups.crud
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.model.Role
 import com.example.realtimechatapp.domain.usecase.group.GetGroupInfoUseCase
+import com.example.realtimechatapp.domain.usecase.group.LeaveGroupUseCase
 import com.example.realtimechatapp.domain.usecase.socket.group.ObserveGroupInfoUseCase
 import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import com.example.realtimechatapp.ui.navigation.Screen
@@ -26,7 +28,8 @@ class GroupMessageActionViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val getGroupInfoUseCase: GetGroupInfoUseCase,
     private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase,
-    private val observeGroupInfoUseCase: ObserveGroupInfoUseCase
+    private val observeGroupInfoUseCase: ObserveGroupInfoUseCase,
+    private val leaveGroupUseCase: LeaveGroupUseCase
 ) : ViewModel() {
     data class GroupMessageActionState(
         val groupId: String = "",
@@ -37,12 +40,23 @@ class GroupMessageActionViewModel @Inject constructor(
         val isEditGroupInfoVisible: Boolean = false,
         val isDeleteGroupVisible: Boolean = false,
         val muteNotifications: Boolean = false,
-        val isLoading: Boolean = false
+        val isLoading: Boolean = false,
+        val dialogState: GroupMessageActionDialogState = GroupMessageActionDialogState.Dismiss,
+        val isLeavingGroup: Boolean = false
     )
 
-    sealed class GroupMessageActionEvent {
-        object Success : GroupMessageActionEvent()
-        data class Failure(val message: UiText) : GroupMessageActionEvent()
+    sealed interface GroupMessageActionDialogState {
+        object Dismiss : GroupMessageActionDialogState
+        object LeaveGroupConfirm : GroupMessageActionDialogState
+        object LeaveGroupSuccess : GroupMessageActionDialogState
+        object DeleteGroupConfirm : GroupMessageActionDialogState
+        object DeleteGroupSuccess : GroupMessageActionDialogState
+        data class Failure(val message: UiText) : GroupMessageActionDialogState
+    }
+
+    sealed interface GroupMessageActionEvent {
+        object NavigateBack : GroupMessageActionEvent
+        data class Failure(val message: UiText) : GroupMessageActionEvent
     }
 
     private val groupId: String =
@@ -58,6 +72,8 @@ class GroupMessageActionViewModel @Inject constructor(
 
     private val _groupMessageActionEvent = Channel<GroupMessageActionEvent>()
     val groupMessageActionEvent = _groupMessageActionEvent.receiveAsFlow()
+
+    private var isCurrentUserOwner: Boolean = false
 
     init {
         getGroupInfo()
@@ -75,7 +91,7 @@ class GroupMessageActionViewModel @Inject constructor(
                     return@collect
                 } else {
                     val currentUserRole = group?.members?.find { it.userId?.id == currentUserId }?.role ?: Role.MEMBER
-                    val isCurrentUserOwner = group?.owner?.id == currentUserId
+                    isCurrentUserOwner = group?.owner?.id == currentUserId
                     val isCurrentUserAdmin = currentUserRole == Role.ADMIN
 
                     _groupMessageActionState.update {
@@ -119,5 +135,77 @@ class GroupMessageActionViewModel @Inject constructor(
 
     fun onMuteNotificationChange(newValue: Boolean) {
         _groupMessageActionState.update { it.copy(muteNotifications = newValue) }
+    }
+
+    fun showLeaveGroupConfirmDialog() {
+        viewModelScope.launch {
+            if (isCurrentUserOwner) {
+                _groupMessageActionState.update {
+                    it.copy(
+                        dialogState = GroupMessageActionDialogState.Failure(
+                            UiText.StringResource(R.string.owner_cannot_leave_group)
+                        )
+                    )
+                }
+            } else {
+                _groupMessageActionState.update { it.copy(dialogState = GroupMessageActionDialogState.LeaveGroupConfirm) }
+            }
+        }
+    }
+
+    fun leaveGroup() {
+        viewModelScope.launch {
+            _groupMessageActionState.update { it.copy(isLeavingGroup = true) }
+
+            leaveGroupUseCase(groupId).onSuccess {
+                _groupMessageActionState.update {
+                    it.copy(
+                        dialogState = GroupMessageActionDialogState.LeaveGroupSuccess,
+                        isLeavingGroup = false
+                    )
+                }
+            }.onFailure { exception ->
+                _groupMessageActionState.update {
+                    it.copy(
+                        dialogState = GroupMessageActionDialogState.Failure(
+                            exception.getErrorMessage()
+                        ),
+                        isLeavingGroup = false
+                    )
+                }
+            }
+        }
+    }
+
+    fun dismissDialog() {
+        _groupMessageActionState.update { it.copy(dialogState = GroupMessageActionDialogState.Dismiss) }
+    }
+
+    fun showDeleteGroupConfirmDialog() {
+        _groupMessageActionState.update { it.copy(dialogState = GroupMessageActionDialogState.DeleteGroupConfirm) }
+    }
+
+    fun deleteGroup() {
+        viewModelScope.launch {
+            _groupMessageActionState.update { it.copy(isLeavingGroup = true) }
+
+            leaveGroupUseCase(groupId).onSuccess {
+                _groupMessageActionState.update {
+                    it.copy(
+                        dialogState = GroupMessageActionDialogState.DeleteGroupSuccess,
+                        isLeavingGroup = false
+                    )
+                }
+            }.onFailure { exception ->
+                _groupMessageActionState.update {
+                    it.copy(
+                        dialogState = GroupMessageActionDialogState.Failure(
+                            exception.getErrorMessage()
+                        ),
+                        isLeavingGroup = false
+                    )
+                }
+            }
+        }
     }
 }

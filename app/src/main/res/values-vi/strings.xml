@@ -112,6 +112,13 @@
     <string name="see_all_members">Xem Thành Viên (%s)</string>
     <string name="edit_group">Sửa Thông Tin Nhóm</string>
     <string name="leave_group">Rời Nhóm</string>
+    <string name="leave">Rời</string>
+    <string name="leave_group_confirmation">Bạn có chắc chắn muốn rời khỏi nhóm này?</string>
+    <string name="leave_group_success">Bạn đã rời nhóm thành công</string>
+    <string name="owner_cannot_leave_group">Bạn là trưởng nhóm. Vui lòng chuyển quyền trưởng nhóm cho thành viên khác trước khi rời nhóm.</string>
+    <string name="delete_group">Giải Tán Nhóm</string>
+    <string name="delete_group_confirmation">Bạn có chắc chắn muốn giải tán nhóm này? Tất cả tin nhắn và dữ liệu sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.</string>
+    <string name="delete_group_success">Đã giải tán nhóm thành công</string>
     <string name="in_development">Đang phát triển</string>
     <string name="retry">Thử Lại</string>
     <string name="something_went_wrong">Đã có lỗi xảy ra.</string>
@@ -134,7 +141,6 @@
     <string name="delete_member_success">Đã xóa thành viên!</string>
     <string name="transfer_owner_confirm">Bạn có chắc chắn muốn chuyển quyền sở hữu nhóm cho thành viên này không?</string>
     <string name="transfer_owner_success">Chuyển quyền sở hữu nhóm thành công!</string>
-    <string name="delete_group">Xóa Nhóm</string>
     <string name="group_name_cannot_be_blank">Tên nhóm không được để trống</string>
     <string name="group_description">Mô tả nhóm</string>
     <string name="update_group_success">Cập nhật thông tin nhóm thành công!</string>

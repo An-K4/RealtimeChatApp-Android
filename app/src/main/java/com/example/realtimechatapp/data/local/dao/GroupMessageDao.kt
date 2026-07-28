@@ -33,4 +33,7 @@ interface GroupMessageDao {
 
     @Query("SELECT * FROM messages WHERE group_id = :groupId AND sender_id != :userId")
     suspend fun getMessagesToMarkSeen(groupId: String, userId: String): List<MessageEntity>
+
+    @Query("DELETE FROM messages WHERE group_id = :groupId")
+    suspend fun deleteGroupMessages(groupId: String)
 }

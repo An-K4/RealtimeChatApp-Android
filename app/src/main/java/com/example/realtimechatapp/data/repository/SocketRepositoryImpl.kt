@@ -291,6 +291,10 @@ class SocketRepositoryImpl @Inject constructor(
         socket?.emit(SocketEvents.JOIN_GROUP, groupId)
     }
 
+    override fun leaveGroup(groupId: String) {
+        socket?.emit(SocketEvents.LEAVE_GROUP, groupId)
+    }
+
     private fun setupGroupCrudListener() {
         socket?.on(SocketEvents.NEW_GROUP_RECEIVED) { args ->
             val rawJson = args[0].toString()
@@ -315,6 +319,24 @@ class SocketRepositoryImpl @Inject constructor(
                 }
             } catch (e: Exception) {
                 Timber.e(e, "Parse json thất bại")
+            }
+        }
+
+        socket?.on(SocketEvents.GROUP_DELETED) { args ->
+            val groupId = args[0].toString()
+            
+            scope.launch {
+                _groupCrudEventsFlow.emit(GroupCrudEvents.Deleted(groupId))
+            }
+        }
+
+        socket?.on(SocketEvents.MEMBER_LEFT) { args ->
+            val data = args[0] as? JSONObject
+            val groupId = data?.getString("groupId") ?: ""
+            val userId = data?.getString("userId") ?: ""
+            
+            scope.launch {
+                _groupCrudEventsFlow.emit(GroupCrudEvents.MemberLeft(groupId, userId))
             }
         }
     }

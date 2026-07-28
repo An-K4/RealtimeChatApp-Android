@@ -63,4 +63,7 @@ interface GroupContactDao {
             insertContact(newGroupContact)
         }
     }
+
+    @Query("DELETE FROM contacts WHERE id = :groupId AND is_group = 1")
+    suspend fun deleteGroupContact(groupId: String)
 }
