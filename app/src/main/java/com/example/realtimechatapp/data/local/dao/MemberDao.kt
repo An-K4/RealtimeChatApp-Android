@@ -20,6 +20,9 @@ interface MemberDao {
     @Query("DELETE FROM members WHERE group_id = :groupId")
     suspend fun deleteGroupMembers(groupId: String)
 
+    @Query("DELETE FROM members WHERE group_id = :groupId AND user_id = :userId")
+    suspend fun deleteMember(groupId: String, userId: String)
+
     @Transaction
     suspend fun syncGroupMembers(groupId: String, newMembers: List<MemberEntity>) {
         deleteGroupMembers(groupId)

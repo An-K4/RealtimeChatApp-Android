@@ -30,4 +30,5 @@ interface GroupRepository {
     suspend fun changeRole(groupId: String, memberId: String, newRole: Role): Result<Unit>
     suspend fun deleteMember(groupId: String, memberId: String): Result<Unit>
     suspend fun transferOwner(groupId: String, newOwnerId: String): Result<List<Member>>
+    suspend fun leaveGroup(groupId: String): Result<Unit>
 }

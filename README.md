@@ -4,7 +4,7 @@
 
 ---
 
-## 📸 Tổng Quan
+## Tổng Quan
 
 Clover Chatty là ứng dụng chat Android cho phép người dùng nhắn tin trực tiếp theo thời gian thực thông qua WebSocket (Socket.IO). Ứng dụng hỗ trợ cả nhắn tin 1-1 và nhóm, với khả năng lưu trữ cục bộ để hoạt động ổn định kể cả khi mất mạng tạm thời.
 
@@ -92,6 +92,10 @@ app/
 
 ### 👥 Quản Lý Nhóm
 - Tạo nhóm mới và thêm thành viên
+- Chỉnh sửa tên nhóm, ảnh đại diện nhóm
+- Phân quyền: Owner, Admin, Member
+- Xóa thành viên, chuyển quyền Owner
+- Rời nhóm và xóa nhóm
 
 ### 🔍 Tìm Kiếm
 - Màn hình tìm kiếm (`Screen.Search`) đã có trong navigation và hoạt động ổn định
@@ -129,12 +133,6 @@ app/
 ## 🚀 Hướng Phát Triển Trong Tương Lai
 
 ### 📌 Ưu Tiên Cao
-
-#### Quản Lý Nhóm
-- Chỉnh sửa tên nhóm, ảnh đại diện nhóm
-- Phân quyền: Owner, Admin, Member
-- Xóa thành viên, chuyển quyền Owner
-- Rời nhóm
 
 #### Thông Báo Đẩy (Push Notification)
 - Tích hợp Firebase Cloud Messaging (FCM) để nhận thông báo khi ứng dụng đóng

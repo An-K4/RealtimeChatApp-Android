@@ -49,4 +49,7 @@ interface GroupApi {
 
     @PATCH("/groups/{id}/transferOwner")
     suspend fun transferOwner(@Path("id") groupId: String, @Body request: TransferOwnerRequestDto): TransferOwnerResponseDto
+
+    @DELETE("/groups/delete/{id}")
+    suspend fun deleteGroup(@Path("id") groupId: String): MessageResponseDto
 }

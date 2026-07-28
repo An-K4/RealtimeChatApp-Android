@@ -30,4 +30,7 @@ interface GroupDao {
 
     @Query("SELECT owner_id FROM `groups` WHERE id = :groupId")
     suspend fun getOwnerIdOfGroup(groupId: String): String?
+
+    @Query("DELETE FROM `groups` WHERE id = :groupId")
+    suspend fun deleteGroup(groupId: String)
 }

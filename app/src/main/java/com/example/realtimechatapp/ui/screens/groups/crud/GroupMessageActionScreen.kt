@@ -50,6 +50,8 @@ import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.ui.components.ActionItem
+import com.example.realtimechatapp.ui.components.ConfirmationDialog
+import com.example.realtimechatapp.ui.components.NotificationDialog
 import com.example.realtimechatapp.ui.components.ToggleSettingItem
 import com.example.realtimechatapp.ui.navigation.Screen
 import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
@@ -67,8 +69,10 @@ fun GroupMessageActionScreen(
         lifeCycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             groupMessageActionViewModel.groupMessageActionEvent.collect { event ->
                 when (event) {
-                    GroupMessageActionViewModel.GroupMessageActionEvent.Success -> {
-
+                    GroupMessageActionViewModel.GroupMessageActionEvent.NavigateBack -> {
+                        navController.navigate(Screen.Groups.route) {
+                            popUpTo(Screen.Groups.route) { inclusive = false }
+                        }
                     }
 
                     is GroupMessageActionViewModel.GroupMessageActionEvent.Failure -> Toast.makeText(
@@ -196,11 +200,7 @@ fun GroupMessageActionScreen(
                         title = UiText.StringResource(R.string.delete_group).asString(),
                         isDangerAction = true,
                         onClick = {
-                            Toast.makeText(
-                                context,
-                                UiText.StringResource(R.string.in_development).asString(context),
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            groupMessageActionViewModel.showDeleteGroupConfirmDialog()
                         },
                         trailingContent = {}
                     )
@@ -213,16 +213,83 @@ fun GroupMessageActionScreen(
                     title = UiText.StringResource(R.string.leave_group).asString(),
                     isDangerAction = true,
                     onClick = {
-                        Toast.makeText(
-                            context,
-                            UiText.StringResource(R.string.in_development).asString(context),
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        groupMessageActionViewModel.showLeaveGroupConfirmDialog()
                     },
                     trailingContent = {}
                 )
             }
         }
+    }
+
+    when (val dialogState = groupMessageActionState.dialogState) {
+        is GroupMessageActionViewModel.GroupMessageActionDialogState.LeaveGroupConfirm -> {
+            ConfirmationDialog(
+                title = UiText.StringResource(R.string.warning).asString(),
+                message = UiText.StringResource(R.string.leave_group_confirmation).asString(),
+                dismissText = UiText.StringResource(R.string.cancel).asString(),
+                confirmText = UiText.StringResource(R.string.leave).asString(),
+                isDangerConfirm = true,
+                onDismiss = { groupMessageActionViewModel.dismissDialog() },
+                onConfirm = {
+                    groupMessageActionViewModel.dismissDialog()
+                    groupMessageActionViewModel.leaveGroup()
+                }
+            )
+        }
+
+        is GroupMessageActionViewModel.GroupMessageActionDialogState.LeaveGroupSuccess -> {
+            NotificationDialog(
+                title = UiText.StringResource(R.string.success).asString(),
+                message = UiText.StringResource(R.string.leave_group_success).asString(),
+                isSuccess = true,
+                onDismiss = {
+                    groupMessageActionViewModel.dismissDialog()
+                    navController.navigate(Screen.Groups.route) {
+                        popUpTo(Screen.Groups.route) { inclusive = false }
+                    }
+                }
+            )
+        }
+
+        is GroupMessageActionViewModel.GroupMessageActionDialogState.DeleteGroupConfirm -> {
+            ConfirmationDialog(
+                title = UiText.StringResource(R.string.warning).asString(),
+                message = UiText.StringResource(R.string.delete_group_confirmation).asString(),
+                dismissText = UiText.StringResource(R.string.cancel).asString(),
+                confirmText = UiText.StringResource(R.string.delete_group).asString(),
+                isDangerConfirm = true,
+                onDismiss = { groupMessageActionViewModel.dismissDialog() },
+                onConfirm = {
+                    groupMessageActionViewModel.dismissDialog()
+                    groupMessageActionViewModel.deleteGroup()
+                }
+            )
+        }
+
+        is GroupMessageActionViewModel.GroupMessageActionDialogState.DeleteGroupSuccess -> {
+            NotificationDialog(
+                title = UiText.StringResource(R.string.success).asString(),
+                message = UiText.StringResource(R.string.delete_group_success).asString(),
+                isSuccess = true,
+                onDismiss = {
+                    groupMessageActionViewModel.dismissDialog()
+                    navController.navigate(Screen.Groups.route) {
+                        popUpTo(Screen.Groups.route) { inclusive = false }
+                    }
+                }
+            )
+        }
+
+        is GroupMessageActionViewModel.GroupMessageActionDialogState.Failure -> {
+            NotificationDialog(
+                title = UiText.StringResource(R.string.error).asString(),
+                message = dialogState.message.asString(),
+                isSuccess = false,
+                onDismiss = { groupMessageActionViewModel.dismissDialog() }
+            )
+        }
+
+        GroupMessageActionViewModel.GroupMessageActionDialogState.Dismiss -> {}
     }
 }
 

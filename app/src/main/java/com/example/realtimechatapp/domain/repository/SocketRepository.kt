@@ -29,6 +29,7 @@ interface SocketRepository {
     suspend fun emitTypingStop(receiverId: String)
 
     fun joinGroup(groupId: String)
+    fun leaveGroup(groupId: String)
     fun observeGroupCrudEvents(): SharedFlow<GroupCrudEvents>
     fun observeGroupMessages(): SharedFlow<MessageDto>
     fun observeGroupMessageContacts(): SharedFlow<MessageDto>
@@ -51,6 +52,7 @@ sealed class GroupCrudEvents {
     data class Created(val group: GroupDto) : GroupCrudEvents()
     data class UpdatedInfo(val groupUpdatedInfo: GroupInfoUpdatedDto) : GroupCrudEvents()
     data class Deleted(val groupId: String) : GroupCrudEvents()
+    data class MemberLeft(val groupId: String, val userId: String) : GroupCrudEvents()
 }
 
 object SocketEvents {
@@ -66,6 +68,7 @@ object SocketEvents {
 
     // group
     const val JOIN_GROUP = "join-group"
+    const val LEAVE_GROUP = "leave-group"
     const val RECEIVE_GROUP_MESSAGE = "receive-group-message"
     const val SEEN_GROUP_MESSAGE = "seen-group-message"
     const val USER_SEEN_MESSAGE = "user-seen-message"
@@ -74,4 +77,6 @@ object SocketEvents {
     const val GROUP_TYPING_STOP = "group-typing-stop"
     const val NEW_GROUP_RECEIVED = "new-group-received"
     const val NEW_GROUP_UPDATED = "new-group-updated"
+    const val GROUP_DELETED = "group-deleted"
+    const val MEMBER_LEFT = "member-left"
 }

@@ -139,7 +139,25 @@ class GroupRepositoryImpl @Inject constructor(
                     }
 
                     is GroupCrudEvents.Deleted -> {
-                        // in development
+                        val groupId = event.groupId
+                        
+                        localDatabase.withTransaction {
+                            groupContactDao.deleteGroupContact(groupId)
+                            groupMessageDao.deleteGroupMessages(groupId)
+                            memberDao.deleteGroupMembers(groupId)
+                            groupDao.deleteGroup(groupId)
+                        }
+                        
+                        socketRepository.leaveGroup(groupId)
+                    }
+
+                    is GroupCrudEvents.MemberLeft -> {
+                        val groupId = event.groupId
+                        val userId = event.userId
+                        
+                        safeDbCall {
+                            memberDao.deleteMember(groupId, userId)
+                        }
                     }
                 }
             }
@@ -427,6 +445,33 @@ class GroupRepositoryImpl @Inject constructor(
             if (e is CancellationException) throw e
 
             Timber.e(e, "Lỗi khi chuyển quyền chủ nhóm")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun leaveGroup(groupId: String): Result<Unit> {
+        return try {
+            // Call API to leave/delete group
+            safeApiCall(networkChecker) { groupApi.deleteGroup(groupId) }
+
+            // Cleanup local database
+            safeDbCall {
+                localDatabase.withTransaction {
+                    groupContactDao.deleteGroupContact(groupId)
+                    groupMessageDao.deleteGroupMessages(groupId)
+                    memberDao.deleteGroupMembers(groupId)
+                    groupDao.deleteGroup(groupId)
+                }
+            }
+
+            // Leave socket room
+            socketRepository.leaveGroup(groupId)
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
+            Timber.e(e, "Lỗi khi rời nhóm")
             Result.failure(e)
         }
     }
