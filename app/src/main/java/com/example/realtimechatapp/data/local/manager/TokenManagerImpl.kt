@@ -20,8 +20,10 @@ class TokenManagerImpl @Inject constructor(
 ): TokenManager {
     companion object {
         private val TOKEN_KEY = stringPreferencesKey("jwt_token")
+        private val REFRESH_TOKEN_KEY = stringPreferencesKey("jwt_refresh_token")
     }
 
+    // Access Token
     override suspend fun saveToken(token: String){
         try {
             dataStore.edit { prefs ->
@@ -56,6 +58,45 @@ class TokenManagerImpl @Inject constructor(
             if (e is CancellationException) throw e
 
             Timber.e(e, "Lỗi xóa token")
+            throw LocalStorageException.LocalDataWriteException
+        }
+    }
+
+    // Refresh Token
+    override suspend fun saveRefreshToken(token: String){
+        try {
+            dataStore.edit { prefs ->
+                prefs[REFRESH_TOKEN_KEY] = token
+            }
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
+            Timber.e(e, "Lỗi lưu refresh token")
+            throw LocalStorageException.LocalDataWriteException
+        }
+    }
+
+    override val refreshToken: Flow<String?> = dataStore.data.catch { exception ->
+        if (exception is IOException) {
+            Timber.e(exception, "Lỗi đọc refresh token")
+            emit(emptyPreferences())
+        } else {
+            Timber.e(exception, "Đã xảy ra lỗi gì đó khi đọc refresh token")
+            throw exception
+        }
+    }.map { prefs ->
+        prefs[REFRESH_TOKEN_KEY]
+    }
+
+    override suspend fun deleteRefreshToken(){
+        try {
+            dataStore.edit { prefs ->
+                prefs.remove(REFRESH_TOKEN_KEY)
+            }
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
+            Timber.e(e, "Lỗi xóa refresh token")
             throw LocalStorageException.LocalDataWriteException
         }
     }

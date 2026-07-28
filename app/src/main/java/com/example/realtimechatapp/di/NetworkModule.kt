@@ -41,6 +41,19 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    @javax.inject.Named("refreshClient")
+    fun provideRefreshClient(): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor(HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            })
+            .connectTimeout(35, TimeUnit.SECONDS)
+            .readTimeout(35, TimeUnit.SECONDS)
+            .build()
+    }
+
+    @Provides
+    @Singleton
     fun provideRetrofit(client: OkHttpClient, gson: Gson): Retrofit{
         return Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create(gson))
