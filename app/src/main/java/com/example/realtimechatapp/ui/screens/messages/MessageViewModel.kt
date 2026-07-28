@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.data.local.manager.TokenManagerImpl
+import com.example.realtimechatapp.domain.exception.AuthException
 import com.example.realtimechatapp.domain.exception.NetworkException
 import com.example.realtimechatapp.domain.model.MessageContact
 import com.example.realtimechatapp.domain.usecase.message.GetMessageContactUseCase
@@ -83,10 +84,21 @@ class MessageViewModel @Inject constructor(
     )
 
     init {
+        checkToken()
         viewModelScope.launch {
             if (isTokenValid()) {
                 connectSocket()
                 getUsers() // auto load
+            }
+        }
+    }
+
+    private fun checkToken() {
+        viewModelScope.launch {
+            tokenManager.token.collect { token ->
+                if (token.isNullOrEmpty()) {
+                    _messageDialogState.value = MessageDialogState.Unauthenticated
+                }
             }
         }
     }
@@ -118,6 +130,11 @@ class MessageViewModel @Inject constructor(
                     is NetworkException.NoInternetException,
                     NetworkException.ServerUnreachableException -> {
                         Timber.e("${exception.getErrorMessage()}")
+                    }
+
+                    is AuthException.UnauthorizedException -> {
+                        // do nothing
+                        Timber.d("Lỗi token hết hạn")
                     }
 
                     else -> _messageDialogState.value = MessageDialogState.Failure(exception.getErrorMessage())

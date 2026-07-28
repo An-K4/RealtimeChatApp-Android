@@ -6,6 +6,7 @@ import com.example.realtimechatapp.data.local.entity.toUser
 import com.example.realtimechatapp.data.local.manager.TokenManagerImpl
 import com.example.realtimechatapp.data.remote.api.AuthApi
 import com.example.realtimechatapp.data.remote.dto.auth.LoginRequestDto
+import com.example.realtimechatapp.data.remote.dto.auth.LogoutRequestDto
 import com.example.realtimechatapp.data.remote.dto.auth.SignupRequestDto
 import com.example.realtimechatapp.data.remote.safeApiCall
 import com.example.realtimechatapp.data.local.safeDbCall
@@ -13,6 +14,7 @@ import com.example.realtimechatapp.domain.model.User
 import com.example.realtimechatapp.domain.repository.AuthRepository
 import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.repository.NetworkChecker
+import kotlinx.coroutines.flow.first
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -41,7 +43,8 @@ class AuthRepositoryImpl @Inject constructor(
             Timber.d("Đã xóa toàn bộ dữ liệu")
 
             val user = response.user.toUser()
-            tokenManager.saveToken(response.token)
+            tokenManager.saveToken(response.accessToken)
+            tokenManager.saveRefreshToken(response.refreshToken)
             currentUserManager.switchUser(response.user.id)
             Timber.d("Chuẩn bị chèn người dùng vào db")
             safeDbCall { userDao.insertUser(response.user.toUserEntity()) }
@@ -77,18 +80,38 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun logout(): Result<Unit> {
         return try {
-            safeApiCall(networkChecker) { authApi.logout() }
-
-            tokenManager.deleteToken()
-            currentUserManager.switchUser("")
-            safeDbCall { localDatabase.clearAllTables() }
-            Timber.d("Đã xóa toàn bộ dữ liệu")
+            // Lấy refresh token từ DataStore
+            val refreshToken = tokenManager.refreshToken.first()
+            
+            // Nếu có refresh token, gọi backend để blacklist
+            if (!refreshToken.isNullOrEmpty()) {
+                safeApiCall(networkChecker) { 
+                    authApi.logout(LogoutRequestDto(refreshToken)) 
+                }
+                Timber.d("Backend logout thành công")
+            } else {
+                // Silent: Không có refresh token, chỉ cleanup local
+                Timber.w("Logout: Refresh token not found, cleanup local only")
+            }
+            
             Result.success(Unit)
         } catch (e: Exception) {
             if (e is CancellationException) throw e
-
-            Timber.e(e, "Đăng xuất lỗi")
-            Result.failure(e)
+            
+            // Dù backend lỗi, vẫn coi như logout thành công
+            Timber.e(e, "Logout API failed, but will cleanup local data")
+            Result.success(Unit)
+        } finally {
+            // LUÔN LUÔN cleanup local data, dù có lỗi hay không
+            try {
+                tokenManager.deleteToken()
+                tokenManager.deleteRefreshToken()
+                currentUserManager.switchUser("")
+                safeDbCall { localDatabase.clearAllTables() }
+                Timber.d("Đã xóa toàn bộ dữ liệu local")
+            } catch (cleanupError: Exception) {
+                Timber.e(cleanupError, "Cleanup local data failed")
+            }
         }
     }
 

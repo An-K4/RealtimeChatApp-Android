@@ -24,7 +24,7 @@ interface AuthApi {
     suspend fun refresh(@Body request: RefreshTokenRequestDto): RefreshTokenResponseDto
 
     @POST("/auth/logout")
-    suspend fun logout(): MessageResponseDto
+    suspend fun logout(@Body request: LogoutRequestDto): LogoutResponseDto
 
     @GET("/auth/me")
     suspend fun getMe(): UserResponseDto
