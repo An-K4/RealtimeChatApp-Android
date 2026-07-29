@@ -206,11 +206,13 @@ class GroupRepositoryImpl @Inject constructor(
                 groupApi.getGroupInfo(groupId)
             }
             val responseGroup = result.group.toGroupEntity()
+            val responseOwner = result.group.owner.toUserEntity()
             val responseMembers = result.group.members.map { it.toMemberEntity(groupId) }
 
             // save to db
             safeDbCall {
                 groupDao.insertGroup(responseGroup)
+                userDao.insertUser(responseOwner)
                 memberDao.syncGroupMembers(groupId, responseMembers)
             }
 

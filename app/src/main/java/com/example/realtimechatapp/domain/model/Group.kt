@@ -5,7 +5,7 @@ data class Group(
     val name: String,
     val avatar: String?,
     val description: String?,
-    val owner: User,
+    val owner: User?,
     val members: List<Member>,
     val createdAt: String
 )

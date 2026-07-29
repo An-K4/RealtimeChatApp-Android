@@ -24,7 +24,7 @@ data class GroupWithDetails(
         parentColumn = "owner_id",
         entityColumn = "id"
     )
-    val owner: UserEntity,
+    val owner: UserEntity?,
 )
 
 fun GroupWithDetails.toGroup() = Group(
@@ -32,7 +32,7 @@ fun GroupWithDetails.toGroup() = Group(
     name = group.name,
     avatar = group.avatar,
     description = group.description,
-    owner = owner.toUser(),
-    members = members.map { it.toMember(owner.id) },
+    owner = owner?.toUser(),
+    members = owner?.let { owner -> members.map { it.toMember(owner.id) } } ?: emptyList(),
     createdAt = group.createdAt.formatToTime(false)
 )
