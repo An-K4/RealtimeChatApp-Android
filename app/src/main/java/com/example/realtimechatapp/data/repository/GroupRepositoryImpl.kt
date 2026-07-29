@@ -159,6 +159,12 @@ class GroupRepositoryImpl @Inject constructor(
                             memberDao.deleteMember(groupId, userId)
                         }
                     }
+
+                    is GroupCrudEvents.ReloadGroups -> {
+                        // Gọi lại getGroups() để lấy danh sách mới với unread count và lastMessage đúng
+                        getGroups()
+                        Timber.d("Đã được thêm vào nhóm mới, reload groups thành công")
+                    }
                 }
             }
         }

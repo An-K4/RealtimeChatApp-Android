@@ -53,6 +53,7 @@ sealed class GroupCrudEvents {
     data class UpdatedInfo(val groupUpdatedInfo: GroupInfoUpdatedDto) : GroupCrudEvents()
     data class Deleted(val groupId: String) : GroupCrudEvents()
     data class MemberLeft(val groupId: String, val userId: String) : GroupCrudEvents()
+    object ReloadGroups : GroupCrudEvents()
 }
 
 object SocketEvents {
@@ -79,4 +80,5 @@ object SocketEvents {
     const val NEW_GROUP_UPDATED = "new-group-updated"
     const val GROUP_DELETED = "group-deleted"
     const val MEMBER_LEFT = "member-left"
+    const val RELOAD_GROUPS = "reload-groups"
 }

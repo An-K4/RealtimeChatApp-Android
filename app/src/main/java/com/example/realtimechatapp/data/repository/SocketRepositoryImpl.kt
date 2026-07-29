@@ -86,11 +86,12 @@ class SocketRepositoryImpl @Inject constructor(
         }
 
         // hilt can't get token asynchronously in @Provides
-        val token = tokenManager.token.first()
-        if (token?.isEmpty() == true) return
+        // Sử dụng refresh token cho socket (long-lived 7 days)
+        val refreshToken = tokenManager.refreshToken.first()
+        if (refreshToken?.isEmpty() == true) return
 
         val options = IO.Options.builder()
-            .setAuth(mapOf("token" to token))
+            .setAuth(mapOf("token" to refreshToken))
             .setForceNew(true)
             .setReconnection(true)
             .build()
@@ -337,6 +338,13 @@ class SocketRepositoryImpl @Inject constructor(
             
             scope.launch {
                 _groupCrudEventsFlow.emit(GroupCrudEvents.MemberLeft(groupId, userId))
+            }
+        }
+
+        socket?.on(SocketEvents.RELOAD_GROUPS) {
+            scope.launch {
+                Timber.d("có socket reload nhóm")
+                _groupCrudEventsFlow.emit(GroupCrudEvents.ReloadGroups)
             }
         }
     }
