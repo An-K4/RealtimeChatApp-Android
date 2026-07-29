@@ -9,6 +9,7 @@ import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.usecase.group.GetGroupInfoUseCase
 import com.example.realtimechatapp.domain.usecase.socket.group.ObserveGroupInfoUseCase
 import com.example.realtimechatapp.domain.usecase.group.UpdateGroupUseCase
+import com.example.realtimechatapp.domain.usecase.socket.ObserveKickedFromGroupUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +26,8 @@ class EditGroupViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val getGroupInfoUseCase: GetGroupInfoUseCase,
     private val observeGroupInfoUseCase: ObserveGroupInfoUseCase,
-    private val updateGroupUseCase: UpdateGroupUseCase
+    private val updateGroupUseCase: UpdateGroupUseCase,
+    private val observeKickedFromGroupUseCase: ObserveKickedFromGroupUseCase
 ) : ViewModel() {
     data class EditGroupState(
         val groupName: String = "",
@@ -33,8 +35,14 @@ class EditGroupViewModel @Inject constructor(
         val groupAvatar: Any? = null,
         val isUpdateEnable: Boolean = false,
         val isLoading: Boolean = false,
-        val isUpdating: Boolean = false
+        val isUpdating: Boolean = false,
+        val dialogState: EditGroupDialogState = EditGroupDialogState.Dismiss
     )
+    
+    sealed interface EditGroupDialogState {
+        object Dismiss : EditGroupDialogState
+        object KickedFromGroup : EditGroupDialogState
+    }
 
     sealed interface EditGroupEvent {
         object EditSuccess : EditGroupEvent
@@ -60,6 +68,17 @@ class EditGroupViewModel @Inject constructor(
     init {
         getGroupInfo()
         observeGroupInfo()
+        observeKickEvents()
+    }
+    
+    private fun observeKickEvents() {
+        viewModelScope.launch {
+            observeKickedFromGroupUseCase().collect { kickInfo ->
+                if (kickInfo.groupId == groupId) {
+                    _editGroupState.update { it.copy(dialogState = EditGroupDialogState.KickedFromGroup) }
+                }
+            }
+        }
     }
 
     private fun getGroupInfo() {

@@ -1,5 +1,6 @@
 package com.example.realtimechatapp.ui.screens.groups
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,9 +10,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -26,6 +29,23 @@ fun GroupScreen(
     groupViewModel: GroupViewModel = hiltViewModel()
 ){
     val groupState by groupViewModel.groupState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    
+    // Handle kick event with Toast
+    LaunchedEffect(Unit) {
+        groupViewModel.groupEvent.collect { event ->
+            when (event) {
+                is GroupViewModel.GroupEvent.KickedFromGroup -> {
+                    Toast.makeText(
+                        context,
+                        "Bạn đã bị xóa khỏi nhóm ${event.groupName}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+                else -> { /* Handle other events if needed */ }
+            }
+        }
+    }
 
     Box(
         modifier = Modifier.fillMaxSize()

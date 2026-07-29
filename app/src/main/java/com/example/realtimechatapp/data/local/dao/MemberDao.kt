@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import com.example.realtimechatapp.data.local.entity.MemberEntity
+import com.example.realtimechatapp.data.local.entity.MemberRole
 import com.example.realtimechatapp.data.local.pojo.MemberWithDetails
 
 @Dao
@@ -22,6 +23,9 @@ interface MemberDao {
 
     @Query("DELETE FROM members WHERE group_id = :groupId AND user_id = :userId")
     suspend fun deleteMember(groupId: String, userId: String)
+
+    @Query("UPDATE members SET role = :newRole WHERE group_id = :groupId AND user_id = :userId")
+    suspend fun updateMemberRole(groupId: String, userId: String, newRole: MemberRole)
 
     @Transaction
     suspend fun syncGroupMembers(groupId: String, newMembers: List<MemberEntity>) {

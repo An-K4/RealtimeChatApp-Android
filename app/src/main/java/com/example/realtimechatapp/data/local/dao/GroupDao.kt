@@ -21,6 +21,9 @@ interface GroupDao {
     @Query("UPDATE `groups` SET name = :groupName, avatar = :groupAvatar, description = :groupDescription WHERE id = :groupId")
     suspend fun updateGroupInfo(groupId: String, groupName: String, groupAvatar: String?, groupDescription: String?)
 
+    @Query("UPDATE `groups` SET owner_id = :newOwnerId WHERE id = :groupId")
+    suspend fun updateGroupOwner(groupId: String, newOwnerId: String)
+
     @Query("SELECT * FROM `groups` WHERE id = :groupId")
     fun observeGroupById(groupId: String): Flow<GroupWithDetails?>
 

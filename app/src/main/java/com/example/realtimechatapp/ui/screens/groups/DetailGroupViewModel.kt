@@ -18,6 +18,7 @@ import com.example.realtimechatapp.domain.usecase.socket.group.ObserveGroupMessa
 import com.example.realtimechatapp.domain.usecase.socket.group.ObserveGroupTypingUseCase
 import com.example.realtimechatapp.domain.usecase.socket.group.SeenGroupMessageUseCase
 import com.example.realtimechatapp.domain.usecase.socket.group.SendGroupMessageUseCase
+import com.example.realtimechatapp.domain.usecase.socket.ObserveKickedFromGroupUseCase
 import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import com.example.realtimechatapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -48,18 +49,20 @@ class DetailGroupViewModel @Inject constructor(
     private val sendGroupMessageUseCase: SendGroupMessageUseCase,
     private val seenGroupMessageUseCase: SeenGroupMessageUseCase,
     private val emitGroupTypingStartUseCase: EmitGroupTypingStartUseCase,
-    private val emitGroupTypingStopUseCase: EmitGroupTypingStopUseCase
+    private val emitGroupTypingStopUseCase: EmitGroupTypingStopUseCase,
+    private val observeKickedFromGroupUseCase: ObserveKickedFromGroupUseCase
 ) : ViewModel() {
     data class DetailGroupState(
         val currentUserId: String = "",
-        val groupName: String? = null,
+        val groupName: String = "",
         val groupStatus: UiText? = null,
         val groupTypingStatus: UiText? = null,
-        val groupAvatar: String? = null,
+        val groupAvatar: String = "",
         val groupMessages: List<Message> = emptyList(),
         val groupMembers: List<Member> = emptyList(),
         val messageInput: String? = null,
-        val isLoading: Boolean = false
+        val isLoading: Boolean = false,
+        val isKicked: Boolean = false
     )
 
     sealed interface DetailGroupEvent {
@@ -82,6 +85,7 @@ class DetailGroupViewModel @Inject constructor(
     private val groupId: String = checkNotNull(savedStateHandle[Screen.DetailGroup.ARG_GROUP_ID])
     private val _messageInput = MutableStateFlow("")
     private val _isLoading = MutableStateFlow(true)
+    private val _isKicked = MutableStateFlow(false)
 
     private val detailGroupContextFlow =
         combine(currentUserId, observeGroupInfoUseCase(groupId)) { currentUserId, groupHeaderInfo ->
@@ -112,14 +116,15 @@ class DetailGroupViewModel @Inject constructor(
             Timber.e("Lỗi luồng lấy người dùng đang nhập trong nhóm: ${exception.getErrorMessage()}")
             emit(emptyList())
         },
-        inputAndLoadingStateFlow
-    ) { detailGroupContext, groupMessages, groupTypingUsers, inputAndLoadingState ->
+        inputAndLoadingStateFlow,
+        _isKicked
+    ) { detailGroupContext, groupMessages, groupTypingUsers, inputAndLoadingState, isKicked ->
         val otherTypingUsers =
             groupTypingUsers.filter { it.senderId != detailGroupContext.currentUserId }
 
         DetailGroupState(
             currentUserId = detailGroupContext.currentUserId,
-            groupName = detailGroupContext.groupHeaderInfo?.name,
+            groupName = detailGroupContext.groupHeaderInfo?.name ?: "",
             groupStatus = UiText.StringResource(
                 R.string.group_status,
                 detailGroupContext.groupHeaderInfo?.members?.size ?: 0
@@ -143,15 +148,14 @@ class DetailGroupViewModel @Inject constructor(
                     otherTypingUsers[0].senderName
                 )
 
-                else -> {
-                    null
-                }
+                else -> null
             },
-            groupAvatar = detailGroupContext.groupHeaderInfo?.avatar,
+            groupAvatar = detailGroupContext.groupHeaderInfo?.avatar ?: "",
             groupMessages = groupMessages,
             groupMembers = detailGroupContext.groupHeaderInfo?.members ?: emptyList(),
             messageInput = inputAndLoadingState.messageInput,
-            isLoading = inputAndLoadingState.isLoading && groupMessages.isEmpty()
+            isLoading = inputAndLoadingState.isLoading && groupMessages.isEmpty(),
+            isKicked = isKicked
         )
     }.catch { exception ->
         Timber.e(exception, "Lỗi luồng màn hình nhắn nhóm chi tiết")
@@ -170,6 +174,17 @@ class DetailGroupViewModel @Inject constructor(
         getGroupInfo()
         getGroupMessage()
         markGroupMessageAsSeen()
+        observeKickEvents()
+    }
+    
+    private fun observeKickEvents() {
+        viewModelScope.launch {
+            observeKickedFromGroupUseCase().collect { kickInfo ->
+                if (kickInfo.groupId == groupId) {
+                    _isKicked.value = true
+                }
+            }
+        }
     }
 
     fun markGroupMessageAsSeen() {

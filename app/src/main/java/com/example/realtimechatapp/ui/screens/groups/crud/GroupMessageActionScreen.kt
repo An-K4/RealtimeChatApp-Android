@@ -69,10 +69,8 @@ fun GroupMessageActionScreen(
         lifeCycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             groupMessageActionViewModel.groupMessageActionEvent.collect { event ->
                 when (event) {
-                    GroupMessageActionViewModel.GroupMessageActionEvent.NavigateBack -> {
-                        navController.navigate(Screen.Groups.route) {
-                            popUpTo(Screen.Groups.route) { inclusive = false }
-                        }
+                    GroupMessageActionViewModel.GroupMessageActionEvent.Success -> {
+
                     }
 
                     is GroupMessageActionViewModel.GroupMessageActionEvent.Failure -> Toast.makeText(
@@ -107,14 +105,14 @@ fun GroupMessageActionScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = groupMessageActionState.groupName ?: "",
+            text = groupMessageActionState.groupName,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = groupMessageActionState.groupDescription ?: "",
+            text = groupMessageActionState.groupDescription,
             fontSize = 16.sp,
             color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Center,
@@ -135,7 +133,11 @@ fun GroupMessageActionScreen(
                     groupMessageActionState.groupMemberSize
                 ).asString(),
                 onClick = {
-                    navController.navigate(Screen.MemberManagement.createRoute(groupMessageActionState.groupId))
+                    navController.navigate(
+                        Screen.MemberManagement.createRoute(
+                            groupMessageActionState.groupId
+                        )
+                    )
                 },
             )
         }
@@ -187,7 +189,11 @@ fun GroupMessageActionScreen(
                         icon = Icons.Default.Edit,
                         title = UiText.StringResource(R.string.edit_group).asString(),
                         onClick = {
-                            navController.navigate(Screen.EditGroup.createRoute(groupMessageActionState.groupId))
+                            navController.navigate(
+                                Screen.EditGroup.createRoute(
+                                    groupMessageActionState.groupId
+                                )
+                            )
                         },
                     )
                 }
@@ -222,6 +228,19 @@ fun GroupMessageActionScreen(
     }
 
     when (val dialogState = groupMessageActionState.dialogState) {
+        is GroupMessageActionViewModel.GroupMessageActionDialogState.KickedFromGroup -> {
+            NotificationDialog(
+                title = UiText.StringResource(R.string.warning).asString(),
+                message = "Bạn đã bị xóa khỏi nhóm. Liên hệ admin để biết thêm thông tin.",
+                isSuccess = false,
+                onDismiss = {
+                    navController.navigate(Screen.Groups.route) {
+                        popUpTo(Screen.Groups.route) { inclusive = false }
+                    }
+                }
+            )
+        }
+
         is GroupMessageActionViewModel.GroupMessageActionDialogState.LeaveGroupConfirm -> {
             ConfirmationDialog(
                 title = UiText.StringResource(R.string.warning).asString(),

@@ -5,6 +5,9 @@ import com.example.realtimechatapp.data.remote.dto.group.GroupInfoUpdatedDto
 import com.example.realtimechatapp.data.remote.dto.group.GroupMessageSeenDto
 import com.example.realtimechatapp.data.remote.dto.message.MessageDto
 import com.example.realtimechatapp.data.remote.dto.message.MessageSeenDto
+import com.example.realtimechatapp.data.remote.dto.socket.MemberRemovedDto
+import com.example.realtimechatapp.data.remote.dto.socket.MemberRoleChangedDto
+import com.example.realtimechatapp.data.remote.dto.socket.OwnerTransferredDto
 import com.example.realtimechatapp.domain.model.GroupTypingUser
 import com.example.realtimechatapp.domain.model.SendGroupMessageParam
 import com.example.realtimechatapp.domain.model.SendMessageParam
@@ -53,6 +56,9 @@ sealed class GroupCrudEvents {
     data class UpdatedInfo(val groupUpdatedInfo: GroupInfoUpdatedDto) : GroupCrudEvents()
     data class Deleted(val groupId: String) : GroupCrudEvents()
     data class MemberLeft(val groupId: String, val userId: String) : GroupCrudEvents()
+    data class MemberRemoved(val info: MemberRemovedDto) : GroupCrudEvents()
+    data class MemberRoleChanged(val info: MemberRoleChangedDto) : GroupCrudEvents()
+    data class OwnerTransferred(val info: OwnerTransferredDto) : GroupCrudEvents()
     object ReloadGroups : GroupCrudEvents()
 }
 
@@ -80,5 +86,8 @@ object SocketEvents {
     const val NEW_GROUP_UPDATED = "new-group-updated"
     const val GROUP_DELETED = "group-deleted"
     const val MEMBER_LEFT = "member-left"
+    const val MEMBER_REMOVED = "member-removed"
+    const val MEMBER_ROLE_CHANGED = "member-role-changed"
+    const val OWNER_TRANSFERRED = "owner-transferred"
     const val RELOAD_GROUPS = "reload-groups"
 }

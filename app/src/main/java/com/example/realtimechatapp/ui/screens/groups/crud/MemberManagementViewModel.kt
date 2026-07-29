@@ -14,6 +14,7 @@ import com.example.realtimechatapp.domain.usecase.group.ChangeRoleUseCase
 import com.example.realtimechatapp.domain.usecase.group.DeleteMemberUseCase
 import com.example.realtimechatapp.domain.usecase.group.GetGroupMembersUseCase
 import com.example.realtimechatapp.domain.usecase.group.TransferOwnerUseCase
+import com.example.realtimechatapp.domain.usecase.socket.ObserveKickedFromGroupUseCase
 import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import com.example.realtimechatapp.domain.usecase.user.GetLocalUserUseCase
 import com.example.realtimechatapp.domain.usecase.user.PerformSearchUsersUseCase
@@ -41,7 +42,8 @@ class MemberManagementViewModel @Inject constructor(
     private val addMembersUseCase: AddMembersUseCase,
     private val changeRoleUseCase: ChangeRoleUseCase,
     private val deleteMemberUseCase: DeleteMemberUseCase,
-    private val transferOwnerUseCase: TransferOwnerUseCase
+    private val transferOwnerUseCase: TransferOwnerUseCase,
+    private val observeKickedFromGroupUseCase: ObserveKickedFromGroupUseCase
 ) : ViewModel() {
     data class MemberManagementState(
         val members: List<Member> = emptyList(),
@@ -90,6 +92,7 @@ class MemberManagementViewModel @Inject constructor(
         object DemoteConfirm : MemberManagementDialogState
         object DeleteMemberConfirm : MemberManagementDialogState
         object TransferOwnerConfirm : MemberManagementDialogState
+        object KickedFromGroup : MemberManagementDialogState
         data class Failure(val message: UiText) : MemberManagementDialogState
     }
 
@@ -106,6 +109,7 @@ class MemberManagementViewModel @Inject constructor(
 
     init {
         getGroupMembers()
+        observeKickEvents()
         viewModelScope.launch {
             _addMemberState.map { state -> state.querySearch }
                 .distinctUntilChanged()
@@ -119,6 +123,18 @@ class MemberManagementViewModel @Inject constructor(
                 }
         }
     }
+    
+    private fun observeKickEvents() {
+        viewModelScope.launch {
+            observeKickedFromGroupUseCase().collect { kickInfo ->
+                if (kickInfo.groupId == groupId) {
+                    _memberManagementState.update {
+                        it.copy(dialogState = MemberManagementDialogState.KickedFromGroup)
+                    }
+                }
+            }
+        }
+    }
 
     private fun getGroupMembers() {
         viewModelScope.launch {
@@ -126,6 +142,8 @@ class MemberManagementViewModel @Inject constructor(
 
             getGroupMembersUseCase(groupId).onSuccess { members ->
                 cleanAndUpdateMemberListState(members)
+            }.onFailure { exception ->
+                _memberManagementState.update { it.copy(isLoading = false) }
             }
         }
     }

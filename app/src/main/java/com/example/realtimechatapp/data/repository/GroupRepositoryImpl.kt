@@ -140,21 +140,21 @@ class GroupRepositoryImpl @Inject constructor(
 
                     is GroupCrudEvents.Deleted -> {
                         val groupId = event.groupId
-                        
+
                         localDatabase.withTransaction {
                             groupContactDao.deleteGroupContact(groupId)
                             groupMessageDao.deleteGroupMessages(groupId)
                             memberDao.deleteGroupMembers(groupId)
                             groupDao.deleteGroup(groupId)
                         }
-                        
+
                         socketRepository.leaveGroup(groupId)
                     }
 
                     is GroupCrudEvents.MemberLeft -> {
                         val groupId = event.groupId
                         val userId = event.userId
-                        
+
                         safeDbCall {
                             memberDao.deleteMember(groupId, userId)
                         }
@@ -164,6 +164,42 @@ class GroupRepositoryImpl @Inject constructor(
                         // Gọi lại getGroups() để lấy danh sách mới với unread count và lastMessage đúng
                         getGroups()
                         Timber.d("Đã được thêm vào nhóm mới, reload groups thành công")
+                    }
+
+                    is GroupCrudEvents.MemberRemoved -> {
+                        localDatabase.withTransaction {
+                            groupContactDao.deleteGroupContact(event.info.groupId)
+                            groupMessageDao.deleteGroupMessages(event.info.groupId)
+                            memberDao.deleteGroupMembers(event.info.groupId)
+                            groupDao.deleteGroup(event.info.groupId)
+                        }
+                        socketRepository.leaveGroup(event.info.groupId)
+                    }
+
+                    is GroupCrudEvents.MemberRoleChanged -> {
+                        memberDao.updateMemberRole(
+                            groupId = event.info.groupId,
+                            userId = event.info.member.userId.id,
+                            newRole = event.info.member.role.toMemberRole()
+                        )
+                        Timber.d("Updated member role: groupId=${event.info.groupId}, userId=${event.info.member.userId.id}, role=${event.info.member.role}")
+                    }
+
+                    is GroupCrudEvents.OwnerTransferred -> {
+                        localDatabase.withTransaction {
+                            // Update new owner role to admin
+                            memberDao.updateMemberRole(
+                                groupId = event.info.groupId,
+                                userId = event.info.newOwner.userId.id,
+                                newRole = event.info.newOwner.role.toMemberRole()
+                            )
+                            // Update group owner field
+                            groupDao.updateGroupOwner(
+                                groupId = event.info.groupId,
+                                newOwnerId = event.info.newOwner.userId.id
+                            )
+                        }
+                        Timber.d("Owner transferred: groupId=${event.info.groupId}, newOwner=${event.info.newOwner.userId.id}")
                     }
                 }
             }

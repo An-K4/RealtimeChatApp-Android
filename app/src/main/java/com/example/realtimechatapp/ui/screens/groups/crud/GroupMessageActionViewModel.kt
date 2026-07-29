@@ -10,6 +10,7 @@ import com.example.realtimechatapp.domain.model.Role
 import com.example.realtimechatapp.domain.usecase.group.GetGroupInfoUseCase
 import com.example.realtimechatapp.domain.usecase.group.LeaveGroupUseCase
 import com.example.realtimechatapp.domain.usecase.socket.group.ObserveGroupInfoUseCase
+import com.example.realtimechatapp.domain.usecase.socket.ObserveKickedFromGroupUseCase
 import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import com.example.realtimechatapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,14 +30,15 @@ class GroupMessageActionViewModel @Inject constructor(
     private val getGroupInfoUseCase: GetGroupInfoUseCase,
     private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase,
     private val observeGroupInfoUseCase: ObserveGroupInfoUseCase,
-    private val leaveGroupUseCase: LeaveGroupUseCase
+    private val leaveGroupUseCase: LeaveGroupUseCase,
+    private val observeKickedFromGroupUseCase: ObserveKickedFromGroupUseCase
 ) : ViewModel() {
     data class GroupMessageActionState(
         val groupId: String = "",
-        val groupName: String? = null,
-        val groupDescription: String? = null,
-        val groupAvatar: String? = null,
-        val groupMemberSize: Int? = null,
+        val groupName: String = "",
+        val groupDescription: String = "",
+        val groupAvatar: String = "",
+        val groupMemberSize: Int = 0,
         val isEditGroupInfoVisible: Boolean = false,
         val isDeleteGroupVisible: Boolean = false,
         val muteNotifications: Boolean = false,
@@ -52,10 +54,11 @@ class GroupMessageActionViewModel @Inject constructor(
         object DeleteGroupConfirm : GroupMessageActionDialogState
         object DeleteGroupSuccess : GroupMessageActionDialogState
         data class Failure(val message: UiText) : GroupMessageActionDialogState
+        object KickedFromGroup : GroupMessageActionDialogState
     }
 
     sealed interface GroupMessageActionEvent {
-        object NavigateBack : GroupMessageActionEvent
+        object Success : GroupMessageActionEvent
         data class Failure(val message: UiText) : GroupMessageActionEvent
     }
 
@@ -79,6 +82,19 @@ class GroupMessageActionViewModel @Inject constructor(
         getGroupInfo()
         getCurrentUserId()
         observeGroupInfo()
+        observeKickEvents()
+    }
+    
+    private fun observeKickEvents() {
+        viewModelScope.launch {
+            observeKickedFromGroupUseCase().collect { kickInfo ->
+                if (kickInfo.groupId == groupId) {
+                    _groupMessageActionState.update {
+                        it.copy(dialogState = GroupMessageActionDialogState.KickedFromGroup)
+                    }
+                }
+            }
+        }
     }
 
     private fun observeGroupInfo() {
@@ -97,9 +113,9 @@ class GroupMessageActionViewModel @Inject constructor(
                     _groupMessageActionState.update {
                         it.copy(
                             groupName = group?.name ?: "",
-                            groupDescription = group?.description,
-                            groupAvatar = group?.avatar,
-                            groupMemberSize = group?.members?.size,
+                            groupDescription = group?.description ?: "",
+                            groupAvatar = group?.avatar ?: "",
+                            groupMemberSize = group?.members?.size ?: 0,
                             isEditGroupInfoVisible = isCurrentUserOwner || isCurrentUserAdmin,
                             isDeleteGroupVisible = isCurrentUserOwner
                         )

@@ -41,6 +41,8 @@ import androidx.navigation.NavController
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.ui.components.BadgedAvatar
+import com.example.realtimechatapp.ui.components.NotificationDialog
+import com.example.realtimechatapp.ui.navigation.Screen
 import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 
 @Composable
@@ -74,10 +76,30 @@ fun EditGroupScreen(
                     }
 
                     is EditGroupViewModel.EditGroupEvent.Failure -> {
-                        Toast.makeText(context, event.message.asString(context), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, event.message.asString(context), Toast.LENGTH_SHORT)
+                            .show()
                     }
                 }
             }
+        }
+    }
+
+    when (editGroupState.dialogState) {
+        is EditGroupViewModel.EditGroupDialogState.KickedFromGroup -> {
+            NotificationDialog(
+                title = UiText.StringResource(R.string.warning).asString(context),
+                message = "Bạn đã bị xóa khỏi nhóm. Liên hệ admin để biết thêm thông tin.",
+                isSuccess = false,
+                onDismiss = {
+                    navController.navigate(Screen.Groups.route) {
+                        popUpTo(Screen.Groups.route) { inclusive = false }
+                    }
+                }
+            )
+        }
+
+        EditGroupViewModel.EditGroupDialogState.Dismiss -> {
+            // No dialog
         }
     }
 

@@ -6,6 +6,7 @@ import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.model.GroupMessageContact
 import com.example.realtimechatapp.domain.usecase.group.GetGroupsUseCase
+import com.example.realtimechatapp.domain.usecase.socket.ObserveKickedFromGroupUseCase
 import com.example.realtimechatapp.domain.usecase.socket.group.ObserveGroupMessageContactUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -21,7 +23,8 @@ import javax.inject.Inject
 @HiltViewModel
 class GroupViewModel @Inject constructor(
     private val getGroupsUseCase: GetGroupsUseCase,
-    private val observeGroupMessageContactUseCase: ObserveGroupMessageContactUseCase
+    private val observeGroupMessageContactUseCase: ObserveGroupMessageContactUseCase,
+    private val observeKickedFromGroupUseCase: ObserveKickedFromGroupUseCase
 ): ViewModel() {
     data class GroupState(
         val groups: List<GroupMessageContact> = emptyList(),
@@ -31,9 +34,11 @@ class GroupViewModel @Inject constructor(
     sealed class GroupEvent {
         object Success : GroupEvent()
         data class Failure(val message: UiText) : GroupEvent()
+        data class KickedFromGroup(val groupName: String) : GroupEvent()
     }
 
     private val _groupEvent = Channel<GroupEvent>()
+    val groupEvent = _groupEvent.receiveAsFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val groupState = combine(
@@ -59,6 +64,15 @@ class GroupViewModel @Inject constructor(
     // init after state variables
     init {
         getGroups()
+        observeKickEvents()
+    }
+
+    private fun observeKickEvents() {
+        viewModelScope.launch {
+            observeKickedFromGroupUseCase().collect { kickInfo ->
+                _groupEvent.send(GroupEvent.KickedFromGroup(kickInfo.groupName))
+            }
+        }
     }
 
     fun getGroups() {

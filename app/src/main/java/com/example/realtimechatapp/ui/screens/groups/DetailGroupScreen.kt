@@ -38,6 +38,7 @@ import com.example.realtimechatapp.ui.components.WelcomePlaceholder
 import com.example.realtimechatapp.ui.components.ContactHeader
 import com.example.realtimechatapp.ui.components.MessageInput
 import com.example.realtimechatapp.ui.components.MessageRenderItem
+import com.example.realtimechatapp.ui.components.NotificationDialog
 import com.example.realtimechatapp.ui.theme.RealtimeGreen
 
 @Composable
@@ -89,10 +90,20 @@ fun DetailGroupScreen(
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
+        // Kicked Dialog
+        if (detailGroupState.isKicked) {
+            NotificationDialog(
+                title = UiText.StringResource(R.string.warning).asString(),
+                message = "Bạn đã bị xóa khỏi nhóm. Liên hệ admin để biết thêm thông tin.",
+                isSuccess = false,
+                onDismiss = { navController.popBackStack() }
+            )
+        }
+
         // in development
         ContactHeader(
             avatarContactPreview = detailGroupState.groupAvatar,
-            contactName = detailGroupState.groupName ?: "",
+            contactName = detailGroupState.groupName,
             contactAdditionalInfo = detailGroupState.groupStatus,
             onVideoCallClick = {},
             onVoiceCallClick = {}

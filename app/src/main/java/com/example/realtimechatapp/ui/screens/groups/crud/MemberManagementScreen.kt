@@ -496,6 +496,20 @@ fun MemberManagementScreen(
 
     when (val dialogState = memberManagementState.dialogState) {
         MemberManagementViewModel.MemberManagementDialogState.Dismiss -> {}
+
+        MemberManagementViewModel.MemberManagementDialogState.KickedFromGroup -> {
+            NotificationDialog(
+                title = StringResource(R.string.warning).asString(),
+                message = "Bạn đã bị xóa khỏi nhóm. Liên hệ admin để biết thêm thông tin.",
+                isSuccess = false,
+                onDismiss = {
+                    navController.navigate(Screen.Groups.route) {
+                        popUpTo(Screen.Groups.route) { inclusive = false }
+                    }
+                }
+            )
+        }
+
         MemberManagementViewModel.MemberManagementDialogState.AddMemberConfirm -> {
             val newMembersSize = addMemberState.selectedUser.size
 

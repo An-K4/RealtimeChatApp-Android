@@ -6,6 +6,9 @@ import com.example.realtimechatapp.data.remote.dto.group.GroupMessageSeenDto
 import com.example.realtimechatapp.domain.repository.SocketEvents
 import com.example.realtimechatapp.data.remote.dto.message.MessageDto
 import com.example.realtimechatapp.data.remote.dto.message.MessageSeenDto
+import com.example.realtimechatapp.data.remote.dto.socket.MemberRemovedDto
+import com.example.realtimechatapp.data.remote.dto.socket.MemberRoleChangedDto
+import com.example.realtimechatapp.data.remote.dto.socket.OwnerTransferredDto
 import com.example.realtimechatapp.domain.model.GroupTypingUser
 import com.example.realtimechatapp.domain.model.SendGroupMessageParam
 import com.example.realtimechatapp.domain.model.SendMessageParam
@@ -345,6 +348,58 @@ class SocketRepositoryImpl @Inject constructor(
             scope.launch {
                 Timber.d("có socket reload nhóm")
                 _groupCrudEventsFlow.emit(GroupCrudEvents.ReloadGroups)
+            }
+        }
+
+        socket?.on(SocketEvents.MEMBER_REMOVED) { args ->
+            try {
+                val data = args[0] as? JSONObject ?: return@on
+                
+                val dto = MemberRemovedDto(
+                    groupId = data.optString("groupId", ""),
+                    groupName = data.optString("groupName", "Unknown Group"),
+                    groupAvatar = data.optString("groupAvatar", ""),
+                    removedBy = data.optString("removedBy", ""),
+                    removedAt = data.optString("removedAt", "")
+                )
+                
+                scope.launch {
+                    _groupCrudEventsFlow.emit(GroupCrudEvents.MemberRemoved(dto))
+                }
+                
+                Timber.d("MEMBER_REMOVED: ${dto.groupName}")
+            } catch (e: Exception) {
+                Timber.e(e, "Parse MEMBER_REMOVED failed")
+            }
+        }
+
+        socket?.on(SocketEvents.MEMBER_ROLE_CHANGED) { args ->
+            try {
+                val rawJson = args[0].toString()
+                val dto = gson.fromJson(rawJson, MemberRoleChangedDto::class.java)
+                
+                scope.launch {
+                    _groupCrudEventsFlow.emit(GroupCrudEvents.MemberRoleChanged(dto))
+                }
+                
+                Timber.d("MEMBER_ROLE_CHANGED: groupId=${dto.groupId}, userId=${dto.member.userId.id}, newRole=${dto.member.role}")
+            } catch (e: Exception) {
+                Timber.e(e, "Parse MEMBER_ROLE_CHANGED failed")
+            }
+        }
+
+        socket?.on(SocketEvents.OWNER_TRANSFERRED) { args ->
+            try {
+                val rawJson = args[0].toString()
+                val dto = gson.fromJson(rawJson, OwnerTransferredDto::class.java)
+                
+                scope.launch {
+                    _groupCrudEventsFlow.emit(GroupCrudEvents.OwnerTransferred(dto))
+                }
+                
+                Timber.d("OWNER_TRANSFERRED: groupId=${dto.groupId}, newOwner=${dto.newOwner.userId.id}")
+            } catch (e: Exception) {
+                Timber.e(e, "Parse OWNER_TRANSFERRED failed")
             }
         }
     }
