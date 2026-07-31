@@ -26,7 +26,7 @@ import com.example.realtimechatapp.data.local.entity.UserEntity
         MemberEntity::class,
         MessageEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

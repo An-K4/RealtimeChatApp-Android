@@ -2,13 +2,21 @@ package com.example.realtimechatapp.data.local.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.example.realtimechatapp.common.formatToTime
 import com.example.realtimechatapp.domain.model.GroupMessageContact
 import com.example.realtimechatapp.domain.model.LastMessage
 import com.example.realtimechatapp.domain.model.MessageContact
 
-@Entity(tableName = "contacts")
+@Entity(
+    tableName = "contacts",
+    indices = [
+        Index(value = ["is_group"]),
+        Index(value = ["last_time_stamp"]),
+        Index(value = ["is_group", "last_time_stamp"])
+    ]
+)
 data class ContactEntity(
     @PrimaryKey
     val id: String,
