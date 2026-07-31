@@ -83,16 +83,16 @@ app/
 - Trạng thái online/offline của bạn bè theo thời gian thực
 - Cache tin nhắn cục bộ với Room (hoạt động offline)
 
+### 🖼️ Chia Sẻ Media
+- Gửi ảnh từ thư viện hoặc chụp trực tiếp
+- Xem ảnh phóng to khi tap vào
+
 ### 👥 Nhóm Chat (Cơ Bản)
 - Xem danh sách nhóm đã tham gia
 - Xem tin nhắn trong nhóm
 - Hiển thị thông tin nhóm: tên, ảnh đại diện, số thành viên
 - Phân biệt tin nhắn của mình và người khác trong nhóm
 - Hiển thị avatar và tên người gửi trong nhóm
-- 
-### Chia Sẻ Media
-- Gửi ảnh từ thư viện hoặc chụp trực tiếp
-- Xem ảnh phóng to khi tap vào
 
 ### 👥 Quản Lý Nhóm
 - Tạo nhóm mới và thêm thành viên
@@ -131,6 +131,9 @@ app/
 - Custom `UiText` để hỗ trợ string resource lẫn dynamic string trong ViewModel
 - `AuthInterceptor` tự động gắn JWT và xử lý token hết hạn
 - `UserAdapter` (Gson) xử lý trường hợp API trả về userId dạng string hoặc object
+- Tối ưu Room query: Thêm index phù hợp để cải thiện tốc độ truy vấn
+- Tối ưu Coil: Cấu hình cache size, placeholder thống nhất
+- Giảm recomposition: Review và cố gắng tối ưu recomposition của các màn hình
 
 ---
 
@@ -144,16 +147,6 @@ app/
 
 #### Nhắn Tin Nhóm Và Cá nhân Đầy Đủ:
 - Màn hình thao tác phụ với từng cuộc trò chuyện
-
----
-
-### 📌 Cải Thiện Hiệu Suất
-
-- **Áp dụng Message Cursor/Watermark**: Thay thế query quét toàn bộ bảng bằng con trỏ trạng thái (lastSeenMessageId hoặc lastSeenTimestamp) để quản lý trạng thái đã đọc tự động và tối ưu hóa DB.
-- **Phân trang tin nhắn**: Hiện tại load cố định 30 tin nhắn — cần implement lazy loading khi cuộn lên trên
-- **Tối ưu Room query**: Thêm index phù hợp, tăng tốc truy vấn
-- **Tối ưu Coil**: Cấu hình cache size, placeholder thống nhất
-- **Giảm recomposition**: Review các `State` chưa cần thiết trong Compose
 
 ---
 
