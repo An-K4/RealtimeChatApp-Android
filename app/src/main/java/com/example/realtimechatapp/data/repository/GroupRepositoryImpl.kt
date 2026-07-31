@@ -85,6 +85,7 @@ class GroupRepositoryImpl @Inject constructor(
                         groupContactDao.upsertGroupContact(
                             contactId = contactId,
                             lastMessage = messageDto.content,
+                            lastAttachments = messageDto.attachments,
                             lastSenderName = messageDto.senderId.fullName,
                             isMine = isMine,
                             lastTimeStamp = messageDto.createdAt.isoToLong()
@@ -534,6 +535,7 @@ class GroupRepositoryImpl @Inject constructor(
                         isGroup = true,
                         lastMessage = null,
                         lastSenderName = null,
+                        lastAttachments = null,
                         isMine = false,
                         lastTimeStamp = groupEntity.createdAt,
                         unreadCount = 0,

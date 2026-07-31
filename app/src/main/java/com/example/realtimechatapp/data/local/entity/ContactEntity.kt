@@ -19,6 +19,9 @@ data class ContactEntity(
     @ColumnInfo("last_message")
     val lastMessage: String?,
 
+    @ColumnInfo("last_attachments")
+    val lastAttachments: String?,
+
     @ColumnInfo("last_sender_name")
     val lastSenderName: String?,
 
@@ -45,6 +48,7 @@ fun ContactEntity.toMessageContact() = MessageContact(
     unreadCount = this.unreadCount,
     lastMessage = LastMessage(
         content = this.lastMessage ?: "",
+        attachments = this.lastAttachments,
         createdAt = this.lastTimeStamp.formatToTime(true),
         senderName = this.lastSenderName,
         isMine = this.isMine
@@ -61,6 +65,7 @@ fun ContactEntity.toGroupMessageContact() = GroupMessageContact(
     unreadCount = this.unreadCount,
     lastMessage = LastMessage(
         content = this.lastMessage ?: "",
+        attachments = this.lastAttachments,
         createdAt = this.lastTimeStamp.formatToTime(true),
         senderName = this.lastSenderName,
         isMine = this.isMine

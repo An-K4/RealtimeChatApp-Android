@@ -1,6 +1,10 @@
 package com.example.realtimechatapp.ui.screens.groups
 
+import android.Manifest
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +23,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -34,12 +42,14 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
+import com.example.realtimechatapp.ui.components.FullScreenImagePreviewDialog
 import com.example.realtimechatapp.ui.components.WelcomePlaceholder
 import com.example.realtimechatapp.ui.components.ContactHeader
 import com.example.realtimechatapp.ui.components.MessageInput
 import com.example.realtimechatapp.ui.components.MessageRenderItem
 import com.example.realtimechatapp.ui.components.NotificationDialog
 import com.example.realtimechatapp.ui.theme.RealtimeGreen
+import java.io.File
 
 @Composable
 fun DetailGroupScreen(
@@ -50,6 +60,44 @@ fun DetailGroupScreen(
     val listState = rememberLazyListState()
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
+
+    // Camera URI state
+    var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Gallery launcher
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { detailGroupViewModel.onSelectedMediaChange(it) }
+    }
+
+    // Camera launcher
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success: Boolean ->
+        if (success && cameraImageUri != null) {
+            detailGroupViewModel.onSelectedMediaChange(cameraImageUri!!)
+        }
+    }
+
+    // Camera permission launcher
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Tạo URI cho camera
+            val photoFile = File(context.cacheDir, "camera/IMG_${System.currentTimeMillis()}.jpg")
+            photoFile.parentFile?.mkdirs()
+            cameraImageUri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                photoFile
+            )
+            cameraLauncher.launch(cameraImageUri!!)
+        } else {
+            Toast.makeText(context, UiText.StringResource(R.string.camera_permission_denied).asString(context), Toast.LENGTH_SHORT).show()
+        }
+    }
 
     LaunchedEffect(Unit) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -141,10 +189,17 @@ fun DetailGroupScreen(
                                     senderAvatar = groupMessage.senderAvatar,
                                     senderName = groupMessage.senderName,
                                     message = groupMessage.content ?: "",
+                                    attachments = groupMessage.attachments,
                                     time = groupMessage.createdAt,
                                     isSeen = groupMessage.seenUserIds?.isNotEmpty() == true,
                                     isGroup = true,
-                                    fromCurrentUser = groupMessage.senderId == detailGroupState.currentUserId
+                                    fromCurrentUser = groupMessage.senderId == detailGroupState.currentUserId,
+                                    onImageClick = { imageUrl ->
+                                        detailGroupViewModel.showImagePreview(
+                                            imageModel = imageUrl,
+                                            allowClear = false
+                                        )
+                                    }
                                 )
                             }
                         }
@@ -175,10 +230,40 @@ fun DetailGroupScreen(
 
         MessageInput(
             messageText = detailGroupState.messageInput ?: "",
+            selectedImageUri = detailGroupState.selectedImageUri,
+            isSending = detailGroupState.isSending,
             onMessageTextChange = { detailGroupViewModel.onGroupMessageInputChange(it) },
-            onCameraClick = {},
-            onGalleryClick = {},
+            onCameraClick = {
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            },
+            onGalleryClick = {
+                galleryLauncher.launch("image/*")
+            },
+            onPreviewClick = {
+                detailGroupState.selectedImageUri?.let { uri ->
+                    detailGroupViewModel.showImagePreview(
+                        imageModel = uri,
+                        allowClear = true
+                    )
+                }
+            },
             onSendClick = { detailGroupViewModel.sendGroupMessage() }
         )
+    }
+
+    // Render FullScreenImagePreviewDialog
+    when (val dialogState = detailGroupState.dialogState) {
+        is DetailGroupViewModel.ImagePreviewDialogState.Show -> {
+            FullScreenImagePreviewDialog(
+                imageModel = dialogState.imageModel,
+                onDismiss = { detailGroupViewModel.dismissImagePreview() },
+                onClear = if (dialogState.allowClear) {
+                    { detailGroupViewModel.clearAndDismissImagePreview() }
+                } else null
+            )
+        }
+        DetailGroupViewModel.ImagePreviewDialogState.Dismiss -> {
+            // Do nothing
+        }
     }
 }

@@ -150,4 +150,8 @@
     <plurals name="new_members_added_confirm">
         <item quantity="other">Xác nhận thêm thành viên?</item>
     </plurals>
+    <string name="camera_permission_denied">Quyền truy cập camera bị từ chối</string>
+    <string name="you_sent_an_image">Bạn đã gửi một ảnh</string>
+    <string name="sb_sent_an_image">%s đã gửi một ảnh</string>
+    <string name="sent_an_image">Đã gửi một ảnh</string>
 </resources>

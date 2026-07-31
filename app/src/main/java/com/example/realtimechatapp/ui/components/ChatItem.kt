@@ -51,9 +51,8 @@ fun ChatItem(
     onItemClicked: () -> Unit
 ) {
     val previewLastMessage = lastMessage?.let {
-        if (lastMessage.content.isEmpty()) {
-            UiText.StringResource(R.string.no_messages_yet).asString()
-        } else {
+        // Hiển thị content nếu có
+        if (lastMessage.content.isNotEmpty()) {
             if (lastMessage.isMine) {
                 UiText.StringResource(R.string.you_with_arg, lastMessage.content).asString()
             } else {
@@ -63,6 +62,22 @@ fun ChatItem(
                     lastMessage.content
                 }
             }
+        } 
+        // Hiển thị text thay thế nếu chỉ có ảnh
+        else if (!lastMessage.attachments.isNullOrEmpty()) {
+            if (lastMessage.isMine) {
+                UiText.StringResource(R.string.you_sent_an_image).asString()
+            } else {
+                if (isGroup) {
+                    UiText.StringResource(R.string.sb_sent_an_image, lastMessage.senderName).asString()
+                } else {
+                    UiText.StringResource(R.string.sent_an_image).asString()
+                }
+            }
+        } 
+        // Không có gì cả
+        else {
+            UiText.StringResource(R.string.no_messages_yet).asString()
         }
     }
     val onlineColor =

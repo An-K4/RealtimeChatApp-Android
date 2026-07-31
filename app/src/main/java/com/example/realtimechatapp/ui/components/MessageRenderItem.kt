@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,10 +45,12 @@ fun MessageRenderItem(
     senderAvatar: String?,
     senderName: String?,
     message: String,
+    attachments: String?,
     time: String,
     isSeen: Boolean,
     isGroup: Boolean,
-    fromCurrentUser: Boolean
+    fromCurrentUser: Boolean,
+    onImageClick: (String) -> Unit
 ) {
     val currentUserShape = RoundedCornerShape(
         topStart = 16.dp,
@@ -121,11 +124,31 @@ fun MessageRenderItem(
                         horizontalAlignment = if (fromCurrentUser) Alignment.End else Alignment.Start,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                     ) {
-                        Text(
-                            text = message,
-                            fontSize = 16.sp,
-                            color = if (fromCurrentUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground
-                        )
+                        // Hiển thị ảnh nếu có attachments
+                        if (!attachments.isNullOrEmpty()) {
+                            AsyncImage(
+                                model = attachments,
+                                contentDescription = "Message image",
+                                modifier = Modifier
+                                    .widthIn(max = 250.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { onImageClick(attachments) },
+                                contentScale = ContentScale.Crop
+                            )
+
+                            if (message.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(5.dp))
+                            }
+                        }
+
+                        // Hiển thị text nếu có
+                        if (message.isNotEmpty()) {
+                            Text(
+                                text = message,
+                                fontSize = 16.sp,
+                                color = if (fromCurrentUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(3.dp))
 

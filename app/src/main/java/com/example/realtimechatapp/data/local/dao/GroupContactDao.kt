@@ -31,6 +31,7 @@ interface GroupContactDao {
     suspend fun upsertGroupContact(
         contactId: String,
         lastMessage: String?,
+        lastAttachments: String?,
         lastSenderName: String,
         isMine: Boolean,
         lastTimeStamp: Long,
@@ -40,6 +41,7 @@ interface GroupContactDao {
         if (existingContact != null){
             val updatedGroupContact = existingContact.copy(
                 lastMessage = lastMessage,
+                lastAttachments = lastAttachments,
                 lastSenderName = lastSenderName,
                 isMine = isMine,
                 lastTimeStamp = lastTimeStamp,
@@ -52,6 +54,7 @@ interface GroupContactDao {
                 id = contactId,
                 isGroup = true,
                 lastMessage = lastMessage,
+                lastAttachments = lastAttachments,
                 lastSenderName = lastSenderName,
                 isMine = isMine,
                 lastTimeStamp = lastTimeStamp,

@@ -1,5 +1,6 @@
 package com.example.realtimechatapp.ui.screens.messages
 
+import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,6 +21,7 @@ import com.example.realtimechatapp.domain.usecase.socket.message.SendMessageUseC
 import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import com.example.realtimechatapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -57,8 +59,19 @@ class DetailMessageViewModel @Inject constructor(
         val friendAvatar: String? = null,
         val messages: List<Message> = emptyList(),
         val messageInput: String? = null,
-        val isLoading: Boolean = false
+        val isLoading: Boolean = false,
+        val isSending: Boolean = false,
+        val selectedImageUri: Uri? = null,
+        val dialogState: ImagePreviewDialogState = ImagePreviewDialogState.Dismiss
     )
+
+    sealed interface ImagePreviewDialogState {
+        object Dismiss : ImagePreviewDialogState
+        data class Show(
+            val imageModel: Any,
+            val allowClear: Boolean = false
+        ) : ImagePreviewDialogState
+    }
 
     sealed interface DetailMessageEvent {
         object GetMessageSuccess : DetailMessageEvent
@@ -76,16 +89,25 @@ class DetailMessageViewModel @Inject constructor(
         val typingUserIds: Set<String>
     )
 
-    private data class InputAndLoadingState(
+    private data class MessageInputAndImageState(
         val messageInput: String,
-        val isLoading: Boolean
+        val selectedImageUri: Uri?
+    )
+
+    private data class DialogAndLoadingState(
+        val dialogState: ImagePreviewDialogState,
+        val isLoading: Boolean,
+        val isSending: Boolean
     )
 
     private val currentUserId = flow { emit(getCurrentUserIdUseCase().getOrThrow()) }
     private val friendId: String =
         checkNotNull(savedStateHandle[Screen.DetailMessage.ARG_FRIEND_ID])
     private val _messageInput = MutableStateFlow("")
+    private val _selectedImageUri = MutableStateFlow<Uri?>(null)
+    private val _imagePreviewDialogState = MutableStateFlow<ImagePreviewDialogState>(ImagePreviewDialogState.Dismiss)
     private val _isLoading = MutableStateFlow(true)
+    private val _isSending = MutableStateFlow(false)
     private val _headerInfo = MutableStateFlow<User?>(null)
     private val detailMessageContextFlow =
         combine(currentUserId, _headerInfo) { currentUserId, headerInfo ->
@@ -117,21 +139,34 @@ class DetailMessageViewModel @Inject constructor(
     }
 
     // mutable state flows don't throw exception
-    private val inputAndLoadingStateFlow = combine(
+    private val messageInputAndImageStateFlow = combine(
         _messageInput,
-        _isLoading
-    ) { messageInput, isLoading ->
-        InputAndLoadingState(
+        _selectedImageUri
+    ) { messageInput, selectedImageUri ->
+        MessageInputAndImageState(
             messageInput = messageInput,
-            isLoading = isLoading
+            selectedImageUri = selectedImageUri
+        )
+    }
+
+    private val dialogAndLoadingStateFlow = combine(
+        _imagePreviewDialogState,
+        _isLoading,
+        _isSending
+    ) { dialogState, isLoading, isSending ->
+        DialogAndLoadingState(
+            dialogState = dialogState,
+            isLoading = isLoading,
+            isSending = isSending
         )
     }
 
     val detailMessageState = combine(
         detailMessageContextFlow,
         socketDataFlow,
-        inputAndLoadingStateFlow
-    ) { detailMessageContext, socketData, inputAndLoadingState ->
+        messageInputAndImageStateFlow,
+        dialogAndLoadingStateFlow
+    ) { detailMessageContext, socketData, messageInputAndImageState, dialogAndLoadingState ->
         DetailMessageState(
             currentUserId = detailMessageContext.currentUserId,
             friendId = friendId,
@@ -143,8 +178,11 @@ class DetailMessageViewModel @Inject constructor(
             friendTypingStatus = socketData.typingUserIds.contains(friendId),
             friendAvatar = detailMessageContext.friendUser?.avatar ?: "",
             messages = socketData.messages,
-            messageInput = inputAndLoadingState.messageInput,
-            isLoading = inputAndLoadingState.isLoading && socketData.messages.isEmpty()
+            messageInput = messageInputAndImageState.messageInput,
+            isLoading = dialogAndLoadingState.isLoading && socketData.messages.isEmpty(),
+            isSending = dialogAndLoadingState.isSending,
+            selectedImageUri = messageInputAndImageState.selectedImageUri,
+            dialogState = dialogAndLoadingState.dialogState
         )
     }.catch { exception ->
         Timber.e(exception, "Lỗi luồng màn hình nhắn chi tiết")
@@ -171,7 +209,6 @@ class DetailMessageViewModel @Inject constructor(
 
             result.onSuccess { user ->
                 _headerInfo.value = user
-                Timber.d("Thông tin người dùng: $user")
             }.onFailure { e ->
                 _detailMessageEvent.send(DetailMessageEvent.Failure(e.getErrorMessage()))
             }
@@ -184,8 +221,7 @@ class DetailMessageViewModel @Inject constructor(
             val result = getMessageUseCase(friendId)
 
             result.onSuccess {
-                // _detailMessageEvent.send(DetailMessageEvent.GetMessageSuccess)
-                Timber.d("Lấy tin nhắn thành công")
+                // Success: messages will be emitted via observeMessageUseCase
             }.onFailure { e ->
                 _detailMessageEvent.send(DetailMessageEvent.Failure(e.getErrorMessage()))
             }
@@ -226,21 +262,53 @@ class DetailMessageViewModel @Inject constructor(
         }
     }
 
+    fun onSelectedMediaChange(uri: Uri?) {
+        _selectedImageUri.value = uri
+    }
+
+    fun showImagePreview(imageModel: Any, allowClear: Boolean = false) {
+        _imagePreviewDialogState.value = ImagePreviewDialogState.Show(imageModel, allowClear)
+    }
+
+    fun dismissImagePreview() {
+        _imagePreviewDialogState.value = ImagePreviewDialogState.Dismiss
+    }
+
+    fun clearAndDismissImagePreview() {
+        _selectedImageUri.value = null
+        _imagePreviewDialogState.value = ImagePreviewDialogState.Dismiss
+    }
+
     fun sendMessage() {
         val content = _messageInput.value.trim()
-        if (content.isEmpty()) return
+        val imageUri = _selectedImageUri.value
+        
+        // Cho phép gửi nếu có content hoặc có ảnh
+        if (content.isEmpty() && imageUri == null) return
 
         viewModelScope.launch {
-            sendMessageUseCase(
-                content = content,
-                receiverId = friendId
-            )
+            _isSending.value = true
+            try {
+                sendMessageUseCase(
+                    content = content,
+                    receiverId = friendId,
+                    selectedImageUri = imageUri
+                )
 
-            typingJob?.cancel()
-            typingJob = null
-            viewModelScope.launch { emitTypingStopUseCase(friendId) }
+                typingJob?.cancel()
+                typingJob = null
+                viewModelScope.launch { emitTypingStopUseCase(friendId) }
 
-            _messageInput.value = ""
+                _messageInput.value = ""
+                _selectedImageUri.value = null
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "Lỗi khi gửi tin nhắn (vm)")
+                _detailMessageEvent.send(DetailMessageEvent.Failure(e.getErrorMessage()))
+            } finally {
+                _isSending.value = false
+            }
         }
     }
 }

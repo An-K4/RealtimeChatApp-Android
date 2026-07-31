@@ -1,6 +1,7 @@
 package com.example.realtimechatapp.ui.components
 
 import android.content.res.Configuration
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -27,10 +28,13 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
@@ -38,9 +42,12 @@ import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 @Composable
 fun MessageInput(
     messageText: String?,
+    selectedImageUri: Uri?,
+    isSending: Boolean = false,
     onMessageTextChange: (String) -> Unit,
     onCameraClick: () -> Unit,
     onGalleryClick: () -> Unit,
+    onPreviewClick: () -> Unit,
     onSendClick: () -> Unit
 ) {
     Row(
@@ -78,46 +85,72 @@ fun MessageInput(
                     maxLines = 3
                 )
 
-                IconButton(
-                    onClick = { onCameraClick() },
-                    modifier = Modifier.size(50.dp)
+                // Box gộp chung 1 chỗ: preview ảnh HOẶC camera/gallery icon
+                Box(
+                    modifier = Modifier.width(100.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Rounded.CameraAlt,
-                        contentDescription = "camera",
-                        tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
+                    if (selectedImageUri != null) {
+                        // Preview nhỏ - CHỈ hiện ảnh, không có nút X đè lên
+                        AsyncImage(
+                            model = selectedImageUri,
+                            contentDescription = "Image preview",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable { onPreviewClick() },
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Row {
+                            IconButton(
+                                onClick = { onCameraClick() },
+                                modifier = Modifier.size(50.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.CameraAlt,
+                                    contentDescription = "camera",
+                                    tint = MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
 
-                IconButton(
-                    onClick = { onGalleryClick() },
-                    modifier = Modifier.size(50.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Image,
-                        contentDescription = "gallery",
-                        tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.size(28.dp)
-                    )
+                            IconButton(
+                                onClick = { onGalleryClick() },
+                                modifier = Modifier.size(50.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Image,
+                                    contentDescription = "gallery",
+                                    tint = MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        Box(
+        IconButton(
+            onClick = onSendClick,
+            enabled = !isSending,
             modifier = Modifier
                 .size(48.dp)
-                .background(MaterialTheme.colorScheme.primary, CircleShape)
-                .clickable { onSendClick() }
+                .background(
+                    color = if (isSending) 
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                    else 
+                        MaterialTheme.colorScheme.primary,
+                    shape = CircleShape
+                )
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Default.Send,
                 contentDescription = "send",
-                modifier = Modifier
-                    .size(24.dp)
-                    .align(Alignment.Center),
+                modifier = Modifier.size(24.dp),
                 tint = MaterialTheme.colorScheme.onPrimary
             )
         }

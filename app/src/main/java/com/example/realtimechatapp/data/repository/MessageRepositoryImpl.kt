@@ -69,6 +69,7 @@ class MessageRepositoryImpl @Inject constructor(
                         contactId = contactId,
                         isMine = isMine,
                         lastMessage = messageDto.content,
+                        lastAttachments = messageDto.attachments,
                         lastSenderName = messageDto.senderId.fullName,
                         lastTimeStamp = messageDto.createdAt.isoToLong(),
                         contactName = if (isMine) messageDto.receiverId?.fullName else messageDto.senderId.fullName,

@@ -89,6 +89,10 @@ app/
 - Hiển thị thông tin nhóm: tên, ảnh đại diện, số thành viên
 - Phân biệt tin nhắn của mình và người khác trong nhóm
 - Hiển thị avatar và tên người gửi trong nhóm
+- 
+### Chia Sẻ Media
+- Gửi ảnh từ thư viện hoặc chụp trực tiếp
+- Xem ảnh phóng to khi tap vào
 
 ### 👥 Quản Lý Nhóm
 - Tạo nhóm mới và thêm thành viên
@@ -137,11 +141,6 @@ app/
 #### Thông Báo Đẩy (Push Notification)
 - Tích hợp Firebase Cloud Messaging (FCM) để nhận thông báo khi ứng dụng đóng
 - Badge số thông báo trên icon ứng dụng
-
-#### Chia Sẻ Media
-- Gửi ảnh từ thư viện hoặc chụp trực tiếp (nút camera/gallery đã có UI, chưa có logic)
-- Xem ảnh phóng to khi tap vào
-- Gửi file đính kèm
 
 #### Nhắn Tin Nhóm Và Cá nhân Đầy Đủ:
 - Màn hình thao tác phụ với từng cuộc trò chuyện

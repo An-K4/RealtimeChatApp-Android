@@ -30,6 +30,7 @@ data class MessageContactDto(
             id = this.id,
             isGroup = false,
             lastMessage = this.lastMessage.content,
+            lastAttachments = this.lastMessage.attachments,
             lastSenderName = this.lastMessage.senderName,
             lastTimeStamp = this.lastMessageTime.isoToLong(),
             unreadCount = this.unreadCount,

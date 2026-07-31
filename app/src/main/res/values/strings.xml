@@ -151,4 +151,8 @@
         <item quantity="one">Are you sure you want to add this user?</item>
         <item quantity="other">Are you sure you want to add these %1$d users?</item>
     </plurals>
+    <string name="camera_permission_denied">Camera permission denied</string>
+    <string name="you_sent_an_image">You sent an image</string>
+    <string name="sb_sent_an_image">%s sent an image</string>
+    <string name="sent_an_image">Sent an image</string>
 </resources>

@@ -1,6 +1,10 @@
 package com.example.realtimechatapp.ui.screens.messages
 
+import android.Manifest
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +23,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -34,12 +42,13 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
+import com.example.realtimechatapp.ui.components.FullScreenImagePreviewDialog
 import com.example.realtimechatapp.ui.components.WelcomePlaceholder
 import com.example.realtimechatapp.ui.components.ContactHeader
 import com.example.realtimechatapp.ui.components.MessageInput
 import com.example.realtimechatapp.ui.components.MessageRenderItem
 import com.example.realtimechatapp.ui.theme.RealtimeGreen
-import timber.log.Timber
+import java.io.File
 
 @Composable
 fun DetailMessageScreen(
@@ -50,6 +59,44 @@ fun DetailMessageScreen(
     val listState = rememberLazyListState()
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
+
+    // Camera URI state
+    var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Gallery launcher
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { detailMessageViewModel.onSelectedMediaChange(it) }
+    }
+
+    // Camera launcher
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success: Boolean ->
+        if (success && cameraImageUri != null) {
+            detailMessageViewModel.onSelectedMediaChange(cameraImageUri!!)
+        }
+    }
+
+    // Camera permission launcher
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Tạo URI cho camera
+            val photoFile = File(context.cacheDir, "camera/IMG_${System.currentTimeMillis()}.jpg")
+            photoFile.parentFile?.mkdirs()
+            cameraImageUri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                photoFile
+            )
+            cameraLauncher.launch(cameraImageUri!!)
+        } else {
+            Toast.makeText(context, UiText.StringResource(R.string.camera_permission_denied).asString(context), Toast.LENGTH_SHORT).show()
+        }
+    }
 
     LaunchedEffect(Unit) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -79,7 +126,6 @@ fun DetailMessageScreen(
             }
 
             if (hasUnseenMessages) {
-                Timber.d("Có tin nhắn chưa đọc, gọi mark message as seen.")
                 detailMessageViewModel.markMessageAsSeen()
             }
 
@@ -131,10 +177,17 @@ fun DetailMessageScreen(
                                     senderAvatar = item.senderAvatar,
                                     senderName = item.senderName,
                                     message = item.content ?: "",
+                                    attachments = item.attachments,
                                     time = item.createdAt,
                                     isSeen = item.seenUserIds?.isNotEmpty() == true,
                                     isGroup = false,
-                                    fromCurrentUser = item.senderId == detailMessageState.currentUserId
+                                    fromCurrentUser = item.senderId == detailMessageState.currentUserId,
+                                    onImageClick = { imageUrl ->
+                                        detailMessageViewModel.showImagePreview(
+                                            imageModel = imageUrl,
+                                            allowClear = false
+                                        )
+                                    }
                                 )
                             }
                         }
@@ -165,10 +218,40 @@ fun DetailMessageScreen(
 
         MessageInput(
             messageText = detailMessageState.messageInput ?: "",
+            selectedImageUri = detailMessageState.selectedImageUri,
+            isSending = detailMessageState.isSending,
             onMessageTextChange = { detailMessageViewModel.onMessageInputChange(it) },
-            onCameraClick = {},
-            onGalleryClick = {},
+            onCameraClick = {
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            },
+            onGalleryClick = {
+                galleryLauncher.launch("image/*")
+            },
+            onPreviewClick = {
+                detailMessageState.selectedImageUri?.let { uri ->
+                    detailMessageViewModel.showImagePreview(
+                        imageModel = uri,
+                        allowClear = true
+                    )
+                }
+            },
             onSendClick = { detailMessageViewModel.sendMessage() }
         )
+    }
+
+    // Render FullScreenImagePreviewDialog
+    when (val dialogState = detailMessageState.dialogState) {
+        is DetailMessageViewModel.ImagePreviewDialogState.Show -> {
+            FullScreenImagePreviewDialog(
+                imageModel = dialogState.imageModel,
+                onDismiss = { detailMessageViewModel.dismissImagePreview() },
+                onClear = if (dialogState.allowClear) {
+                    { detailMessageViewModel.clearAndDismissImagePreview() }
+                } else null
+            )
+        }
+        DetailMessageViewModel.ImagePreviewDialogState.Dismiss -> {
+            // Do nothing
+        }
     }
 }

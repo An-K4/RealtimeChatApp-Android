@@ -20,6 +20,7 @@ data class GroupContactDto(
             id = this.id,
             isGroup = true,
             lastMessage = this.lastMessage.content,
+            lastAttachments = this.lastMessage.attachments,
             lastSenderName = this.lastMessage.senderName,
             isMine = this.lastMessage.isMine,
             lastTimeStamp = this.lastMessage.createdAt.isoToLong(),

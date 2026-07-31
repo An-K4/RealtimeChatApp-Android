@@ -32,6 +32,7 @@ interface MessageContactDao {
         contactId: String,
         isMine: Boolean,
         lastMessage: String?,
+        lastAttachments: String?,
         lastSenderName: String,
         lastTimeStamp: Long,
         contactName: String?,
@@ -44,6 +45,7 @@ interface MessageContactDao {
                 id = contactId,
                 isGroup = false,
                 lastMessage = lastMessage,
+                lastAttachments = lastAttachments,
                 lastSenderName = lastSenderName,
                 isMine = isMine,
                 lastTimeStamp = lastTimeStamp,
@@ -56,6 +58,7 @@ interface MessageContactDao {
         } else {
             val updatedContact = existingContact.copy(
                 lastMessage = lastMessage,
+                lastAttachments = lastAttachments,
                 lastSenderName = lastSenderName,
                 isMine = isMine,
                 lastTimeStamp = lastTimeStamp,
