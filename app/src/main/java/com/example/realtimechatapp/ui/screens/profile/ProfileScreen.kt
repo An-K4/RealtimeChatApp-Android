@@ -499,13 +499,13 @@ fun ProfileScreen(
                 ) {
                     OutlinedTextField(
                         value = changePasswordState.oldPassword,
-                        onValueChange = { profileViewModel.onOldPasswordChange(it) },
+                        onValueChange = onOldPasswordChange,
                         label = { Text(StringResource(R.string.old_password).asString()) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         visualTransformation = if (oldPasswordVisible) {
                             VisualTransformation.None
-                        } else {onOldPasswordChange
+                        } else {
                             PasswordVisualTransformation()
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -530,7 +530,7 @@ fun ProfileScreen(
 
                     OutlinedTextField(
                         value = changePasswordState.newPassword,
-                        onValueChange = { profileViewModel.onNewPasswordChange(it) },
+                        onValueChange = onNewPasswordChange,
                         label = { Text(StringResource(R.string.new_password).asString()) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
