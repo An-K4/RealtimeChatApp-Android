@@ -1,4 +1,4 @@
-package com.example.realtimechatapp.ui.screens.messages
+﻿package com.example.realtimechatapp.ui.screens.messages
 
 import android.Manifest
 import android.net.Uri
@@ -63,28 +63,33 @@ fun DetailMessageScreen(
     // Camera URI state
     var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
 
-    // Gallery launcher
-    val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let { detailMessageViewModel.onSelectedMediaChange(it) }
+    // Remember stable callback for media selection
+    val onMediaSelected = remember<(Uri) -> Unit> {
+        { uri -> detailMessageViewModel.onSelectedMediaChange(uri) }
     }
 
-    // Camera launcher
+    // Gallery launcher with stable callback
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? ->
+            uri?.let(onMediaSelected)
+        }
+    )
+
+    // Camera launcher with stable callback
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success: Boolean ->
         if (success && cameraImageUri != null) {
-            detailMessageViewModel.onSelectedMediaChange(cameraImageUri!!)
+            onMediaSelected(cameraImageUri!!)
         }
     }
 
-    // Camera permission launcher
+    // Camera permission launcher with stable callback
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            // Tạo URI cho camera
             val photoFile = File(context.cacheDir, "camera/IMG_${System.currentTimeMillis()}.jpg")
             photoFile.parentFile?.mkdirs()
             cameraImageUri = FileProvider.getUriForFile(
@@ -94,11 +99,16 @@ fun DetailMessageScreen(
             )
             cameraLauncher.launch(cameraImageUri!!)
         } else {
-            Toast.makeText(context, UiText.StringResource(R.string.camera_permission_denied).asString(context), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                UiText.StringResource(R.string.camera_permission_denied).asString(context),
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
-    LaunchedEffect(Unit) {
+    // LaunchedEffect with proper key (lifecycleOwner instead of Unit)
+    LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             detailMessageViewModel.detailMessageEvent.collect { event ->
                 when (event) {
@@ -118,6 +128,7 @@ fun DetailMessageScreen(
         }
     }
 
+    // Auto-scroll logic remains the same but more efficient with key
     LaunchedEffect(detailMessageState.messages.size) {
         if (detailMessageState.messages.isNotEmpty()) {
             val hasUnseenMessages = detailMessageState.messages.any { message ->
@@ -171,8 +182,18 @@ fun DetailMessageScreen(
                         ) {
                             items(
                                 items = detailMessageState.messages,
-                                key = { message -> message.id }
+                                key = { message -> message.id } // Key already present - good!
                             ) { item ->
+                                // Remember callback to prevent MessageRenderItem recomposition
+                                val onImageClick = remember(item.id) {
+                                    { imageUrl: String ->
+                                        detailMessageViewModel.showImagePreview(
+                                            imageModel = imageUrl,
+                                            allowClear = false
+                                        )
+                                    }
+                                }
+
                                 MessageRenderItem(
                                     senderAvatar = item.senderAvatar,
                                     senderName = item.senderName,
@@ -182,19 +203,17 @@ fun DetailMessageScreen(
                                     isSeen = item.seenUserIds?.isNotEmpty() == true,
                                     isGroup = false,
                                     fromCurrentUser = item.senderId == detailMessageState.currentUserId,
-                                    onImageClick = { imageUrl ->
-                                        detailMessageViewModel.showImagePreview(
-                                            imageModel = imageUrl,
-                                            allowClear = false
-                                        )
-                                    }
+                                    onImageClick = onImageClick
                                 )
                             }
                         }
 
                         if (detailMessageState.friendTypingStatus) {
                             Text(
-                                text = UiText.StringResource(R.string.sb_is_typing, detailMessageState.friendName).asString(),
+                                text = UiText.StringResource(
+                                    R.string.sb_is_typing,
+                                    detailMessageState.friendName
+                                ).asString(),
                                 fontSize = 12.sp,
                                 textAlign = TextAlign.Start,
                                 color = RealtimeGreen,
@@ -216,26 +235,44 @@ fun DetailMessageScreen(
             }
         }
 
-        MessageInput(
-            messageText = detailMessageState.messageInput ?: "",
-            selectedImageUri = detailMessageState.selectedImageUri,
-            isSending = detailMessageState.isSending,
-            onMessageTextChange = { detailMessageViewModel.onMessageInputChange(it) },
-            onCameraClick = {
-                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-            },
-            onGalleryClick = {
-                galleryLauncher.launch("image/*")
-            },
-            onPreviewClick = {
+        // Remember all callbacks for MessageInput to prevent recomposition
+        val onMessageTextChange = remember {
+            { text: String -> detailMessageViewModel.onMessageInputChange(text) }
+        }
+
+        val onCameraClick = remember {
+            { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) }
+        }
+
+        val onGalleryClick = remember {
+            { galleryLauncher.launch("image/*") }
+        }
+
+        val onPreviewClick = remember {
+            {
                 detailMessageState.selectedImageUri?.let { uri ->
                     detailMessageViewModel.showImagePreview(
                         imageModel = uri,
                         allowClear = true
                     )
                 }
-            },
-            onSendClick = { detailMessageViewModel.sendMessage() }
+                Unit
+            }
+        }
+
+        val onSendClick = remember {
+            { detailMessageViewModel.sendMessage() }
+        }
+
+        MessageInput(
+            messageText = detailMessageState.messageInput,
+            selectedImageUri = detailMessageState.selectedImageUri,
+            isSending = detailMessageState.isSending,
+            onMessageTextChange = onMessageTextChange,
+            onCameraClick = onCameraClick,
+            onGalleryClick = onGalleryClick,
+            onPreviewClick = onPreviewClick,
+            onSendClick = onSendClick
         )
     }
 

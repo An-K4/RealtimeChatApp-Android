@@ -12,6 +12,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -65,15 +66,18 @@ fun GroupScreen(
                         items = groupState.groups,
                         key = { group -> group.id}
                     ){ group ->
+                        // Remember callback
+                        val onItemClicked = remember(group.id) {
+                            { navController.navigate(Screen.DetailGroup.createRoute(group.id)) }
+                        }
+                        
                         ChatItem(
                             isGroup = true,
                             avatar = group.avatar,
                             name = group.name,
                             unreadCount = group.unreadCount,
                             lastMessage = group.lastMessage,
-                            onItemClicked = {
-                                navController.navigate(Screen.DetailGroup.createRoute(group.id))
-                            }
+                            onItemClicked = onItemClicked
                         )
                     }
                 }

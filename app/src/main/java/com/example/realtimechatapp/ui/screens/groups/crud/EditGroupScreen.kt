@@ -1,4 +1,4 @@
-package com.example.realtimechatapp.ui.screens.groups.crud
+﻿package com.example.realtimechatapp.ui.screens.groups.crud
 
 import android.content.res.Configuration
 import android.widget.Toast
@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -53,16 +54,53 @@ fun EditGroupScreen(
     val context = LocalContext.current
     val lifeCycleOwner = LocalLifecycleOwner.current
     val editGroupState by editGroupViewModel.editGroupState.collectAsStateWithLifecycle()
-    val photoPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = { uri ->
+    
+    // Remember callbacks
+    val onPhotoSelected = remember {
+        { uri: android.net.Uri? ->
             if (uri != null) {
                 editGroupViewModel.onGroupAvatarChange(uri)
             }
         }
-    )
+    }
+    
+    val onGroupNameChange = remember {
+        { text: String -> editGroupViewModel.onGroupNameChange(text) }
+    }
+    
+    val onGroupDescriptionChange = remember {
+        { text: String -> editGroupViewModel.onGroupDescriptionChange(text) }
+    }
+    
+    val onUpdateGroup = remember {
+        { editGroupViewModel.updateGroup() }
+    }
 
-    LaunchedEffect(Unit) {
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = onPhotoSelected
+    )
+    
+    val onBadgeClick = remember {
+        {
+            photoPickerLauncher.launch(
+                PickVisualMediaRequest(
+                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                )
+            )
+        }
+    }
+    
+    val onKickedDismiss = remember {
+        {
+            navController.navigate(Screen.Groups.route) {
+                popUpTo(Screen.Groups.route) { inclusive = false }
+            }
+        }
+    }
+
+    // LaunchedEffect with proper key
+    LaunchedEffect(lifeCycleOwner) {
         lifeCycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             editGroupViewModel.editGroupEvent.collect { event ->
                 when (event) {
@@ -90,11 +128,7 @@ fun EditGroupScreen(
                 title = UiText.StringResource(R.string.warning).asString(context),
                 message = "Bạn đã bị xóa khỏi nhóm. Liên hệ admin để biết thêm thông tin.",
                 isSuccess = false,
-                onDismiss = {
-                    navController.navigate(Screen.Groups.route) {
-                        popUpTo(Screen.Groups.route) { inclusive = false }
-                    }
-                }
+                onDismiss = onKickedDismiss
             )
         }
 
@@ -112,19 +146,13 @@ fun EditGroupScreen(
     ) {
         BadgedAvatar(
             currentAvatar = editGroupState.groupAvatar,
-            onBadgeClick = {
-                photoPickerLauncher.launch(
-                    PickVisualMediaRequest(
-                        ActivityResultContracts.PickVisualMedia.ImageOnly
-                    )
-                )
-            }
+            onBadgeClick = onBadgeClick
         )
         Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = editGroupState.groupName,
-            onValueChange = { editGroupViewModel.onGroupNameChange(it) },
+            onValueChange = onGroupNameChange,
             label = { Text(stringResource(R.string.group_name)) },
             modifier = Modifier.fillMaxWidth(),
             maxLines = 3,
@@ -139,7 +167,7 @@ fun EditGroupScreen(
 
         OutlinedTextField(
             value = editGroupState.groupDescription ?: "",
-            onValueChange = { editGroupViewModel.onGroupDescriptionChange(it) },
+            onValueChange = onGroupDescriptionChange,
             label = { Text(stringResource(R.string.group_description)) },
             modifier = Modifier
                 .fillMaxWidth()
@@ -154,7 +182,7 @@ fun EditGroupScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(
-            onClick = { editGroupViewModel.updateGroup() },
+            onClick = onUpdateGroup,
             modifier = Modifier.fillMaxWidth(),
             enabled = editGroupState.isUpdateEnable && !editGroupState.isUpdating,
             colors = ButtonDefaults.buttonColors(

@@ -38,6 +38,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,6 +62,7 @@ import com.example.realtimechatapp.ui.navigation.Screen
 import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 import com.example.realtimechatapp.ui.theme.RealtimeGreen
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,7 +80,52 @@ fun CreateGroupScreen(
 
     val addMemberSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    LaunchedEffect(Unit) {
+    // Remember all callbacks
+    val onGroupNameChange = remember {
+        { text: String -> createGroupViewModel.onGroupNameChange(text) }
+    }
+
+    val onShowAddMember = remember {
+        {
+            with(createGroupViewModel) {
+                prepareAddMemberFlow()
+                showAddMemberSheet()
+            }
+        }
+    }
+
+    val onCreateGroup = remember {
+        { createGroupViewModel.createGroup() }
+    }
+
+    val onQuerySearchChange = remember {
+        { text: String -> createGroupViewModel.onQuerySearchChange(text) }
+    }
+
+    // Remember sheet callbacks
+    val onDismissSheet = remember {
+        {
+            uiScope.launch { addMemberSheetState.hide() }.invokeOnCompletion {
+                if (!addMemberSheetState.isVisible) createGroupViewModel.dismissSheet()
+            }
+            Unit
+        }
+    }
+
+    val onConfirmAddMember = remember {
+        {
+            uiScope.launch { addMemberSheetState.hide() }.invokeOnCompletion {
+                if (!addMemberSheetState.isVisible) createGroupViewModel.dismissSheet()
+            }
+            with(createGroupViewModel) {
+                onNewMemberAdded()
+                clearAddMemberFlow()
+            }
+        }
+    }
+
+    // LaunchedEffect with proper key
+    LaunchedEffect(lifeCycleOwner) {
         lifeCycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             createGroupViewModel.createGroupEvent.collect { event ->
                 when (event) {
@@ -94,6 +141,7 @@ fun CreateGroupScreen(
                     }
 
                     is CreateGroupViewModel.CreateGroupEvent.Failure -> {
+                        Timber.e("hello")
                         Toast.makeText(context, event.message.asString(context), Toast.LENGTH_SHORT)
                             .show()
                     }
@@ -109,7 +157,7 @@ fun CreateGroupScreen(
     ) {
         OutlinedTextField(
             value = createGroupState.groupName,
-            onValueChange = { createGroupViewModel.onGroupNameChange(it) },
+            onValueChange = onGroupNameChange,
             label = { Text(UiText.StringResource(R.string.group_name).asString()) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
@@ -133,12 +181,7 @@ fun CreateGroupScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(
-            onClick = {
-                with (createGroupViewModel) {
-                    prepareAddMemberFlow()
-                    showAddMemberSheet()
-                }
-            },
+            onClick = onShowAddMember,
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -167,6 +210,11 @@ fun CreateGroupScreen(
                 items = createGroupState.groupMembers.toList(),
                 key = { member -> member.id }
             ) { groupMember ->
+                // Remember remove callback
+                val onRemoveMember = remember(groupMember.id) {
+                    { createGroupViewModel.onGroupMemberRemove(groupMember) }
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -181,7 +229,7 @@ fun CreateGroupScreen(
                     )
 
                     IconButton(
-                        onClick = { createGroupViewModel.onGroupMemberRemove(groupMember) },
+                        onClick = onRemoveMember,
                         colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.secondary)
                     ) {
                         Icon(
@@ -194,7 +242,7 @@ fun CreateGroupScreen(
         }
 
         Button(
-            onClick = { createGroupViewModel.createGroup() },
+            onClick = onCreateGroup,
             modifier = Modifier.fillMaxWidth(),
             enabled = !createGroupState.isLoading,
             colors = ButtonDefaults.buttonColors(
@@ -225,7 +273,7 @@ fun CreateGroupScreen(
             ModalBottomSheet(
                 sheetState = addMemberSheetState,
                 onDismissRequest = {
-                    with (createGroupViewModel) {
+                    with(createGroupViewModel) {
                         dismissSheet()
                         clearAddMemberFlow()
                     }
@@ -248,7 +296,7 @@ fun CreateGroupScreen(
 
                     OutlinedTextField(
                         value = addMemberState.querySearch,
-                        onValueChange = { createGroupViewModel.onQuerySearchChange(it) },
+                        onValueChange = onQuerySearchChange,
                         placeholder = {
                             Text(
                                 text = UiText.StringResource(R.string.type_a_keyword).asString(),
@@ -281,14 +329,16 @@ fun CreateGroupScreen(
                     ) {
                         items(
                             items = addMemberState.searchResult ?: addMemberState.localUsers,
-                            key = { member -> member.id }
+                            key = { user -> user.id }
                         ) { user ->
                             val isChecked = addMemberState.selectedUser.any { it.id == user.id }
-                            val checkAction = {
-                                if (!isChecked) {
-                                    createGroupViewModel.onSelectedMemberAdd(user)
-                                } else {
-                                    createGroupViewModel.onSelectedMemberRemove(user)
+                            val checkAction = remember(user.id, isChecked) {
+                                {
+                                    if (!isChecked) {
+                                        createGroupViewModel.onSelectedMemberAdd(user)
+                                    } else {
+                                        createGroupViewModel.onSelectedMemberRemove(user)
+                                    }
                                 }
                             }
 
@@ -313,14 +363,14 @@ fun CreateGroupScreen(
                         }
                     }
 
-                    Row {
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         OutlinedButton(
-                            onClick = {
-                                uiScope.launch { addMemberSheetState.hide() }
-                                    .invokeOnCompletion {
-                                        if (!addMemberSheetState.isVisible) createGroupViewModel.dismissSheet()
-                                    }
-                            },
+                            onClick = onDismissSheet,
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(10.dp)
@@ -333,17 +383,8 @@ fun CreateGroupScreen(
                         }
 
                         Button(
-                            onClick = {
-                                uiScope.launch { addMemberSheetState.hide() }
-                                    .invokeOnCompletion {
-                                        if (!addMemberSheetState.isVisible) createGroupViewModel.dismissSheet()
-                                    }
-                                with(createGroupViewModel) {
-                                    onNewMemberAdded()
-                                    clearAddMemberFlow()
-                                }
-                            },
-                            enabled = !addMemberState.selectedUser.isEmpty(),
+                            onClick = onConfirmAddMember,
+                            enabled = addMemberState.selectedUser.isNotEmpty(),
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(10.dp),

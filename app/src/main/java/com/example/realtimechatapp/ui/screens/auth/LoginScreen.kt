@@ -71,11 +71,37 @@ fun LoginScreen(
     val lifeCycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
 
+    // Remember form callbacks
+    val onUsernameChange = remember {
+        { text: String -> authViewModel.onLoginUsernameChange(text) }
+    }
+    
+    val onPasswordChange = remember {
+        { text: String -> authViewModel.onLoginPasswordChange(text) }
+    }
+    
+    val onLogin = remember {
+        { authViewModel.login() }
+    }
+    
+    val onNavigateToSignup = remember {
+        {
+            navController.navigate(Screen.Signup.route) {
+                popUpTo(Screen.Login.route) { inclusive = true }
+            }
+        }
+    }
+    
+    val onDismissDialog = remember {
+        { authViewModel.dismissLoginDialog() }
+    }
+
     LaunchedEffect(Unit) {
         authViewModel.loginWithToken()
     }
 
-    LaunchedEffect(Unit) {
+    // LaunchedEffect with proper key
+    LaunchedEffect(lifeCycleOwner) {
         lifeCycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             authViewModel.authEvent.collect { event ->
                 when (event) {
@@ -125,7 +151,7 @@ fun LoginScreen(
 
             OutlinedTextField(
                 value = loginState.username,
-                onValueChange = { authViewModel.onLoginUsernameChange(it) },
+                onValueChange = onUsernameChange,
                 label = { Text(stringResource(R.string.username)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -141,7 +167,7 @@ fun LoginScreen(
 
             OutlinedTextField(
                 value = loginState.password,
-                onValueChange = { authViewModel.onLoginPasswordChange(it) },
+                onValueChange = onPasswordChange,
                 label = { Text(stringResource(R.string.password)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
@@ -171,7 +197,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { authViewModel.login() },
+                onClick = onLogin,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(10.dp),
@@ -205,11 +231,7 @@ fun LoginScreen(
                 "signup",
                 "",
                 "",
-                onTextClicked = {
-                    navController.navigate(Screen.Signup.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
-                    }
-                }
+                onTextClicked = onNavigateToSignup
             )
         }
     }
@@ -224,7 +246,7 @@ fun LoginScreen(
                 title = stringResource(R.string.login_error),
                 message = dialog.message.asString(),
                 isSuccess = false,
-                onDismiss = { authViewModel.dismissLoginDialog() }
+                onDismiss = onDismissDialog
             )
         }
 

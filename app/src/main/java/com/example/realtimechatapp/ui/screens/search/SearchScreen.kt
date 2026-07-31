@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -55,12 +56,29 @@ fun SearchScreen(
     val searchState by searchViewModel.searchState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
+    // Remember callbacks
+    val onQueryChange = remember {
+        { text: String -> searchViewModel.onQueryChange(text) }
+    }
+
+    val onTabSelected = remember<(SearchTabs) -> Unit> {
+        { tab -> searchViewModel.onTabSelected(tab) }
+    }
+
+    val onBackClick = remember {
+        {
+            navController.popBackStack()
+            Unit
+        }
+    }
+
     LaunchedEffect(Unit) {
         searchViewModel.searchEvents.collect {
             when (it) {
                 is SearchViewModel.SearchEvents.SaveNewUserSuccess -> {
                     navController.navigate(Screen.DetailMessage.createRoute(it.newUserId))
                 }
+
                 is SearchViewModel.SearchEvents.Failure -> {
                     Toast.makeText(context, it.message.asString(context), Toast.LENGTH_SHORT).show()
                 }
@@ -77,7 +95,7 @@ fun SearchScreen(
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { navController.popBackStack() }) {
+            IconButton(onClick = onBackClick) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Default.ArrowBack,
                     contentDescription = "back",
@@ -87,7 +105,7 @@ fun SearchScreen(
 
             OutlinedTextField(
                 value = searchState.query,
-                onValueChange = { searchViewModel.onQueryChange(it) },
+                onValueChange = onQueryChange,
                 placeholder = {
                     Text(
                         text = UiText.StringResource(R.string.type_a_keyword).asString(),
@@ -113,7 +131,7 @@ fun SearchScreen(
         ) {
             Tab(
                 selected = searchState.currentTab == SearchTabs.USER,
-                onClick = { searchViewModel.onTabSelected(SearchTabs.USER) },
+                onClick = { onTabSelected(SearchTabs.USER) },
                 text = { Text(UiText.StringResource(R.string.everyone).asString()) },
                 selectedContentColor = MaterialTheme.colorScheme.primary,
                 unselectedContentColor = MaterialTheme.colorScheme.onBackground
@@ -121,7 +139,7 @@ fun SearchScreen(
 
             Tab(
                 selected = searchState.currentTab == SearchTabs.GROUP,
-                onClick = { searchViewModel.onTabSelected(SearchTabs.GROUP) },
+                onClick = { onTabSelected(SearchTabs.GROUP) },
                 text = { Text(UiText.StringResource(R.string.groups).asString()) },
                 selectedContentColor = MaterialTheme.colorScheme.primary,
                 unselectedContentColor = MaterialTheme.colorScheme.onBackground
@@ -166,13 +184,16 @@ fun SearchScreen(
                                     items = userSearchResult,
                                     key = { user -> user.id }
                                 ) { user ->
+                                    // Remember callback
+                                    val onItemClicked = remember(user.id) {
+                                        { searchViewModel.saveNewUserInfo(user) }
+                                    }
+
                                     ContactListItem(
                                         avatar = user.avatar ?: "",
                                         name = user.fullName,
                                         additionalInfo = user.email,
-                                        onItemClicked = {
-                                            searchViewModel.saveNewUserInfo(user)
-                                        },
+                                        onItemClicked = onItemClicked,
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 }
@@ -202,6 +223,17 @@ fun SearchScreen(
                                     items = groupSearchResult,
                                     key = { group -> group.id }
                                 ) { group ->
+                                    // Remember callback
+                                    val onItemClicked = remember(group.id) {
+                                        {
+                                            navController.navigate(
+                                                Screen.DetailGroup.createRoute(
+                                                    group.id
+                                                )
+                                            )
+                                        }
+                                    }
+
                                     ContactListItem(
                                         avatar = group.avatar ?: "",
                                         name = group.name,
@@ -209,9 +241,7 @@ fun SearchScreen(
                                             R.string.group_status,
                                             group.members.size
                                         ).asString(),
-                                        onItemClicked = {
-                                            navController.navigate(Screen.DetailGroup.createRoute(group.id))
-                                        },
+                                        onItemClicked = onItemClicked,
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 }

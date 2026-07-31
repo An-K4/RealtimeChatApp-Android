@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -48,6 +49,11 @@ fun MessageScreen(
                         items = messageState.users,
                         key = { user -> user.id }
                     ) { user ->
+                        // Remember callback
+                        val onItemClicked = remember(user.id) {
+                            { navController.navigate(Screen.DetailMessage.createRoute(user.id)) }
+                        }
+                        
                         ChatItem(
                             isGroup = false,
                             avatar = user.avatar,
@@ -56,9 +62,7 @@ fun MessageScreen(
                             lastMessage = user.lastMessage,
                             isOnline = user.isOnline,
                             isTyping = user.isTyping,
-                            onItemClicked = {
-                                navController.navigate(Screen.DetailMessage.createRoute(user.id))
-                            }
+                            onItemClicked = onItemClicked
                         )
                     }
                 }
@@ -69,29 +73,35 @@ fun MessageScreen(
     when (val dialogState = messageState.messageDialogState) {
         MessageViewModel.MessageDialogState.Dismiss -> {}
         MessageViewModel.MessageDialogState.Unauthenticated -> {
-            NotificationDialog(
-                title = UiText.StringResource(R.string.error).asString(),
-                message = UiText.StringResource(R.string.login_session_expired_notification)
-                    .asString(),
-                isSuccess = false,
-                onDismiss = {
+            val onDismissUnauthenticated = remember {
+                {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) {
                             inclusive = true
                         }
                     }
                 }
+            }
+            
+            NotificationDialog(
+                title = UiText.StringResource(R.string.error).asString(),
+                message = UiText.StringResource(R.string.login_session_expired_notification)
+                    .asString(),
+                isSuccess = false,
+                onDismiss = onDismissUnauthenticated
             )
         }
 
         is MessageViewModel.MessageDialogState.Failure -> {
+            val onDismissFailure = remember {
+                { messageViewModel.dismissDialog() }
+            }
+            
             NotificationDialog(
                 title = UiText.StringResource(R.string.error).asString(),
                 message = dialogState.message.asString(),
                 isSuccess = false,
-                onDismiss = {
-                    messageViewModel.dismissDialog()
-                }
+                onDismiss = onDismissFailure
             )
         }
     }

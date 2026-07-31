@@ -1,4 +1,4 @@
-package com.example.realtimechatapp.ui.screens.groups
+﻿package com.example.realtimechatapp.ui.screens.groups
 
 import android.Manifest
 import android.net.Uri
@@ -64,28 +64,33 @@ fun DetailGroupScreen(
     // Camera URI state
     var cameraImageUri by remember { mutableStateOf<Uri?>(null) }
 
-    // Gallery launcher
-    val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let { detailGroupViewModel.onSelectedMediaChange(it) }
+    // Remember stable callback for media selection
+    val onMediaSelected = remember<(Uri) -> Unit> {
+        { uri -> detailGroupViewModel.onSelectedMediaChange(uri) }
     }
 
-    // Camera launcher
+    // Gallery launcher with stable callback
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? ->
+            uri?.let(onMediaSelected)
+        }
+    )
+
+    // Camera launcher with stable callback
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success: Boolean ->
         if (success && cameraImageUri != null) {
-            detailGroupViewModel.onSelectedMediaChange(cameraImageUri!!)
+            onMediaSelected(cameraImageUri!!)
         }
     }
 
-    // Camera permission launcher
+    // Camera permission launcher with stable callback
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            // Tạo URI cho camera
             val photoFile = File(context.cacheDir, "camera/IMG_${System.currentTimeMillis()}.jpg")
             photoFile.parentFile?.mkdirs()
             cameraImageUri = FileProvider.getUriForFile(
@@ -99,7 +104,8 @@ fun DetailGroupScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
+    // LaunchedEffect with proper key (lifecycleOwner instead of Unit)
+    LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             detailGroupViewModel.detailGroupEvent.collect { event ->
                 when (event) {
@@ -120,6 +126,7 @@ fun DetailGroupScreen(
         }
     }
 
+    // Auto-scroll logic remains the same
     LaunchedEffect(detailGroupState.groupMessages.size) {
         if (detailGroupState.groupMessages.isNotEmpty()) {
             val hasUnseenMessages = detailGroupState.groupMessages.any { message ->
@@ -183,8 +190,18 @@ fun DetailGroupScreen(
                         ) {
                             items(
                                 items = detailGroupState.groupMessages,
-                                key = { groupMessage -> groupMessage.id }
+                                key = { groupMessage -> groupMessage.id } // Key already present - good!
                             ) { groupMessage ->
+                                // Remember callback to prevent MessageRenderItem recomposition
+                                val onImageClick = remember(groupMessage.id) {
+                                    { imageUrl: String ->
+                                        detailGroupViewModel.showImagePreview(
+                                            imageModel = imageUrl,
+                                            allowClear = false
+                                        )
+                                    }
+                                }
+                                
                                 MessageRenderItem(
                                     senderAvatar = groupMessage.senderAvatar,
                                     senderName = groupMessage.senderName,
@@ -194,12 +211,7 @@ fun DetailGroupScreen(
                                     isSeen = groupMessage.seenUserIds?.isNotEmpty() == true,
                                     isGroup = true,
                                     fromCurrentUser = groupMessage.senderId == detailGroupState.currentUserId,
-                                    onImageClick = { imageUrl ->
-                                        detailGroupViewModel.showImagePreview(
-                                            imageModel = imageUrl,
-                                            allowClear = false
-                                        )
-                                    }
+                                    onImageClick = onImageClick
                                 )
                             }
                         }
@@ -228,26 +240,44 @@ fun DetailGroupScreen(
             }
         }
 
-        MessageInput(
-            messageText = detailGroupState.messageInput ?: "",
-            selectedImageUri = detailGroupState.selectedImageUri,
-            isSending = detailGroupState.isSending,
-            onMessageTextChange = { detailGroupViewModel.onGroupMessageInputChange(it) },
-            onCameraClick = {
-                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-            },
-            onGalleryClick = {
-                galleryLauncher.launch("image/*")
-            },
-            onPreviewClick = {
+        // Remember all callbacks for MessageInput to prevent recomposition
+        val onMessageTextChange = remember {
+            { text: String -> detailGroupViewModel.onGroupMessageInputChange(text) }
+        }
+        
+        val onCameraClick = remember {
+            { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) }
+        }
+        
+        val onGalleryClick = remember {
+            { galleryLauncher.launch("image/*") }
+        }
+        
+        val onPreviewClick = remember {
+            {
                 detailGroupState.selectedImageUri?.let { uri ->
                     detailGroupViewModel.showImagePreview(
                         imageModel = uri,
                         allowClear = true
                     )
                 }
-            },
-            onSendClick = { detailGroupViewModel.sendGroupMessage() }
+                Unit
+            }
+        }
+        
+        val onSendClick = remember {
+            { detailGroupViewModel.sendGroupMessage() }
+        }
+
+        MessageInput(
+            messageText = detailGroupState.messageInput,
+            selectedImageUri = detailGroupState.selectedImageUri,
+            isSending = detailGroupState.isSending,
+            onMessageTextChange = onMessageTextChange,
+            onCameraClick = onCameraClick,
+            onGalleryClick = onGalleryClick,
+            onPreviewClick = onPreviewClick,
+            onSendClick = onSendClick
         )
     }
 

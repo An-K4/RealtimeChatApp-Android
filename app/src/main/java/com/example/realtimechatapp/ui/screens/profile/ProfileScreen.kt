@@ -104,16 +104,97 @@ fun ProfileScreen(
     val uiScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
-    val photoPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = { uri ->
+    // Remember photo picker callback
+    val onPhotoSelected = remember {
+        { uri: android.net.Uri? ->
             if (uri != null) {
                 profileViewModel.onUpdateAvatarChange(uri)
             }
         }
-    )
+    }
 
-    LaunchedEffect(Unit) {
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = onPhotoSelected
+    )
+    
+    // Remember all button callbacks
+    val onShowUpdateProfile = remember {
+        { profileViewModel.showUpdateProfileSheet() }
+    }
+    
+    val onShowChangePassword = remember {
+        { profileViewModel.showChangePasswordSheet() }
+    }
+    
+    val onShowLogoutConfirm = remember {
+        { profileViewModel.showLogoutConfirmDialog() }
+    }
+    
+    val onUpdateFullNameChange = remember {
+        { text: String -> profileViewModel.onUpdateFullNameChange(text) }
+    }
+    
+    val onUpdateEmailChange = remember {
+        { text: String -> profileViewModel.onUpdateEmailChange(text) }
+    }
+    
+    val onOldPasswordChange = remember {
+        { text: String -> profileViewModel.onOldPasswordChange(text) }
+    }
+    
+    val onNewPasswordChange = remember {
+        { text: String -> profileViewModel.onNewPasswordChange(text) }
+    }
+    
+    val onConfirmNewPasswordChange = remember {
+        { text: String -> profileViewModel.onConfirmNewPasswordChange(text) }
+    }
+    
+    val onBadgeClick = remember {
+        {
+            photoPickerLauncher.launch(
+                PickVisualMediaRequest(
+                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                )
+            )
+        }
+    }
+    
+    // Remember sheet dismiss callbacks
+    val onDismissUpdateSheet = remember {
+        {
+            uiScope.launch { updateSheetState.hide() }.invokeOnCompletion {
+                if (!updateSheetState.isVisible) profileViewModel.dismissSheet()
+            }
+            Unit
+        }
+    }
+    
+    val onDismissChangePasswordSheet = remember {
+        {
+            uiScope.launch { changePasswordSheetState.hide() }.invokeOnCompletion {
+                if (!changePasswordSheetState.isVisible) profileViewModel.dismissSheet()
+            }
+            Unit
+        }
+    }
+    
+    val onShowUpdateProfileConfirm = remember {
+        { profileViewModel.showUpdateProfileConfirmDialog() }
+    }
+    
+    val onShowChangePasswordConfirm = remember {
+        { profileViewModel.showChangePasswordConfirmDialog() }
+    }
+    
+    // Remember dialog callbacks
+    val onDismissDialog = remember {
+        { profileViewModel.dismissDialog() }
+    }
+
+    // LaunchedEffect with proper key
+    LaunchedEffect(lifeCycleOwner) {
         lifeCycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             profileViewModel.profileEvent.collect { event ->
                 when (event) {
@@ -207,9 +288,7 @@ fun ProfileScreen(
                             .verticalScroll(scrollState)
                     ) {
                         Button(
-                            onClick = {
-                                profileViewModel.showUpdateProfileSheet()
-                            },
+                            onClick = onShowUpdateProfile,
                             modifier = Modifier.fillMaxWidth(),
                             enabled = !profileState.isUpdating,
                             colors = ButtonDefaults.buttonColors(
@@ -238,7 +317,7 @@ fun ProfileScreen(
                             }
                         }
                         Button(
-                            onClick = { profileViewModel.showChangePasswordSheet() },
+                            onClick = onShowChangePassword,
                             modifier = Modifier.fillMaxWidth(),
                             enabled = !profileState.isChanging,
                             colors = ButtonDefaults.buttonColors(
@@ -266,7 +345,7 @@ fun ProfileScreen(
                             }
                         }
                         Button(
-                            onClick = { profileViewModel.showLogoutConfirmDialog() },
+                            onClick = onShowLogoutConfirm,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 5.dp),
@@ -306,6 +385,7 @@ fun ProfileScreen(
                     uiScope.launch { updateSheetState.hide() }.invokeOnCompletion {
                         if (!updateSheetState.isVisible) profileViewModel.dismissSheet()
                     }
+                    Unit
                 }
             ) {
                 Column(
@@ -319,20 +399,14 @@ fun ProfileScreen(
                 ) {
                     BadgedAvatar(
                         currentAvatar = updateProfileState.avatar,
-                        onBadgeClick = {
-                            photoPickerLauncher.launch(
-                                PickVisualMediaRequest(
-                                    ActivityResultContracts.PickVisualMedia.ImageOnly
-                                )
-                            )
-                        }
+                        onBadgeClick = onBadgeClick
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     OutlinedTextField(
                         value = updateProfileState.fullName,
-                        onValueChange = { profileViewModel.onUpdateFullNameChange(it) },
+                        onValueChange = onUpdateFullNameChange,
                         label = { Text(StringResource(R.string.fullname).asString()) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
@@ -348,7 +422,7 @@ fun ProfileScreen(
 
                     OutlinedTextField(
                         value = updateProfileState.email,
-                        onValueChange = { profileViewModel.onUpdateEmailChange(it) },
+                        onValueChange = onUpdateEmailChange,
                         label = { Text(StringResource(R.string.email).asString()) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
@@ -364,12 +438,7 @@ fun ProfileScreen(
 
                     Row {
                         OutlinedButton(
-                            onClick = {
-                                uiScope.launch { updateSheetState.hide() }
-                                    .invokeOnCompletion {
-                                        if (!updateSheetState.isVisible) profileViewModel.dismissSheet()
-                                    }
-                            },
+                            onClick = onDismissUpdateSheet,
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(10.dp)
@@ -382,9 +451,7 @@ fun ProfileScreen(
                         }
 
                         Button(
-                            onClick = {
-                                profileViewModel.showUpdateProfileConfirmDialog()
-                            },
+                            onClick = onShowUpdateProfileConfirm,
                             enabled = updateProfileState.isUpdateEnable,
                             modifier = Modifier
                                 .weight(1f)
@@ -418,6 +485,7 @@ fun ProfileScreen(
                     uiScope.launch { changePasswordSheetState.hide() }.invokeOnCompletion {
                         if (!changePasswordSheetState.isVisible) profileViewModel.dismissSheet()
                     }
+                    Unit
                 }
             ) {
                 Column(
@@ -437,7 +505,7 @@ fun ProfileScreen(
                         singleLine = true,
                         visualTransformation = if (oldPasswordVisible) {
                             VisualTransformation.None
-                        } else {
+                        } else {onOldPasswordChange
                             PasswordVisualTransformation()
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -468,7 +536,7 @@ fun ProfileScreen(
                         singleLine = true,
                         visualTransformation = if (newPasswordVisible) {
                             VisualTransformation.None
-                        } else {
+                        } else {onNewPasswordChange
                             PasswordVisualTransformation()
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -493,7 +561,7 @@ fun ProfileScreen(
 
                     OutlinedTextField(
                         value = changePasswordState.confirmNewPassword,
-                        onValueChange = { profileViewModel.onConfirmNewPasswordChange(it) },
+                        onValueChange = onConfirmNewPasswordChange,
                         label = {
                             Text(
                                 StringResource(R.string.confirm_new_password).asString()
@@ -530,14 +598,7 @@ fun ProfileScreen(
 
                     Row {
                         OutlinedButton(
-                            onClick = {
-                                uiScope.launch { changePasswordSheetState.hide() }
-                                    .invokeOnCompletion {
-                                        if (!changePasswordSheetState.isVisible) {
-                                            profileViewModel.dismissSheet()
-                                        }
-                                    }
-                            },
+                            onClick = onDismissChangePasswordSheet,
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(10.dp)
@@ -550,9 +611,7 @@ fun ProfileScreen(
                         }
 
                         Button(
-                            onClick = {
-                                profileViewModel.showChangePasswordConfirmDialog()
-                            },
+                            onClick = onShowChangePasswordConfirm,
                             enabled = changePasswordState.isChangePasswordEnable,
                             modifier = Modifier
                                 .weight(1f)
@@ -582,108 +641,122 @@ fun ProfileScreen(
 
     when (val dialogState = profileState.dialogState) {
         is ProfileViewModel.ProfileDialogState.UpdateProfileConfirm -> {
-            ConfirmationDialog(
-                title = StringResource(R.string.notification).asString(),
-                message = StringResource(R.string.update_profile_confirm_warning).asString(),
-                dismissText = StringResource(R.string.cancel).asString(),
-                confirmText = StringResource(R.string.confirm).asString(),
-                isDangerConfirm = false,
-                onDismiss = { profileViewModel.dismissDialog() },
-                onConfirm = {
+            val onConfirmUpdate = remember {
+                {
                     with(profileViewModel) {
                         dismissDialog()
                         uiScope.launch { updateSheetState.hide() }.invokeOnCompletion {
                             dismissSheet()
                             updateProfile()
                         }
+                        Unit
                     }
                 }
+            }
+
+            ConfirmationDialog(
+                title = StringResource(R.string.notification).asString(),
+                message = StringResource(R.string.update_profile_confirm_warning).asString(),
+                dismissText = StringResource(R.string.cancel).asString(),
+                confirmText = StringResource(R.string.confirm).asString(),
+                isDangerConfirm = false,
+                onDismiss = onDismissDialog,
+                onConfirm = onConfirmUpdate
             )
         }
 
         is ProfileViewModel.ProfileDialogState.UpdateProfileSuccess -> {
             NotificationDialog(
                 title = StringResource(R.string.success).asString(),
-                message = StringResource(R.string.update_profile_success_notification)
-                    .asString(),
+                message = StringResource(R.string.update_profile_success_notification).asString(),
                 isSuccess = true,
-                onDismiss = { profileViewModel.dismissDialog() }
+                onDismiss = onDismissDialog
             )
         }
 
         is ProfileViewModel.ProfileDialogState.ChangePasswordConfirm -> {
-            ConfirmationDialog(
-                title = StringResource(R.string.notification).asString(),
-                message = StringResource(R.string.change_password_confirm_warning)
-                    .asString(),
-                dismissText = StringResource(R.string.cancel).asString(),
-                confirmText = StringResource(R.string.confirm).asString(),
-                isDangerConfirm = true,
-                onDismiss = { profileViewModel.dismissDialog() },
-                onConfirm = {
+            val onConfirmChangePassword = remember {
+                {
                     with(profileViewModel) {
                         dismissDialog()
                         uiScope.launch { changePasswordSheetState.hide() }.invokeOnCompletion {
                             dismissSheet()
                             changePassword()
                         }
+                        Unit
                     }
                 }
+            }
+
+            ConfirmationDialog(
+                title = StringResource(R.string.notification).asString(),
+                message = StringResource(R.string.change_password_confirm_warning).asString(),
+                dismissText = StringResource(R.string.cancel).asString(),
+                confirmText = StringResource(R.string.confirm).asString(),
+                isDangerConfirm = true,
+                onDismiss = onDismissDialog,
+                onConfirm = onConfirmChangePassword
             )
         }
 
         is ProfileViewModel.ProfileDialogState.ChangePasswordSuccess -> {
-            NotificationDialog(
-                title = StringResource(R.string.success).asString(),
-                message = StringResource(R.string.change_password_success_notification)
-                    .asString(),
-                isSuccess = true,
-                onDismiss = {
+            val onDismissChangePasswordSuccess = remember {
+                {
                     with(profileViewModel) {
                         dismissDialog()
                         logout(showLogoutSuccessDialog = false)
                     }
                 }
+            }
+
+            NotificationDialog(
+                title = StringResource(R.string.success).asString(),
+                message = StringResource(R.string.change_password_success_notification).asString(),
+                isSuccess = true,
+                onDismiss = onDismissChangePasswordSuccess
             )
         }
 
         is ProfileViewModel.ProfileDialogState.LogoutConfirm -> {
+            val onConfirmLogout = remember {
+                {
+                    with(profileViewModel) {
+                        dismissDialog()
+                        logout(showLogoutSuccessDialog = true)
+                    }
+                }
+            }
+
             ConfirmationDialog(
                 title = StringResource(R.string.warning).asString(),
                 message = StringResource(R.string.logout_confirm_warning).asString(),
                 dismissText = StringResource(R.string.cancel).asString(),
                 confirmText = StringResource(R.string.log_out).asString(),
                 isDangerConfirm = true,
-                onDismiss = { profileViewModel.dismissDialog() },
-                onConfirm = {
-                    with(profileViewModel) {
-                        dismissDialog()
-                        logout(showLogoutSuccessDialog = true)
-                    }
-                }
+                onDismiss = onDismissDialog,
+                onConfirm = onConfirmLogout
             )
         }
 
         is ProfileViewModel.ProfileDialogState.LogoutSuccess -> {
-            NotificationDialog(
-                title = StringResource(R.string.success).asString(),
-                message = StringResource(R.string.logged_out_successfully).asString(),
-                isSuccess = true,
-                onDismiss = {
+            val onDismissLogoutSuccess = remember {
+                {
                     profileViewModel.dismissDialog()
                     navController.navigate(Screen.Login.route) {
                         popUpTo(navController.graph.id) {
-                            // "group" tab state is saved by BottomNavBar (saveState=true) and not present
-                            // in backstack at logout time, so popUpTo(0) won't destroy it — clear manually
-                            // if not, when logout again in the same application lifecycle
-                            // restoreState will use old instance of GroupViewModel, getGroups in init will not be called
                             navController.clearBackStack(Screen.Groups.route)
-
                             inclusive = true
                         }
                         launchSingleTop = true
                     }
                 }
+            }
+
+            NotificationDialog(
+                title = StringResource(R.string.success).asString(),
+                message = StringResource(R.string.logged_out_successfully).asString(),
+                isSuccess = true,
+                onDismiss = onDismissLogoutSuccess
             )
         }
 
@@ -692,7 +765,7 @@ fun ProfileScreen(
                 title = StringResource(R.string.error).asString(),
                 message = dialogState.message.asString(),
                 isSuccess = false,
-                onDismiss = { profileViewModel.dismissDialog() }
+                onDismiss = onDismissDialog
             )
         }
 

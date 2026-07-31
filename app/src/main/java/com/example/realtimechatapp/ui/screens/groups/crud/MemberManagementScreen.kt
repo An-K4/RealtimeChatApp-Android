@@ -42,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -82,6 +83,67 @@ fun MemberManagementScreen(
     val memberActionSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val uiScope = rememberCoroutineScope()
 
+    // Remember all button callbacks at top level
+    val onAddMemberClick = remember {
+        {
+            with(memberManagementViewModel) {
+                prepareAddMemberFlow()
+                showAddMemberSheet()
+            }
+        }
+    }
+
+    val onReloadClick = remember {
+        { memberManagementViewModel.reloadMemberList() }
+    }
+
+    val onQuerySearchChange = remember {
+        { query: String -> memberManagementViewModel.onQuerySearchChange(query) }
+    }
+
+    // Remember sheet callbacks
+    val onDismissAddMemberSheet = remember {
+        {
+            uiScope.launch { addMemberSheetState.hide() }.invokeOnCompletion {
+                if (!addMemberSheetState.isVisible) memberManagementViewModel.dismissSheet()
+            }
+            Unit
+        }
+    }
+
+    val onShowAddMemberConfirm = remember {
+        { memberManagementViewModel.showAddMemberConfirmDialog() }
+    }
+
+    // Remember member action callbacks
+    val onDirectMessageClick = remember {
+        {
+            uiScope.launch { memberActionSheetState.hide() }.invokeOnCompletion {
+                if (!memberActionSheetState.isVisible) memberManagementViewModel.dismissSheet()
+                memberActionState.selectedMemberInfo?.let {
+                    navController.navigate(Screen.DetailMessage.createRoute(it.id))
+                }
+            }
+            Unit
+        }
+    }
+
+    val onTransferOwnerClick = remember {
+        { memberManagementViewModel.showTransferOwnerConfirmDialog() }
+    }
+
+    val onPromoteClick = remember {
+        { memberManagementViewModel.showPromoteConfirmDialog() }
+    }
+
+    val onDemoteClick = remember {
+        { memberManagementViewModel.showDemoteConfirmDialog() }
+    }
+
+    val onDeleteMemberClick = remember {
+        { memberManagementViewModel.showDeleteMemberConfirmDialog() }
+    }
+
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier.fillMaxSize()
@@ -89,9 +151,12 @@ fun MemberManagementScreen(
         if (memberManagementState.isLoading) {
             CircularProgressIndicator()
         } else if (memberManagementState.isEmptyMemberList) {
-            ErrorPlaceholder {
-                memberManagementViewModel.reloadMemberList()
+            // Remember error placeholder callback
+            val onErrorReload = remember {
+                { memberManagementViewModel.reloadMemberList() }
             }
+
+            ErrorPlaceholder(onErrorReload)
         } else {
             Column(
                 modifier = Modifier
@@ -101,12 +166,7 @@ fun MemberManagementScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Button(
-                    onClick = {
-                        with(memberManagementViewModel) {
-                            prepareAddMemberFlow()
-                            showAddMemberSheet()
-                        }
-                    },
+                    onClick = onAddMemberClick,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
@@ -134,9 +194,7 @@ fun MemberManagementScreen(
                         "",
                         "",
                         textSize = 12.sp,
-                        onTextClicked = {
-                            memberManagementViewModel.reloadMemberList()
-                        }
+                        onTextClicked = onReloadClick
                     )
                 }
 
@@ -150,6 +208,16 @@ fun MemberManagementScreen(
                         key = { member -> member.userId?.id ?: "" }
                     ) { member ->
                         member.userId?.let {
+                            // Remember callback to prevent ContactListItem recomposition
+                            val onItemClicked = remember(member.userId.id) {
+                                {
+                                    with(memberManagementViewModel) {
+                                        prepareMemberActionFlow(member.userId.id)
+                                        showMemberActionSheet()
+                                    }
+                                }
+                            }
+
                             ContactListItem(
                                 avatar = it.avatar ?: "",
                                 name = it.fullName,
@@ -163,12 +231,7 @@ fun MemberManagementScreen(
                                     else -> StringResource(R.string.member)
                                         .asString()
                                 },
-                                onItemClicked = {
-                                    with(memberManagementViewModel) {
-                                        prepareMemberActionFlow(member.userId.id)
-                                        showMemberActionSheet()
-                                    }
-                                },
+                                onItemClicked = onItemClicked,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -206,7 +269,7 @@ fun MemberManagementScreen(
 
                     OutlinedTextField(
                         value = addMemberState.querySearch,
-                        onValueChange = { memberManagementViewModel.onQuerySearchChange(it) },
+                        onValueChange = onQuerySearchChange,
                         placeholder = {
                             Text(
                                 text = StringResource(R.string.type_a_keyword).asString(),
@@ -245,12 +308,21 @@ fun MemberManagementScreen(
                             val isChecked = addMemberState.selectedUser.any { it.id == user.id }
                             val isInMemberList =
                                 memberManagementState.members.any { it.userId?.id == user.id }
-                            val checkAction = {
-                                if (!isChecked) {
-                                    memberManagementViewModel.onSelectedMemberAdd(user)
-                                } else {
-                                    memberManagementViewModel.onSelectedMemberRemove(user)
+
+                            // Remember checkbox action callback
+                            val checkAction = remember(user.id, isChecked) {
+                                {
+                                    if (!isChecked) {
+                                        memberManagementViewModel.onSelectedMemberAdd(user)
+                                    } else {
+                                        memberManagementViewModel.onSelectedMemberRemove(user)
+                                    }
                                 }
+                            }
+
+                            // Remember item click callback
+                            val onItemClicked = remember(user.id, isInMemberList) {
+                                { if (!isInMemberList) checkAction() }
                             }
 
                             Row(
@@ -273,7 +345,7 @@ fun MemberManagementScreen(
                                     avatar = user.avatar ?: "",
                                     name = user.fullName,
                                     additionalInfo = user.email,
-                                    onItemClicked = { if (!isInMemberList) checkAction() },
+                                    onItemClicked = onItemClicked,
                                     modifier = Modifier.weight(1f)
                                 )
                             }
@@ -291,21 +363,19 @@ fun MemberManagementScreen(
                                 items = addMemberState.selectedUser.toList(),
                                 key = { member -> member.id }
                             ) { user ->
-                                BadgedAvatar(60.dp, user.avatar, Icons.Default.Close) {
-                                    memberManagementViewModel.onSelectedMemberRemove(user)
+                                // Remember remove callback
+                                val onRemove = remember(user.id) {
+                                    { memberManagementViewModel.onSelectedMemberRemove(user) }
                                 }
+
+                                BadgedAvatar(60.dp, user.avatar, Icons.Default.Close, onRemove)
                             }
                         }
                     }
 
                     Row {
                         OutlinedButton(
-                            onClick = {
-                                uiScope.launch { addMemberSheetState.hide() }
-                                    .invokeOnCompletion {
-                                        if (!addMemberSheetState.isVisible) memberManagementViewModel.dismissSheet()
-                                    }
-                            },
+                            onClick = onDismissAddMemberSheet,
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(10.dp)
@@ -318,7 +388,7 @@ fun MemberManagementScreen(
                         }
 
                         Button(
-                            onClick = { memberManagementViewModel.showAddMemberConfirmDialog() },
+                            onClick = onShowAddMemberConfirm,
                             enabled = !addMemberState.selectedUser.isEmpty(),
                             modifier = Modifier
                                 .weight(1f)
@@ -355,137 +425,121 @@ fun MemberManagementScreen(
                     }
                 }
             ) {
-                if (memberActionState.isFetchingInfo) {
-                    CircularProgressIndicator()
-                } else {
-                    ContactListItem(
-                        avatar = memberActionState.selectedMemberInfo?.avatar ?: "",
-                        name = memberActionState.selectedMemberInfo?.fullName
-                            ?: StringResource(R.string.clover_chatty_user).asString(),
-                        additionalInfo = memberActionState.selectedMemberRole.toDisplayName()
-                            .asString(),
-                        onItemClicked = {
-                            uiScope.launch { memberActionSheetState.hide() }.invokeOnCompletion {
-                                if (!memberActionSheetState.isVisible) memberManagementViewModel.dismissSheet()
-                                memberActionState.selectedMemberInfo?.let {
-                                    navController.navigate(
-                                        Screen.DetailMessage.createRoute(it.id)
-                                    )
-                                }
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    HorizontalDivider(
-                        modifier = Modifier
-                            .height(1.dp)
-                            .padding(4.dp)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    LazyColumn {
-                        if (memberActionState.isDirectMessageVisible) {
-                            item {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    ActionItem(
-                                        icon = Icons.AutoMirrored.Filled.Chat,
-                                        title = StringResource(R.string.direct_message).asString(),
-                                        onClick = {
-                                            uiScope.launch { memberActionSheetState.hide() }
-                                                .invokeOnCompletion {
-                                                    if (!memberActionSheetState.isVisible) memberManagementViewModel.dismissSheet()
-                                                    memberActionState.selectedMemberInfo?.let {
-                                                        navController.navigate(
-                                                            Screen.DetailMessage.createRoute(it.id)
-                                                        )
-                                                    }
-                                                }
-                                        },
-                                        trailingContent = {}
-                                    )
-                                }
+                // Remember member action sheet contact item callback
+                val onContactItemClick = remember(memberActionState.selectedMemberInfo?.id) {
+                    {
+                        uiScope.launch { memberActionSheetState.hide() }.invokeOnCompletion {
+                            if (!memberActionSheetState.isVisible) memberManagementViewModel.dismissSheet()
+                            memberActionState.selectedMemberInfo?.let {
+                                navController.navigate(
+                                    Screen.DetailMessage.createRoute(it.id)
+                                )
                             }
                         }
+                        Unit
+                    }
+                }
 
-                        if (memberActionState.isTransferOwnerVisible) {
-                            item {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    ActionItem(
-                                        icon = Icons.Default.Key,
-                                        title = StringResource(R.string.transfer_group_ownership).asString(),
-                                        onClick = {
-                                            memberManagementViewModel.showTransferOwnerConfirmDialog()
-                                        },
-                                        trailingContent = {}
-                                    )
-                                }
+                ContactListItem(
+                    avatar = memberActionState.selectedMemberInfo?.avatar ?: "",
+                    name = memberActionState.selectedMemberInfo?.fullName
+                        ?: StringResource(R.string.clover_chatty_user).asString(),
+                    additionalInfo = memberActionState.selectedMemberRole.toDisplayName()
+                        .asString(),
+                    onItemClicked = onContactItemClick,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                HorizontalDivider(
+                    modifier = Modifier
+                        .height(1.dp)
+                        .padding(4.dp)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                LazyColumn {
+                    if (memberActionState.isDirectMessageVisible) {
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                ActionItem(
+                                    icon = Icons.AutoMirrored.Filled.Chat,
+                                    title = StringResource(R.string.direct_message).asString(),
+                                    onClick = onDirectMessageClick,
+                                    trailingContent = {}
+                                )
                             }
                         }
+                    }
 
-                        if (memberActionState.isPromoteToAdminVisible) {
-                            item {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    ActionItem(
-                                        icon = Icons.Default.ManageAccounts,
-                                        title = StringResource(R.string.promote_as_admin).asString(),
-                                        onClick = {
-                                            memberManagementViewModel.showPromoteConfirmDialog()
-                                        },
-                                        trailingContent = {}
-                                    )
-                                }
+                    if (memberActionState.isTransferOwnerVisible) {
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                ActionItem(
+                                    icon = Icons.Default.Key,
+                                    title = StringResource(R.string.transfer_group_ownership).asString(),
+                                    onClick = onTransferOwnerClick,
+                                    trailingContent = {}
+                                )
                             }
                         }
+                    }
 
-                        if (memberActionState.isDemoteToMemberVisible) {
-                            item {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    ActionItem(
-                                        icon = Icons.Default.Person2,
-                                        title = StringResource(R.string.demote_to_member).asString(),
-                                        onClick = {
-                                            memberManagementViewModel.showDemoteConfirmDialog()
-                                        },
-                                        trailingContent = {}
-                                    )
-                                }
+                    if (memberActionState.isPromoteToAdminVisible) {
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                ActionItem(
+                                    icon = Icons.Default.ManageAccounts,
+                                    title = StringResource(R.string.promote_as_admin).asString(),
+                                    onClick = onPromoteClick,
+                                    trailingContent = {}
+                                )
                             }
                         }
+                    }
 
-                        if (memberActionState.isDeleteMemberVisible) {
-                            item {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    ActionItem(
-                                        icon = Icons.Default.PersonOff,
-                                        title = StringResource(R.string.delete_member).asString(),
-                                        isDangerAction = true,
-                                        onClick = {
-                                            memberManagementViewModel.showDeleteMemberConfirmDialog()
-                                        },
-                                        trailingContent = {}
-                                    )
-                                }
+                    if (memberActionState.isDemoteToMemberVisible) {
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                ActionItem(
+                                    icon = Icons.Default.Person2,
+                                    title = StringResource(R.string.demote_to_member).asString(),
+                                    onClick = onDemoteClick,
+                                    trailingContent = {}
+                                )
+                            }
+                        }
+                    }
+
+                    if (memberActionState.isDeleteMemberVisible) {
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                ActionItem(
+                                    icon = Icons.Default.PersonOff,
+                                    title = StringResource(R.string.delete_member).asString(),
+                                    isDangerAction = true,
+                                    onClick = onDeleteMemberClick,
+                                    trailingContent = {}
+                                )
                             }
                         }
                     }

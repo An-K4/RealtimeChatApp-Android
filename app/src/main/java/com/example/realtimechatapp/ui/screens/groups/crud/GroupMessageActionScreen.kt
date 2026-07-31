@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,7 +66,58 @@ fun GroupMessageActionScreen(
     val lifeCycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
+    // Remember callbacks
+    val onMuteNotificationChange = remember {
+        { isChecked: Boolean ->
+            groupMessageActionViewModel.onMuteNotificationChange(isChecked)
+            Toast.makeText(
+                context,
+                UiText.StringResource(R.string.in_development).asString(context),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+    
+    val onMediaFilesClick = remember {
+        {
+            Toast.makeText(
+                context,
+                UiText.StringResource(R.string.in_development).asString(context),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+    
+    val onEditGroupClick = remember(groupMessageActionState.groupId) {
+        {
+            navController.navigate(
+                Screen.EditGroup.createRoute(
+                    groupMessageActionState.groupId
+                )
+            )
+        }
+    }
+    
+    val onDeleteGroupClick = remember {
+        { groupMessageActionViewModel.showDeleteGroupConfirmDialog() }
+    }
+    
+    val onLeaveGroupClick = remember {
+        { groupMessageActionViewModel.showLeaveGroupConfirmDialog() }
+    }
+    
+    val onSeeMembersClick = remember(groupMessageActionState.groupId) {
+        {
+            navController.navigate(
+                Screen.MemberManagement.createRoute(
+                    groupMessageActionState.groupId
+                )
+            )
+        }
+    }
+
+    // LaunchedEffect with proper key
+    LaunchedEffect(lifeCycleOwner) {
         lifeCycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             groupMessageActionViewModel.groupMessageActionEvent.collect { event ->
                 when (event) {
@@ -132,13 +184,7 @@ fun GroupMessageActionScreen(
                     R.string.see_all_members,
                     groupMessageActionState.groupMemberSize
                 ).asString(),
-                onClick = {
-                    navController.navigate(
-                        Screen.MemberManagement.createRoute(
-                            groupMessageActionState.groupId
-                        )
-                    )
-                },
+                onClick = onSeeMembersClick,
             )
         }
         Spacer(modifier = Modifier.height(12.dp))
@@ -158,14 +204,7 @@ fun GroupMessageActionScreen(
                     icon = Icons.Default.NotificationsOff,
                     title = UiText.StringResource(R.string.mute_notification).asString(),
                     isChecked = groupMessageActionState.muteNotifications,
-                    onCheckedChange = {
-                        groupMessageActionViewModel.onMuteNotificationChange(it)
-                        Toast.makeText(
-                            context,
-                            UiText.StringResource(R.string.in_development).asString(context),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
+                    onCheckedChange = onMuteNotificationChange
                 )
             }
 
@@ -173,13 +212,7 @@ fun GroupMessageActionScreen(
                 ActionItem(
                     icon = Icons.Default.Image,
                     title = UiText.StringResource(R.string.media_files).asString(),
-                    onClick = {
-                        Toast.makeText(
-                            context,
-                            UiText.StringResource(R.string.in_development).asString(context),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    },
+                    onClick = onMediaFilesClick,
                 )
             }
 
@@ -188,13 +221,7 @@ fun GroupMessageActionScreen(
                     ActionItem(
                         icon = Icons.Default.Edit,
                         title = UiText.StringResource(R.string.edit_group).asString(),
-                        onClick = {
-                            navController.navigate(
-                                Screen.EditGroup.createRoute(
-                                    groupMessageActionState.groupId
-                                )
-                            )
-                        },
+                        onClick = onEditGroupClick,
                     )
                 }
             }
@@ -205,9 +232,7 @@ fun GroupMessageActionScreen(
                         icon = Icons.Default.GroupOff,
                         title = UiText.StringResource(R.string.delete_group).asString(),
                         isDangerAction = true,
-                        onClick = {
-                            groupMessageActionViewModel.showDeleteGroupConfirmDialog()
-                        },
+                        onClick = onDeleteGroupClick,
                         trailingContent = {}
                     )
                 }
@@ -218,9 +243,7 @@ fun GroupMessageActionScreen(
                     icon = Icons.AutoMirrored.Filled.ExitToApp,
                     title = UiText.StringResource(R.string.leave_group).asString(),
                     isDangerAction = true,
-                    onClick = {
-                        groupMessageActionViewModel.showLeaveGroupConfirmDialog()
-                    },
+                    onClick = onLeaveGroupClick,
                     trailingContent = {}
                 )
             }
@@ -229,73 +252,101 @@ fun GroupMessageActionScreen(
 
     when (val dialogState = groupMessageActionState.dialogState) {
         is GroupMessageActionViewModel.GroupMessageActionDialogState.KickedFromGroup -> {
-            NotificationDialog(
-                title = UiText.StringResource(R.string.warning).asString(),
-                message = "Bạn đã bị xóa khỏi nhóm. Liên hệ admin để biết thêm thông tin.",
-                isSuccess = false,
-                onDismiss = {
+            val onKickedDismiss = remember {
+                {
                     navController.navigate(Screen.Groups.route) {
                         popUpTo(Screen.Groups.route) { inclusive = false }
                     }
                 }
+            }
+            
+            NotificationDialog(
+                title = UiText.StringResource(R.string.warning).asString(),
+                message = "Bạn đã bị xóa khỏi nhóm. Liên hệ admin để biết thêm thông tin.",
+                isSuccess = false,
+                onDismiss = onKickedDismiss
             )
         }
 
         is GroupMessageActionViewModel.GroupMessageActionDialogState.LeaveGroupConfirm -> {
+            val onLeaveConfirmDismiss = remember {
+                { groupMessageActionViewModel.dismissDialog() }
+            }
+            
+            val onLeaveConfirm = remember {
+                {
+                    groupMessageActionViewModel.dismissDialog()
+                    groupMessageActionViewModel.leaveGroup()
+                }
+            }
+            
             ConfirmationDialog(
                 title = UiText.StringResource(R.string.warning).asString(),
                 message = UiText.StringResource(R.string.leave_group_confirmation).asString(),
                 dismissText = UiText.StringResource(R.string.cancel).asString(),
                 confirmText = UiText.StringResource(R.string.leave).asString(),
                 isDangerConfirm = true,
-                onDismiss = { groupMessageActionViewModel.dismissDialog() },
-                onConfirm = {
-                    groupMessageActionViewModel.dismissDialog()
-                    groupMessageActionViewModel.leaveGroup()
-                }
+                onDismiss = onLeaveConfirmDismiss,
+                onConfirm = onLeaveConfirm
             )
         }
 
         is GroupMessageActionViewModel.GroupMessageActionDialogState.LeaveGroupSuccess -> {
-            NotificationDialog(
-                title = UiText.StringResource(R.string.success).asString(),
-                message = UiText.StringResource(R.string.leave_group_success).asString(),
-                isSuccess = true,
-                onDismiss = {
+            val onLeaveSuccessDismiss = remember {
+                {
                     groupMessageActionViewModel.dismissDialog()
                     navController.navigate(Screen.Groups.route) {
                         popUpTo(Screen.Groups.route) { inclusive = false }
                     }
                 }
+            }
+            
+            NotificationDialog(
+                title = UiText.StringResource(R.string.success).asString(),
+                message = UiText.StringResource(R.string.leave_group_success).asString(),
+                isSuccess = true,
+                onDismiss = onLeaveSuccessDismiss
             )
         }
 
         is GroupMessageActionViewModel.GroupMessageActionDialogState.DeleteGroupConfirm -> {
+            val onDeleteConfirmDismiss = remember {
+                { groupMessageActionViewModel.dismissDialog() }
+            }
+            
+            val onDeleteConfirm = remember {
+                {
+                    groupMessageActionViewModel.dismissDialog()
+                    groupMessageActionViewModel.deleteGroup()
+                }
+            }
+            
             ConfirmationDialog(
                 title = UiText.StringResource(R.string.warning).asString(),
                 message = UiText.StringResource(R.string.delete_group_confirmation).asString(),
                 dismissText = UiText.StringResource(R.string.cancel).asString(),
                 confirmText = UiText.StringResource(R.string.delete_group).asString(),
                 isDangerConfirm = true,
-                onDismiss = { groupMessageActionViewModel.dismissDialog() },
-                onConfirm = {
-                    groupMessageActionViewModel.dismissDialog()
-                    groupMessageActionViewModel.deleteGroup()
-                }
+                onDismiss = onDeleteConfirmDismiss,
+                onConfirm = onDeleteConfirm
             )
         }
 
         is GroupMessageActionViewModel.GroupMessageActionDialogState.DeleteGroupSuccess -> {
-            NotificationDialog(
-                title = UiText.StringResource(R.string.success).asString(),
-                message = UiText.StringResource(R.string.delete_group_success).asString(),
-                isSuccess = true,
-                onDismiss = {
+            val onDeleteSuccessDismiss = remember {
+                {
                     groupMessageActionViewModel.dismissDialog()
                     navController.navigate(Screen.Groups.route) {
                         popUpTo(Screen.Groups.route) { inclusive = false }
                     }
                 }
+            }
+            
+            NotificationDialog(
+                title = UiText.StringResource(R.string.success).asString(),
+                message = UiText.StringResource(R.string.delete_group_success).asString(),
+                isSuccess = true,
+                onDismiss = onDeleteSuccessDismiss
             )
         }
 

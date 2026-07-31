@@ -69,16 +69,52 @@ fun SignupScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
 
-    val photoPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = { uri ->
+    // Remember callbacks
+    val onPhotoSelected = remember {
+        { uri: android.net.Uri? ->
             if (uri != null) {
                 authViewModel.onSignupAvatarChange(uri)
             }
         }
-    )
+    }
+    
+    val onUsernameChange = remember {
+        { text: String -> authViewModel.onSignupUsernameChange(text) }
+    }
+    
+    val onPasswordChange = remember {
+        { text: String -> authViewModel.onSignupPasswordChange(text) }
+    }
+    
+    val onPasswordRetypeChange = remember {
+        { text: String -> authViewModel.onSignupPasswordRetypeChange(text) }
+    }
+    
+    val onFullNameChange = remember {
+        { text: String -> authViewModel.onSignupFullNameChange(text) }
+    }
+    
+    val onEmailChange = remember {
+        { text: String -> authViewModel.onSignupEmailChange(text) }
+    }
+    
+    val onSignup = remember {
+        { authViewModel.signup() }
+    }
 
-    LaunchedEffect(Unit) {
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = onPhotoSelected
+    )
+    
+    val onBadgeClick = remember {
+        {
+            photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+        }
+    }
+
+    // LaunchedEffect with proper key
+    LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             authViewModel.authEvent.collect { event ->
                 when (event) {
@@ -104,16 +140,14 @@ fun SignupScreen(
     ) {
         BadgedAvatar(
             currentAvatar = signupState.avatar,
-            onBadgeClick = {
-                photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-            }
+            onBadgeClick = onBadgeClick
         )
 
         Spacer(modifier = Modifier.size(20.dp))
 
         OutlinedTextField(
             value = signupState.username,
-            onValueChange = { authViewModel.onSignupUsernameChange(it) },
+            onValueChange = onUsernameChange,
             label = { Text(stringResource(R.string.username)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
@@ -129,7 +163,7 @@ fun SignupScreen(
 
         OutlinedTextField(
             value = signupState.password,
-            onValueChange = { authViewModel.onSignupPasswordChange(it) },
+            onValueChange = onPasswordChange,
             label = { Text(stringResource(R.string.password)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
@@ -160,7 +194,7 @@ fun SignupScreen(
 
         OutlinedTextField(
             value = signupState.passwordRetype,
-            onValueChange = { authViewModel.onSignupPasswordRetypeChange(it) },
+            onValueChange = onPasswordRetypeChange,
             label = { Text(stringResource(R.string.password_retype)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
@@ -191,7 +225,7 @@ fun SignupScreen(
 
         OutlinedTextField(
             value = signupState.fullName,
-            onValueChange = { authViewModel.onSignupFullNameChange(it) },
+            onValueChange = onFullNameChange,
             label = { Text(stringResource(R.string.fullname)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
@@ -207,7 +241,7 @@ fun SignupScreen(
 
         OutlinedTextField(
             value = signupState.email,
-            onValueChange = { authViewModel.onSignupEmailChange(it) },
+            onValueChange = onEmailChange,
             label = { Text(stringResource(R.string.email)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
@@ -222,7 +256,7 @@ fun SignupScreen(
         Spacer(modifier = Modifier.size(20.dp))
 
         Button(
-            onClick = { authViewModel.signup() },
+            onClick = onSignup,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(10.dp),

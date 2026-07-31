@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -17,6 +18,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
+import com.example.realtimechatapp.domain.repository.AppLanguage
 import com.example.realtimechatapp.domain.repository.ThemeMode
 import com.example.realtimechatapp.ui.components.DropDownSettingItem
 import com.example.realtimechatapp.ui.components.ToggleSettingItem
@@ -25,8 +27,21 @@ import com.example.realtimechatapp.ui.components.ToggleSettingItem
 fun MoreScreen(
     navController: NavController,
     moreViewModel: MoreViewModel = hiltViewModel()
-){
+) {
     val moreScreenState by moreViewModel.moreScreenState.collectAsState()
+
+    // Remember callbacks
+    val onLanguageSelected = remember {
+        { language: AppLanguage ->
+            moreViewModel.changeLanguage(language)
+        }
+    }
+
+    val onThemeChange = remember {
+        { isDark: Boolean ->
+            moreViewModel.changeTheme(if (isDark) ThemeMode.DARK else ThemeMode.LIGHT)
+        }
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize()
@@ -40,9 +55,7 @@ fun MoreScreen(
                 options = moreScreenState.supportedLanguages,
                 selectedOption = moreScreenState.selectedLanguage,
                 displayText = { it.displayName },
-                onOptionSelected = {
-                    moreViewModel.changeLanguage(it)
-                }
+                onOptionSelected = onLanguageSelected
             )
         }
 
@@ -51,9 +64,7 @@ fun MoreScreen(
                 icon = Icons.Default.DarkMode,
                 title = UiText.StringResource(R.string.dark_mode).asString(),
                 isChecked = moreScreenState.isDarkTheme,
-                onCheckedChange = {
-                    moreViewModel.changeTheme(if (it) ThemeMode.DARK else ThemeMode.LIGHT)
-                }
+                onCheckedChange = onThemeChange
             )
         }
     }
@@ -61,7 +72,7 @@ fun MoreScreen(
 
 @Preview(showBackground = true)
 @Composable
-fun Preview(){
+fun Preview() {
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
