@@ -126,19 +126,33 @@ fun DetailGroupScreen(
         }
     }
 
-    // Auto-scroll logic remains the same
+    // Smart auto-scroll: only scroll if user is near the bottom (viewing recent messages)
     LaunchedEffect(detailGroupState.groupMessages.size) {
-        if (detailGroupState.groupMessages.isNotEmpty()) {
-            val hasUnseenMessages = detailGroupState.groupMessages.any { message ->
-                message.senderId != detailGroupState.currentUserId
-                        && message.seenUserIds?.contains(detailGroupState.currentUserId) != true
+        if (detailGroupState.groupMessages.isNotEmpty() && listState.firstVisibleItemIndex <= 2) {
+            // User is viewing recent messages (within 3 latest), auto-scroll to newest
+            listState.animateScrollToItem(0)
+        }
+    }
+
+    // Mark as seen only for messages that are actually visible on screen
+    LaunchedEffect(listState.firstVisibleItemIndex, listState.isScrollInProgress) {
+        // Wait until scroll finishes to avoid marking while user is scrolling
+        if (!listState.isScrollInProgress && detailGroupState.groupMessages.isNotEmpty()) {
+            // Get visible message indices (first 5 items visible)
+            val visibleIndices = (listState.firstVisibleItemIndex until 
+                minOf(listState.firstVisibleItemIndex + 5, detailGroupState.groupMessages.size))
+            
+            // Check if there are unseen messages in visible range
+            val hasUnseenVisibleMessages = visibleIndices.any { index ->
+                val message = detailGroupState.groupMessages.getOrNull(index)
+                message != null && 
+                message.senderId != detailGroupState.currentUserId &&
+                message.seenUserIds?.contains(detailGroupState.currentUserId) != true
             }
 
-            if (hasUnseenMessages) {
+            if (hasUnseenVisibleMessages) {
                 detailGroupViewModel.markGroupMessageAsSeen()
             }
-
-            listState.animateScrollToItem(0)
         }
     }
 

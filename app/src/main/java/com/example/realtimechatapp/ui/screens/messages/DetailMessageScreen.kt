@@ -128,19 +128,33 @@ fun DetailMessageScreen(
         }
     }
 
-    // Auto-scroll logic remains the same but more efficient with key
+    // Smart auto-scroll: only scroll if user is near the bottom (viewing recent messages)
     LaunchedEffect(detailMessageState.messages.size) {
-        if (detailMessageState.messages.isNotEmpty()) {
-            val hasUnseenMessages = detailMessageState.messages.any { message ->
-                message.senderId == detailMessageState.friendId
-                        && message.seenUserIds?.contains(detailMessageState.currentUserId) != true
+        if (detailMessageState.messages.isNotEmpty() && listState.firstVisibleItemIndex <= 2) {
+            // User is viewing recent messages (within 3 latest), auto-scroll to newest
+            listState.animateScrollToItem(0)
+        }
+    }
+
+    // Mark as seen only for messages that are actually visible on screen
+    LaunchedEffect(listState.firstVisibleItemIndex, listState.isScrollInProgress) {
+        // Wait until scroll finishes to avoid marking while user is scrolling
+        if (!listState.isScrollInProgress && detailMessageState.messages.isNotEmpty()) {
+            // Get visible message indices (first 5 items visible)
+            val visibleIndices = (listState.firstVisibleItemIndex until 
+                minOf(listState.firstVisibleItemIndex + 5, detailMessageState.messages.size))
+            
+            // Check if there are unseen messages in visible range
+            val hasUnseenVisibleMessages = visibleIndices.any { index ->
+                val message = detailMessageState.messages.getOrNull(index)
+                message != null && 
+                message.senderId == detailMessageState.friendId &&
+                message.seenUserIds?.contains(detailMessageState.currentUserId) != true
             }
 
-            if (hasUnseenMessages) {
+            if (hasUnseenVisibleMessages) {
                 detailMessageViewModel.markMessageAsSeen()
             }
-
-            listState.animateScrollToItem(0)
         }
     }
 
