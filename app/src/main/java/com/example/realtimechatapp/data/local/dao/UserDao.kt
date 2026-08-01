@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import com.example.realtimechatapp.data.local.entity.UserEntity
+import com.example.realtimechatapp.data.local.pojo.UserWithMutedStatus
 
 @Dao
 interface UserDao {
@@ -51,4 +52,12 @@ interface UserDao {
             upsertUser(user)
         }
     }
+
+    @Query("""
+        SELECT users.*, contacts.is_muted 
+        FROM users 
+        LEFT JOIN contacts ON users.id = contacts.id
+        WHERE users.id = :id
+    """)
+    suspend fun getUsersWithMutedStatusById(id: String): UserWithMutedStatus
 }

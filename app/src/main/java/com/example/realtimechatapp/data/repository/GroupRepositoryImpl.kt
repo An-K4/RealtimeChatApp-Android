@@ -274,6 +274,19 @@ class GroupRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getLocalGroups(): Result<List<Group>> {
+        return try {
+            val localGroupEntities = safeDbCall { groupDao.getLocalGroups() }
+
+            Result.success(localGroupEntities.map { it.toGroup() })
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
+            Timber.e(e, "Lỗi lấy danh sách nhóm cục bộ")
+            Result.failure(e)
+        }
+    }
+
     override fun observeGroupInfo(groupId: String): Flow<Group?> {
         return groupDao.observeGroupById(groupId).map { it?.toGroup() }
     }

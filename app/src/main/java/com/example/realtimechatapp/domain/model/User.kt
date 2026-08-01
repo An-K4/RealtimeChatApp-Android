@@ -7,5 +7,6 @@ data class User(
     val email: String,
     val avatar: String?,
     val isOnline: Boolean = false,
+    val isMuted: Boolean = false,
     val createdAt: String
 )

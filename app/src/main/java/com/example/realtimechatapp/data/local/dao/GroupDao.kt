@@ -27,6 +27,9 @@ interface GroupDao {
     @Query("SELECT * FROM `groups` WHERE id = :groupId")
     fun observeGroupById(groupId: String): Flow<GroupWithDetails?>
 
+    @Query("SELECT * FROM `groups`")
+    fun getLocalGroups(): List<GroupWithDetails>
+
     @Transaction
     @Query("SELECT * FROM `groups` WHERE id = :groupId")
     suspend fun getGroupById(groupId: String): GroupWithDetails?

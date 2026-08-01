@@ -4,6 +4,7 @@ import com.example.realtimechatapp.common.isoToLong
 import com.example.realtimechatapp.data.local.dao.UserDao
 import com.example.realtimechatapp.data.local.entity.UserEntity
 import com.example.realtimechatapp.data.local.entity.toUser
+import com.example.realtimechatapp.data.local.pojo.toUser
 import com.example.realtimechatapp.data.remote.api.UserApi
 import com.example.realtimechatapp.data.remote.dto.user.ChangePasswordRequestDto
 import com.example.realtimechatapp.data.remote.dto.user.UpdateProfileRequestDto
@@ -120,6 +121,19 @@ class UserRepositoryImpl @Inject constructor(
             val localUserEntity = safeDbCall { userDao.getAllContactUsersExcept(currentUserId) }
             val localUsers = localUserEntity.map { it.toUser() }
             Result.success(localUsers)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+
+            Timber.e(e, "Lỗi lấy danh sách người dùng cục bộ")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getUserWithMutedStatus(userId: String): Result<User> {
+        return try {
+            val user = safeDbCall { userDao.getUsersWithMutedStatusById(userId) }
+
+            Result.success(user.toUser())
         } catch (e: Exception) {
             if (e is CancellationException) throw e
 
