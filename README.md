@@ -145,9 +145,6 @@ app/
 - Tích hợp Firebase Cloud Messaging (FCM) để nhận thông báo khi ứng dụng đóng
 - Badge số thông báo trên icon ứng dụng
 
-#### Nhắn Tin Nhóm Và Cá nhân Đầy Đủ:
-- Màn hình thao tác phụ với từng cuộc trò chuyện
-
 ---
 
 ### 📌 Tính Năng Mới Đề Xuất
