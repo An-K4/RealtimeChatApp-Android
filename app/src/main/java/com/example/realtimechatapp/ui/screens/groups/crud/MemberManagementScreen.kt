@@ -321,9 +321,7 @@ fun MemberManagementScreen(
                             }
 
                             // Remember item click callback
-                            val onItemClicked = remember(user.id, isInMemberList) {
-                                { if (!isInMemberList) checkAction() }
-                            }
+                            val onItemClicked = { if (!isInMemberList) checkAction() }
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
