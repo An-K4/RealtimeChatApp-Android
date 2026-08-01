@@ -154,4 +154,7 @@
     <string name="you_sent_an_image">Bạn đã gửi một ảnh</string>
     <string name="sb_sent_an_image">%s đã gửi một ảnh</string>
     <string name="sent_an_image">Đã gửi một ảnh</string>
+    <string name="add_to_group_success">Đã thêm người dùng vào nhóm.\n</string>
+    <string name="add_to_group_confirm">Bạn có chắc muốn thêm người dùng này vào nhóm %s?</string>
+    <string name="already_in_group">Đã là thành viên</string>
 </resources>
