@@ -3,6 +3,7 @@ package com.example.realtimechatapp.data.remote.dto.message
 import com.example.realtimechatapp.common.isoToLong
 import com.example.realtimechatapp.data.local.entity.MessageEntity
 import com.example.realtimechatapp.data.remote.dto.user.UserDto
+import com.example.realtimechatapp.domain.model.MessageStatus
 import com.google.gson.annotations.SerializedName
 
 data class MessageDto(
@@ -25,6 +26,7 @@ data class MessageDto(
         replyToId = this.replyTo?.id,
         attachments = this.attachments,
         seenBy = this.seenBy?.map { it.id },
+        status = MessageStatus.SENT,  // Messages từ server luôn là SENT
         createdAt = this.createdAt.isoToLong()
     )
 

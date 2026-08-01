@@ -16,6 +16,7 @@ import com.example.realtimechatapp.di.ApplicationScope
 import com.example.realtimechatapp.domain.exception.LocalStorageException
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.model.MessageContact
+import com.example.realtimechatapp.domain.model.MessageStatus
 import com.example.realtimechatapp.domain.model.User
 import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.repository.MessageRepository
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.UUID
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -86,6 +88,11 @@ class MessageRepositoryImpl @Inject constructor(
 
                 viewerId?.let { markMessageAsSeen(senderId, viewerId) }
             }
+        }
+
+        // Recovery: Đánh dấu các message bị kẹt ở SENDING quá lâu thành ERROR
+        applicationScope.launch {
+            recoverStaleSendingMessages()
         }
     }
 
@@ -170,20 +177,106 @@ class MessageRepositoryImpl @Inject constructor(
 
     override suspend fun markMessageAsSeen(senderId: String, receiverId: String) {
         val messages = safeDbCall { messageDao.getMessagesToMarkSeen(senderId, receiverId) }
-        val markedMessages = mutableListOf<MessageEntity>()
-
+        
         for (msg in messages) {
-            // without mutableListOf(), if block is always ignored, because currentSeenBy can be null
-            val currentSeenBy = msg.seenBy?.toMutableList() // ?: mutableListOf()
-
-            // or use currentSeenBy?.contains(receiverId) != true to fix this bug
-            // instead of currentSeenBy?.contains(receiverId) == false
-            if (currentSeenBy?.contains(receiverId) != true) {
-                currentSeenBy?.add(receiverId)
-                markedMessages.add(msg.copy(seenBy = currentSeenBy))
+            // Update status to SEEN instead of updating seenBy list
+            if (msg.status != MessageStatus.SEEN) {
+                safeDbCall {
+                    messageDao.updateMessageStatusWithTimestamp(
+                        messageId = msg.id,
+                        status = MessageStatus.SEEN
+                    )
+                }
             }
         }
+    }
 
-        if (messages.isNotEmpty()) safeDbCall { messageDao.updateMessages(markedMessages) }
+    // === NEW METHODS for Message Status Tracking ===
+
+    override suspend fun insertOptimisticMessage(
+        receiverId: String,
+        content: String?,
+        attachment: String?,
+        replyTo: String?
+    ): Result<String> {
+        return try {
+            // Generate temp ID
+            val tempId = UUID.randomUUID().toString()
+
+            // Get current user ID
+            val currentUserId = currentUserManager.getCurrentUserId()
+                ?: return Result.failure(Exception("User not logged in"))
+
+            // Create optimistic message entity
+            val messageEntity = MessageEntity(
+                id = tempId,
+                senderId = currentUserId,
+                receiverId = receiverId,
+                groupId = null,
+                content = content,
+                replyToId = replyTo,
+                attachments = attachment,
+                seenBy = null,
+                status = MessageStatus.SENDING,
+                createdAt = System.currentTimeMillis()
+            )
+
+            // Insert into DB
+            safeDbCall { messageDao.insertMessage(messageEntity) }
+
+            // Update message contact immediately for optimistic UI
+            safeDbCall {
+                messageContactDao.upsertMessageContact(
+                    contactId = receiverId,
+                    isMine = true,
+                    lastMessage = content,
+                    lastAttachments = attachment,
+                    lastSenderName = "", // Sẽ được update khi server response
+                    lastTimeStamp = messageEntity.createdAt,
+                    contactName = null,
+                    contactAvatar = null
+                )
+            }
+
+            Result.success(tempId)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Failed to insert optimistic message")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateMessageStatus(messageId: String, status: MessageStatus) {
+        safeDbCall { messageDao.updateMessageStatusWithTimestamp(messageId, status) }
+    }
+
+    override suspend fun updateMessageAttachments(messageId: String, fileUrl: String) {
+        safeDbCall { messageDao.updateMessageAttachments(messageId, fileUrl) }
+    }
+
+    override suspend fun replaceMessageId(oldId: String, newId: String) {
+        safeDbCall { messageDao.replaceMessageId(oldId, newId) }
+    }
+
+    // Private method: Recovery cho messages bị kẹt ở SENDING
+    private suspend fun recoverStaleSendingMessages() {
+        try {
+            val staleThreshold = System.currentTimeMillis() - 5 * 60 * 1000 // 5 phút
+            val staleMessages = safeDbCall {
+                messageDao.getStaleSendingMessages(staleThreshold)
+            }
+
+            staleMessages.forEach { msg ->
+                safeDbCall {
+                    messageDao.updateMessageStatusWithTimestamp(
+                        msg.id,
+                        MessageStatus.ERROR
+                    )
+                }
+                Timber.w("Recovered stale SENDING message: ${msg.id}")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to recover stale messages")
+        }
     }
 }

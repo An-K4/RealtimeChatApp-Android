@@ -22,9 +22,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import com.example.realtimechatapp.domain.model.MessageStatus
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,7 +50,7 @@ fun MessageRenderItem(
     message: String,
     attachments: String?,
     time: String,
-    isSeen: Boolean,
+    status: MessageStatus,
     isGroup: Boolean,
     fromCurrentUser: Boolean,
     onImageClick: (String) -> Unit
@@ -125,10 +128,13 @@ fun MessageRenderItem(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                     ) {
                         // Hiển thị ảnh nếu có attachments
-                        if (!attachments.isNullOrEmpty()) {
+                        if (attachments != null) {
                             AsyncImage(
                                 model = attachments,
                                 contentDescription = "Message image",
+                                placeholder = painterResource(R.drawable.default_avatar),
+                                error = painterResource(R.drawable.default_avatar),
+                                fallback = painterResource(R.drawable.default_avatar),
                                 modifier = Modifier
                                     .widthIn(max = 250.dp)
                                     .clip(RoundedCornerShape(8.dp))
@@ -163,11 +169,9 @@ fun MessageRenderItem(
                                 modifier = Modifier.padding(end = 3.dp)
                             )
                             if (fromCurrentUser) {
-                                Icon(
-                                    imageVector = if (isSeen) Icons.Default.DoneAll else Icons.Default.Done,
-                                    contentDescription = "status",
-                                    tint = MaterialTheme.colorScheme.onPrimary,
-                                    modifier = Modifier.size(14.dp)
+                                MessageStatusIndicator(
+                                    status = status,
+                                    modifier = Modifier
                                 )
                             }
                         }
@@ -319,6 +323,46 @@ fun MessageRenderItemMine() {
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun MessageStatusIndicator(
+    status: MessageStatus,
+    modifier: Modifier = Modifier
+) {
+    when (status) {
+        MessageStatus.SENDING -> {
+            CircularProgressIndicator(
+                modifier = modifier.size(12.dp),
+                strokeWidth = 1.5.dp,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+        }
+        MessageStatus.SENT -> {
+            Icon(
+                imageVector = Icons.Default.Done,
+                contentDescription = "Sent",
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = modifier.size(14.dp)
+            )
+        }
+        MessageStatus.SEEN -> {
+            Icon(
+                imageVector = Icons.Default.DoneAll,
+                contentDescription = "Seen",
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = modifier.size(14.dp)
+            )
+        }
+        MessageStatus.ERROR -> {
+            Icon(
+                imageVector = Icons.Default.Error,
+                contentDescription = "Error",
+                tint = MaterialTheme.colorScheme.error,
+                modifier = modifier.size(14.dp)
+            )
         }
     }
 }

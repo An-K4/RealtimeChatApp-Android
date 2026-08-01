@@ -74,7 +74,6 @@ class DetailGroupViewModel @Inject constructor(
         val selectedImageUri: Uri? = null,
         val dialogState: ImagePreviewDialogState = ImagePreviewDialogState.Dismiss,
         val isLoading: Boolean = false,
-        val isSending: Boolean = false,
         val isKicked: Boolean = false
     )
 
@@ -101,8 +100,7 @@ class DetailGroupViewModel @Inject constructor(
 
     private data class DialogAndLoadingState(
         val dialogState: ImagePreviewDialogState,
-        val isLoading: Boolean,
-        val isSending: Boolean
+        val isLoading: Boolean
     )
 
     private val currentUserId = flow { emit(getCurrentUserIdUseCase().getOrThrow()) }
@@ -113,7 +111,6 @@ class DetailGroupViewModel @Inject constructor(
     private val _imagePreviewDialogState =
         MutableStateFlow<ImagePreviewDialogState>(ImagePreviewDialogState.Dismiss)
     private val _isLoading = MutableStateFlow(true)
-    private val _isSending = MutableStateFlow(false)
 
     private val detailGroupContextFlow =
         combine(
@@ -177,11 +174,10 @@ class DetailGroupViewModel @Inject constructor(
         }
 
     private val dialogAndLoadingStateFlow =
-        combine(_imagePreviewDialogState, _isLoading, _isSending) { dialogState, isLoading, isSending ->
+        combine(_imagePreviewDialogState, _isLoading) { dialogState, isLoading ->
             DialogAndLoadingState(
                 dialogState = dialogState,
-                isLoading = isLoading,
-                isSending = isSending
+                isLoading = isLoading
             )
         }
 
@@ -229,7 +225,6 @@ class DetailGroupViewModel @Inject constructor(
             selectedImageUri = messageInputAndImageState.selectedImageUri,
             dialogState = dialogAndLoadingState.dialogState,
             isLoading = dialogAndLoadingState.isLoading && groupData.groupMessages.isEmpty(),
-            isSending = dialogAndLoadingState.isSending,
             isKicked = detailGroupContext.isKicked
         )
     }.catch { exception ->
@@ -329,32 +324,40 @@ class DetailGroupViewModel @Inject constructor(
     }
 
     fun sendGroupMessage() {
-        val content = _messageInput.value.trim()
-        val imageUri = _selectedImageUri.value
-        if (content.isEmpty() && imageUri == null) return
+        // Save to temp vars
+        val tempContent = _messageInput.value.trim()
+        val tempImageUri = _selectedImageUri.value
+        
+        // Validate
+        if (tempContent.isEmpty() && tempImageUri == null) return
 
+        // Clear input IMMEDIATELY (optimistic UI - user sees response instantly)
+        _messageInput.value = ""
+        _selectedImageUri.value = null
+        groupTypingJob?.cancel()
+        groupTypingJob = null
+        viewModelScope.launch { emitGroupTypingStopUseCase(groupId) }
+
+        // THEN call useCase with temp vars (background operation)
         viewModelScope.launch {
-            _isSending.value = true
             try {
-                sendGroupMessageUseCase(
-                    content = content,
+                val result = sendGroupMessageUseCase(
+                    content = tempContent,
                     groupId = groupId,
-                    selectedImageUri = imageUri
+                    selectedImageUri = tempImageUri
                 )
-
-                groupTypingJob?.cancel()
-                groupTypingJob = null
-                viewModelScope.launch { emitGroupTypingStopUseCase(groupId) }
-
-                _messageInput.value = ""
-                _selectedImageUri.value = null
+                
+                result.onSuccess { tempMessageId ->
+                    Timber.d("Group message sent with tempId: $tempMessageId")
+                }.onFailure { error ->
+                    Timber.e(error, "Failed to send group message")
+                    _detailGroupEvent.send(DetailGroupEvent.Failure(error.getErrorMessage()))
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, "Lỗi khi gửi tin nhắn (vm)")
+                Timber.e(e, "Unexpected error in sendGroupMessage")
                 _detailGroupEvent.send(DetailGroupEvent.Failure(e.getErrorMessage()))
-            } finally {
-                _isSending.value = false
             }
         }
     }

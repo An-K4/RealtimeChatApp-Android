@@ -214,7 +214,7 @@ fun DetailMessageScreen(
                                     message = item.content ?: "",
                                     attachments = item.attachments,
                                     time = item.createdAt,
-                                    isSeen = item.seenUserIds?.isNotEmpty() == true,
+                                    status = item.status,
                                     isGroup = false,
                                     fromCurrentUser = item.senderId == detailMessageState.currentUserId,
                                     onImageClick = onImageClick
@@ -281,7 +281,6 @@ fun DetailMessageScreen(
         MessageInput(
             messageText = detailMessageState.messageInput,
             selectedImageUri = detailMessageState.selectedImageUri,
-            isSending = detailMessageState.isSending,
             onMessageTextChange = onMessageTextChange,
             onCameraClick = onCameraClick,
             onGalleryClick = onGalleryClick,

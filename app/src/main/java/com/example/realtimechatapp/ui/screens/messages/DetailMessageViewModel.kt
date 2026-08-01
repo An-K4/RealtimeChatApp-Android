@@ -96,8 +96,7 @@ class DetailMessageViewModel @Inject constructor(
 
     private data class DialogAndLoadingState(
         val dialogState: ImagePreviewDialogState,
-        val isLoading: Boolean,
-        val isSending: Boolean
+        val isLoading: Boolean
     )
 
     private val currentUserId = flow { emit(getCurrentUserIdUseCase().getOrThrow()) }
@@ -107,7 +106,6 @@ class DetailMessageViewModel @Inject constructor(
     private val _selectedImageUri = MutableStateFlow<Uri?>(null)
     private val _imagePreviewDialogState = MutableStateFlow<ImagePreviewDialogState>(ImagePreviewDialogState.Dismiss)
     private val _isLoading = MutableStateFlow(true)
-    private val _isSending = MutableStateFlow(false)
     private val _headerInfo = MutableStateFlow<User?>(null)
     private val detailMessageContextFlow =
         combine(currentUserId, _headerInfo) { currentUserId, headerInfo ->
@@ -151,13 +149,11 @@ class DetailMessageViewModel @Inject constructor(
 
     private val dialogAndLoadingStateFlow = combine(
         _imagePreviewDialogState,
-        _isLoading,
-        _isSending
-    ) { dialogState, isLoading, isSending ->
+        _isLoading
+    ) { dialogState, isLoading ->
         DialogAndLoadingState(
             dialogState = dialogState,
-            isLoading = isLoading,
-            isSending = isSending
+            isLoading = isLoading
         )
     }
 
@@ -180,7 +176,6 @@ class DetailMessageViewModel @Inject constructor(
             messages = socketData.messages,
             messageInput = messageInputAndImageState.messageInput,
             isLoading = dialogAndLoadingState.isLoading && socketData.messages.isEmpty(),
-            isSending = dialogAndLoadingState.isSending,
             selectedImageUri = messageInputAndImageState.selectedImageUri,
             dialogState = dialogAndLoadingState.dialogState
         )
@@ -280,34 +275,40 @@ class DetailMessageViewModel @Inject constructor(
     }
 
     fun sendMessage() {
-        val content = _messageInput.value.trim()
-        val imageUri = _selectedImageUri.value
+        // Save to temp vars
+        val tempContent = _messageInput.value.trim()
+        val tempImageUri = _selectedImageUri.value
         
-        // Cho phép gửi nếu có content hoặc có ảnh
-        if (content.isEmpty() && imageUri == null) return
+        // Validate
+        if (tempContent.isEmpty() && tempImageUri == null) return
 
+        // Clear input IMMEDIATELY (optimistic UI - user sees response instantly)
+        _messageInput.value = ""
+        _selectedImageUri.value = null
+        typingJob?.cancel()
+        typingJob = null
+        viewModelScope.launch { emitTypingStopUseCase(friendId) }
+
+        // THEN call useCase with temp vars (background operation)
         viewModelScope.launch {
-            _isSending.value = true
             try {
-                sendMessageUseCase(
-                    content = content,
+                val result = sendMessageUseCase(
+                    content = tempContent,
                     receiverId = friendId,
-                    selectedImageUri = imageUri
+                    selectedImageUri = tempImageUri
                 )
-
-                typingJob?.cancel()
-                typingJob = null
-                viewModelScope.launch { emitTypingStopUseCase(friendId) }
-
-                _messageInput.value = ""
-                _selectedImageUri.value = null
+                
+                result.onSuccess { tempMessageId ->
+                    Timber.d("Message sent with tempId: $tempMessageId")
+                }.onFailure { error ->
+                    Timber.e(error, "Failed to send message")
+                    _detailMessageEvent.send(DetailMessageEvent.Failure(error.getErrorMessage()))
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, "Lỗi khi gửi tin nhắn (vm)")
+                Timber.e(e, "Unexpected error in sendMessage")
                 _detailMessageEvent.send(DetailMessageEvent.Failure(e.getErrorMessage()))
-            } finally {
-                _isSending.value = false
             }
         }
     }

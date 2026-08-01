@@ -36,5 +36,6 @@ fun MessageWithDetails.toMessage() = Message(
     replyToContent = messageReply?.content,
     attachments = message.attachments,
     seenUserIds = message.seenBy,
+    status = message.status,
     createdAt = message.createdAt.formatToTime(toHourMinute = true)
 )

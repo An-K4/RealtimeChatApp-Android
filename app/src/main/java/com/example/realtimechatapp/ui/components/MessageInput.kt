@@ -43,7 +43,6 @@ import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 fun MessageInput(
     messageText: String?,
     selectedImageUri: Uri?,
-    isSending: Boolean = false,
     onMessageTextChange: (String) -> Unit,
     onCameraClick: () -> Unit,
     onGalleryClick: () -> Unit,
@@ -136,14 +135,10 @@ fun MessageInput(
 
         IconButton(
             onClick = onSendClick,
-            enabled = !isSending,
             modifier = Modifier
                 .size(48.dp)
                 .background(
-                    color = if (isSending) 
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                    else 
-                        MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.primary,
                     shape = CircleShape
                 )
         ) {

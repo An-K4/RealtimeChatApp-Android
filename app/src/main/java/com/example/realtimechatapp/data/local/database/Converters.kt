@@ -3,6 +3,7 @@ package com.example.realtimechatapp.data.local.database
 import androidx.room.ProvidedTypeConverter
 import androidx.room.TypeConverter
 import com.example.realtimechatapp.data.local.entity.MemberRole
+import com.example.realtimechatapp.domain.model.MessageStatus
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import javax.inject.Inject
@@ -27,4 +28,10 @@ class Converters @Inject constructor(private val gson: Gson){
 
     @TypeConverter
     fun toParticipantRole(role: String): MemberRole = MemberRole.valueOf(role)
+
+    @TypeConverter
+    fun fromMessageStatus(status: MessageStatus): String = status.name
+
+    @TypeConverter
+    fun toMessageStatus(status: String): MessageStatus = MessageStatus.valueOf(status)
 }

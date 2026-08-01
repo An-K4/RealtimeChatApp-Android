@@ -31,6 +31,7 @@ import com.example.realtimechatapp.domain.model.Group
 import com.example.realtimechatapp.domain.model.GroupMessageContact
 import com.example.realtimechatapp.domain.model.Member
 import com.example.realtimechatapp.domain.model.Message
+import com.example.realtimechatapp.domain.model.MessageStatus
 import com.example.realtimechatapp.domain.model.Role
 import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.repository.GroupCrudEvents
@@ -43,6 +44,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.UUID
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -204,6 +206,10 @@ class GroupRepositoryImpl @Inject constructor(
                     }
                 }
             }
+        }
+
+        applicationScope.launch {
+            recoverStaleSendingMessages()
         }
     }
 
@@ -546,6 +552,85 @@ class GroupRepositoryImpl @Inject constructor(
                 userDao.upsertUser(owner.toUserEntity())
                 memberDao.insertAllMember(members.map { it.toMemberEntity(groupEntity.id) })
             }
+        }
+    }
+
+    override suspend fun insertOptimisticGroupMessage(
+        groupId: String,
+        content: String,
+        attachment: String?,
+        replyTo: String?
+    ): Result<String> {
+        return try {
+            val tempId = UUID.randomUUID().toString()
+            val currentUserId = currentUserManager.getCurrentUserId()
+                ?: return Result.failure(Exception("User not logged in"))
+            
+            val messageEntity = MessageEntity(
+                id = tempId,
+                senderId = currentUserId,
+                receiverId = null,
+                groupId = groupId,
+                content = content,
+                replyToId = replyTo,
+                attachments = attachment,
+                seenBy = null,
+                status = MessageStatus.SENDING,
+                createdAt = System.currentTimeMillis()
+            )
+            
+            safeDbCall { groupMessageDao.insertMessage(messageEntity) }
+            
+            safeDbCall {
+                groupContactDao.upsertGroupContact(
+                    contactId = groupId,
+                    isMine = true,
+                    lastMessage = content,
+                    lastAttachments = attachment,
+                    lastSenderName = "",
+                    lastTimeStamp = messageEntity.createdAt
+                )
+            }
+            
+            Result.success(tempId)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Failed to insert optimistic group message")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateMessageStatus(messageId: String, status: MessageStatus) {
+        safeDbCall { groupMessageDao.updateMessageStatusWithTimestamp(messageId, status) }
+    }
+
+    override suspend fun updateMessageAttachments(messageId: String, fileUrl: String) {
+        safeDbCall { groupMessageDao.updateMessageAttachments(messageId, fileUrl) }
+    }
+
+    override suspend fun replaceMessageId(oldId: String, newId: String) {
+        safeDbCall { groupMessageDao.replaceMessageId(oldId, newId) }
+    }
+
+    private suspend fun recoverStaleSendingMessages() {
+        try {
+            val fiveMinutesAgo = System.currentTimeMillis() - (5 * 60 * 1000)
+            val staleMessages = safeDbCall { 
+                groupMessageDao.getStaleSendingMessages(fiveMinutesAgo) 
+            }
+            
+            staleMessages.forEach { message ->
+                safeDbCall { 
+                    groupMessageDao.updateMessageStatusWithTimestamp(
+                        messageId = message.id,
+                        status = MessageStatus.ERROR
+                    )
+                }
+                Timber.w("Recovered stale group message: ${message.id}")
+            }
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Failed to recover stale group messages")
         }
     }
 }

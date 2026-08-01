@@ -18,5 +18,6 @@ data class Message(
 
     val attachments: String?,
     val seenUserIds: List<String>?,
+    val status: MessageStatus = MessageStatus.SENT,
     val createdAt: String
 )

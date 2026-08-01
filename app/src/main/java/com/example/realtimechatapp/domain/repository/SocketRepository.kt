@@ -27,6 +27,7 @@ interface SocketRepository {
     fun observeTypingStatus(): StateFlow<Set<String>>
 
     suspend fun sendMessage(message: SendMessageParam)
+    suspend fun sendMessageWithAck(message: SendMessageParam, onAck: (success: Boolean, realMessageId: String?) -> Unit)
     suspend fun seenMessage(messageSeen: MessageSeenDto)
     suspend fun emitTypingStart(receiverId: String)
     suspend fun emitTypingStop(receiverId: String)
@@ -40,6 +41,7 @@ interface SocketRepository {
     fun observeGroupTypingStatus(): StateFlow<Map<String, Set<GroupTypingUser>>>
 
     suspend fun sendGroupMessage(groupMessage: SendGroupMessageParam)
+    suspend fun sendGroupMessageWithAck(message: SendGroupMessageParam, onAck: (success: Boolean, realMessageId: String?) -> Unit)
     suspend fun seenGroupMessage(messageSeen: GroupMessageSeenDto)
     suspend fun emitGroupTypingStart(groupId: String)
     suspend fun emitGroupTypingStop(groupId: String)

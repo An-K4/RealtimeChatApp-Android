@@ -270,6 +270,39 @@ class SocketRepositoryImpl @Inject constructor(
         })
     }
 
+    override suspend fun sendMessageWithAck(
+        message: SendMessageParam,
+        onAck: (success: Boolean, realMessageId: String?) -> Unit
+    ) {
+        val jsonString = gson.toJson(message)
+        val jsonObject = JSONObject(jsonString)
+
+        socket?.emit(SocketEvents.SEND_MESSAGE, jsonObject, Ack { args ->
+            try {
+                if (args.isNotEmpty()) {
+                    val response = args[0] as JSONObject
+                    val isSuccess = response.optBoolean("success", false)
+
+                    if (isSuccess) {
+                        val savedMessageJson = response.getJSONObject("data").toString()
+                        val messageDto = gson.fromJson(savedMessageJson, MessageDto::class.java)
+                        onAck(true, messageDto.id)
+                        Timber.d("sendMessageWithAck success: ${messageDto.id}")
+                    } else {
+                        onAck(false, null)
+                        Timber.w("sendMessageWithAck failed: server returned success=false")
+                    }
+                } else {
+                    onAck(false, null)
+                    Timber.w("sendMessageWithAck failed: empty ACK response")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error in sendMessageWithAck callback")
+                onAck(false, null)
+            }
+        })
+    }
+
     override suspend fun seenMessage(messageSeen: MessageSeenDto) {
         val jsonString = gson.toJson(messageSeen)
         val jsonObject = JSONObject(jsonString)
@@ -508,6 +541,39 @@ class SocketRepositoryImpl @Inject constructor(
                     val errorMessage = response.optString("message", "Lỗi không xác định")
                     Timber.d("Gửi tin nhắn nhóm thất bại: $errorMessage")
                 }
+            }
+        })
+    }
+
+    override suspend fun sendGroupMessageWithAck(
+        message: SendGroupMessageParam,
+        onAck: (success: Boolean, realMessageId: String?) -> Unit
+    ) {
+        val jsonString = gson.toJson(message)
+        val jsonObject = JSONObject(jsonString)
+
+        socket?.emit(SocketEvents.SEND_GROUP_MESSAGE, jsonObject, Ack { args ->
+            try {
+                if (args.isNotEmpty()) {
+                    val response = args[0] as JSONObject
+                    val isSuccess = response.optBoolean("success", false)
+
+                    if (isSuccess) {
+                        val savedMessageJson = response.getJSONObject("data").toString()
+                        val messageDto = gson.fromJson(savedMessageJson, MessageDto::class.java)
+                        onAck(true, messageDto.id)
+                        Timber.d("sendGroupMessageWithAck success: ${messageDto.id}")
+                    } else {
+                        onAck(false, null)
+                        Timber.w("sendGroupMessageWithAck failed: server returned success=false")
+                    }
+                } else {
+                    onAck(false, null)
+                    Timber.w("sendGroupMessageWithAck failed: empty ACK response")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error in sendGroupMessageWithAck callback")
+                onAck(false, null)
             }
         })
     }

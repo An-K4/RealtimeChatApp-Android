@@ -4,6 +4,7 @@ import com.example.realtimechatapp.domain.model.Group
 import com.example.realtimechatapp.domain.model.GroupMessageContact
 import com.example.realtimechatapp.domain.model.Member
 import com.example.realtimechatapp.domain.model.Message
+import com.example.realtimechatapp.domain.model.MessageStatus
 import com.example.realtimechatapp.domain.model.Role
 import kotlinx.coroutines.flow.Flow
 
@@ -16,6 +17,18 @@ interface GroupRepository {
     fun observeGroupMessageContacts(): Flow<List<GroupMessageContact>>
     suspend fun seenGroupMessage(groupId: String)
     suspend fun markGroupMessageAsSeen(groupId: String, userId: String)
+
+    // Message status tracking methods
+    suspend fun insertOptimisticGroupMessage(
+        groupId: String,
+        content: String,
+        attachment: String? = null,
+        replyTo: String? = null
+    ): Result<String>
+
+    suspend fun updateMessageStatus(messageId: String, status: MessageStatus)
+    suspend fun updateMessageAttachments(messageId: String, fileUrl: String)
+    suspend fun replaceMessageId(oldId: String, newId: String)
 
     suspend fun createGroup(name: String, members: List<String>): Result<String>
     suspend fun updateGroup(

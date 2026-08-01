@@ -46,7 +46,10 @@ data class ContactEntity(
     val contactName: String?,
 
     @ColumnInfo("contact_avatar")
-    val contactAvatar: String?
+    val contactAvatar: String?,
+
+    @ColumnInfo("is_muted")
+    val isMuted: Boolean = false,
 )
 
 fun ContactEntity.toMessageContact() = MessageContact(

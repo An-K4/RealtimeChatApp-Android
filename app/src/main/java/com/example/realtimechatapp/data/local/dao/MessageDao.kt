@@ -8,6 +8,7 @@ import androidx.room.Transaction
 import androidx.room.Update
 import com.example.realtimechatapp.data.local.entity.MessageEntity
 import com.example.realtimechatapp.data.local.pojo.MessageWithDetails
+import com.example.realtimechatapp.domain.model.MessageStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -35,4 +36,38 @@ interface MessageDao {
 
     @Query("SELECT * FROM messages WHERE sender_id = :senderId AND receiver_id = :receiverId")
     suspend fun getMessagesToMarkSeen(senderId: String, receiverId: String): List<MessageEntity>
+
+    // === NEW METHODS for Message Status Tracking ===
+
+    // Update status của một message
+    @Query("UPDATE messages SET status = :status WHERE id = :messageId")
+    suspend fun updateMessageStatus(messageId: String, status: MessageStatus)
+
+    // Update cả status và updatedAt timestamp
+    @Query("UPDATE messages SET status = :status, updated_at = :updatedAt WHERE id = :messageId")
+    suspend fun updateMessageStatusWithTimestamp(
+        messageId: String,
+        status: MessageStatus,
+        updatedAt: Long = System.currentTimeMillis()
+    )
+
+    // Replace temp ID với real ID từ server
+    @Query("UPDATE messages SET id = :newId WHERE id = :oldId")
+    suspend fun replaceMessageId(oldId: String, newId: String)
+
+    // Update attachments sau khi upload xong
+    @Query("UPDATE messages SET attachments = :fileUrl, updated_at = :updatedAt WHERE id = :messageId")
+    suspend fun updateMessageAttachments(
+        messageId: String,
+        fileUrl: String,
+        updatedAt: Long = System.currentTimeMillis()
+    )
+
+    // Cần cho unit test + để repository kiểm tra lại message sau khi update
+    @Query("SELECT * FROM messages WHERE id = :messageId")
+    suspend fun getMessageById(messageId: String): MessageEntity?
+
+    // Quét các message bị kẹt ở SENDING quá lâu (app bị kill giữa chừng, mất mạng...)
+    @Query("SELECT * FROM messages WHERE status = 'SENDING' AND created_at < :staleBeforeTimestamp")
+    suspend fun getStaleSendingMessages(staleBeforeTimestamp: Long): List<MessageEntity>
 }

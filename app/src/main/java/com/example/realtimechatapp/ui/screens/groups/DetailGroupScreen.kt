@@ -222,7 +222,7 @@ fun DetailGroupScreen(
                                     message = groupMessage.content ?: "",
                                     attachments = groupMessage.attachments,
                                     time = groupMessage.createdAt,
-                                    isSeen = groupMessage.seenUserIds?.isNotEmpty() == true,
+                                    status = groupMessage.status,
                                     isGroup = true,
                                     fromCurrentUser = groupMessage.senderId == detailGroupState.currentUserId,
                                     onImageClick = onImageClick
@@ -286,7 +286,6 @@ fun DetailGroupScreen(
         MessageInput(
             messageText = detailGroupState.messageInput,
             selectedImageUri = detailGroupState.selectedImageUri,
-            isSending = detailGroupState.isSending,
             onMessageTextChange = onMessageTextChange,
             onCameraClick = onCameraClick,
             onGalleryClick = onGalleryClick,
