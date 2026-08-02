@@ -5,7 +5,9 @@ import com.example.realtimechatapp.data.local.dao.UserDao
 import com.example.realtimechatapp.data.local.entity.UserEntity
 import com.example.realtimechatapp.data.local.entity.toUser
 import com.example.realtimechatapp.data.local.pojo.toUser
+import com.example.realtimechatapp.data.remote.api.AuthApi
 import com.example.realtimechatapp.data.remote.api.UserApi
+import com.example.realtimechatapp.data.remote.dto.auth.UpdateFcmTokenRequest
 import com.example.realtimechatapp.data.remote.dto.user.ChangePasswordRequestDto
 import com.example.realtimechatapp.data.remote.dto.user.UpdateProfileRequestDto
 import com.example.realtimechatapp.data.remote.safeApiCall
@@ -22,6 +24,7 @@ import kotlin.coroutines.cancellation.CancellationException
 
 class UserRepositoryImpl @Inject constructor(
     private val userApi: UserApi,
+    private val authApi: AuthApi,
     private val userDao: UserDao,
     private val networkChecker: NetworkChecker,
     private val currentUserManager: CurrentUserManager
@@ -138,6 +141,56 @@ class UserRepositoryImpl @Inject constructor(
             if (e is CancellationException) throw e
 
             Timber.e(e, "Lỗi lấy danh sách người dùng cục bộ")
+            Result.failure(e)
+        }
+    }
+    
+    // FCM Token Management
+    override suspend fun updateFcmToken(token: String) {
+        try {
+            val currentUserId = currentUserManager.getCurrentUserId() ?: return
+            safeDbCall {
+                val currentUser = userDao.getUserById(currentUserId)
+                if (currentUser != null) {
+                    val updated = currentUser.copy(
+                        fcmToken = token,
+                        tokenUpdatedAt = System.currentTimeMillis()
+                    )
+                    userDao.updateUser(updated)
+                }
+            }
+            
+            // Also sync to server
+            syncFcmTokenToServer(token)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Lỗi cập nhật FCM token")
+        }
+    }
+    
+    override suspend fun getCurrentFcmToken(): String? {
+        val currentUserId = currentUserManager.getCurrentUserId() ?: return null
+        return try {
+            val currentUserEntity = safeDbCall {
+                userDao.getUserById(currentUserId)
+            }
+            currentUserEntity?.fcmToken
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Lỗi lấy FCM token hiện tại")
+            null
+        }
+    }
+    
+    override suspend fun syncFcmTokenToServer(token: String): Result<Unit> {
+        return try {
+            safeApiCall(networkChecker) {
+                authApi.updateFcmToken(UpdateFcmTokenRequest(token))
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Lỗi đồng bộ FCM token lên server")
             Result.failure(e)
         }
     }

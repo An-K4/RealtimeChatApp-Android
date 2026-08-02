@@ -30,6 +30,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
     private const val BASE_URL = "https://realtimechatapp-android-backend.onrender.com"
+    // private const val BASE_URL = "http://192.168.1.171:3000"
 
     @Provides
     @Singleton

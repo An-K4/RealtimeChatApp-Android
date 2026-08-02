@@ -11,11 +11,13 @@ import com.example.realtimechatapp.data.local.dao.GroupMessageDao
 import com.example.realtimechatapp.data.local.dao.MessageContactDao
 import com.example.realtimechatapp.data.local.dao.MessageDao
 import com.example.realtimechatapp.data.local.dao.MemberDao
+import com.example.realtimechatapp.data.local.dao.NotificationPreferenceDao
 import com.example.realtimechatapp.data.local.dao.UserDao
 import com.example.realtimechatapp.data.local.entity.ContactEntity
 import com.example.realtimechatapp.data.local.entity.GroupEntity
 import com.example.realtimechatapp.data.local.entity.MessageEntity
 import com.example.realtimechatapp.data.local.entity.MemberEntity
+import com.example.realtimechatapp.data.local.entity.NotificationPreferenceEntity
 import com.example.realtimechatapp.data.local.entity.UserEntity
 
 @Database(
@@ -24,9 +26,10 @@ import com.example.realtimechatapp.data.local.entity.UserEntity
         UserEntity::class,
         GroupEntity::class,
         MemberEntity::class,
-        MessageEntity::class
+        MessageEntity::class,
+        NotificationPreferenceEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -39,6 +42,7 @@ abstract class LocalDatabase: RoomDatabase() {
     abstract fun participantDao(): MemberDao
     abstract fun messageDao(): MessageDao
     abstract fun groupMessageDao(): GroupMessageDao
+    abstract fun notificationPreferenceDao(): NotificationPreferenceDao
 
     companion object{
         @Volatile

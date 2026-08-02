@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
+import com.example.realtimechatapp.domain.usecase.auth.SyncFcmTokenAfterLoginUseCase
 import com.example.realtimechatapp.domain.usecase.auth.GetTokenUseCase
 import com.example.realtimechatapp.domain.usecase.auth.LoginUseCase
 import com.example.realtimechatapp.domain.usecase.auth.SignupUseCase
@@ -25,7 +26,8 @@ class AuthViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val signupUseCase: SignupUseCase,
     private val getTokenUseCase: GetTokenUseCase,
-    private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase
+    private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase,
+    private val syncFcmTokenAfterLoginUseCase: SyncFcmTokenAfterLoginUseCase
 ) : ViewModel() {
     sealed interface AuthDialogState {
         object Dismiss : AuthDialogState
@@ -137,6 +139,8 @@ class AuthViewModel @Inject constructor(
             _loginState.update { it.copy(isLoading = false) }
 
             result.onSuccess { user ->
+                // Sync FCM token immediately after successful login
+                syncFcmTokenAfterLoginUseCase()
                 _authEvent.send(AuthEvent.AuthSuccess)
             }.onFailure { exception ->
                 _loginState.update { it.copy(authDialogState = AuthDialogState.Failure(exception.getErrorMessage())) }

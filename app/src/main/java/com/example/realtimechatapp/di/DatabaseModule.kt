@@ -11,9 +11,12 @@ import com.example.realtimechatapp.data.local.dao.GroupMessageDao
 import com.example.realtimechatapp.data.local.dao.MessageContactDao
 import com.example.realtimechatapp.data.local.dao.MessageDao
 import com.example.realtimechatapp.data.local.dao.MemberDao
+import com.example.realtimechatapp.data.local.dao.NotificationPreferenceDao
 import com.example.realtimechatapp.data.local.dao.UserDao
 import com.example.realtimechatapp.data.local.database.Converters
 import com.example.realtimechatapp.data.local.database.LocalDatabase
+import com.example.realtimechatapp.data.local.manager.ActiveConversationManagerImpl
+import com.example.realtimechatapp.domain.repository.ActiveConversationManager
 import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
@@ -71,11 +74,23 @@ object DatabaseModule {
 
     @Provides
     @Singleton
+    fun provideNotificationPreferenceDao(localDatabase: LocalDatabase): NotificationPreferenceDao = localDatabase.notificationPreferenceDao()
+
+    @Provides
+    @Singleton
     fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences>{
         return PreferenceDataStoreFactory.create (
             produceFile = {
                 context.preferencesDataStoreFile("user_prefs")
             }
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideActiveConversationManager(
+        dataStore: DataStore<Preferences>
+    ): ActiveConversationManager {
+        return ActiveConversationManagerImpl(dataStore)
     }
 }

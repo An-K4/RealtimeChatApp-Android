@@ -1,9 +1,11 @@
 package com.example.realtimechatapp.data.repository
 
+import androidx.room.withTransaction
 import com.example.realtimechatapp.common.isoToLong
 import com.example.realtimechatapp.data.local.dao.MessageContactDao
 import com.example.realtimechatapp.data.local.dao.MessageDao
 import com.example.realtimechatapp.data.local.dao.UserDao
+import com.example.realtimechatapp.data.local.database.LocalDatabase
 import com.example.realtimechatapp.data.local.entity.MessageEntity
 import com.example.realtimechatapp.data.local.entity.toMessageContact
 import com.example.realtimechatapp.data.local.entity.toUser
@@ -37,6 +39,7 @@ class MessageRepositoryImpl @Inject constructor(
     private val messageApi: MessageApi,
     private val messageContactDao: MessageContactDao,
     private val messageDao: MessageDao,
+    private val localDatabase: LocalDatabase,
     private val socketRepository: SocketRepository,
     private val userDao: UserDao,
     private val networkChecker: NetworkChecker,
@@ -46,38 +49,10 @@ class MessageRepositoryImpl @Inject constructor(
     // supervisor job protect coroutine when its child coroutine crash
 
     init {
+        // Socket + FCM path: unified persistence logic
         applicationScope.launch {
             socketRepository.observeMessages().collect { messageDto ->
-                val currentUserId = currentUserManager.getCurrentUserId() ?: return@collect
-                val messageEntity = if (messageDto.receiverId == null) {
-                    messageDto.toMessageEntity().copy(
-                        receiverId = currentUserId
-                    )
-                } else {
-                    messageDto.toMessageEntity()
-                }
-                safeDbCall { messageDao.insertMessage(messageEntity) }
-            }
-        }
-
-        applicationScope.launch {
-            socketRepository.observeMessageContacts().collect { messageDto ->
-                val currentUserId = currentUserManager.getCurrentUserId() ?: return@collect
-                val contactId = messageDto.getMessageContactId(currentUserId)
-                val isMine = messageDto.senderId.id == currentUserId
-
-                safeDbCall {
-                    messageContactDao.upsertMessageContact(
-                        contactId = contactId,
-                        isMine = isMine,
-                        lastMessage = messageDto.content,
-                        lastAttachments = messageDto.attachments,
-                        lastSenderName = messageDto.senderId.fullName,
-                        lastTimeStamp = messageDto.createdAt.isoToLong(),
-                        contactName = if (isMine) messageDto.receiverId?.fullName else messageDto.senderId.fullName,
-                        contactAvatar = if (isMine) messageDto.receiverId?.avatar else messageDto.senderId.avatar
-                    )
-                }
+                persistIncomingMessage(messageDto)
             }
         }
 
@@ -277,6 +252,37 @@ class MessageRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, "Failed to recover stale messages")
+        }
+    }
+    
+    // FCM Integration: Persist incoming message (used by Socket + FCM)
+    override suspend fun persistIncomingMessage(dto: com.example.realtimechatapp.data.remote.dto.message.MessageDto) {
+        val currentUserId = currentUserManager.getCurrentUserId() ?: return
+        val messageEntity = if (dto.receiverId == null) {
+            dto.toMessageEntity().copy(receiverId = currentUserId)
+        } else {
+            dto.toMessageEntity()
+        }
+        val contactId = dto.getMessageContactId(currentUserId)
+        val isMine = dto.senderId.id == currentUserId
+
+        safeDbCall {
+            localDatabase.withTransaction {
+                // Upsert UserEntity for sender (prevents RecordNotFoundException)
+                userDao.upsertUser(dto.senderId.toUserEntity())
+
+                messageDao.insertMessage(messageEntity)
+                messageContactDao.upsertMessageContact(
+                    contactId = contactId,
+                    isMine = isMine,
+                    lastMessage = dto.content,
+                    lastAttachments = dto.attachments,
+                    lastSenderName = dto.senderId.fullName,
+                    lastTimeStamp = dto.createdAt.isoToLong(),
+                    contactName = if (isMine) dto.receiverId?.fullName else dto.senderId.fullName,
+                    contactAvatar = if (isMine) dto.receiverId?.avatar else dto.senderId.avatar
+                )
+            }
         }
     }
 }

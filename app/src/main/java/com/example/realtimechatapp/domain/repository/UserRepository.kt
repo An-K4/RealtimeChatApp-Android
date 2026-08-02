@@ -11,4 +11,9 @@ interface UserRepository {
     suspend fun saveNewUserInfo(newUser: User): Result<Unit>
     suspend fun getOtherLocalUsers(): Result<List<User>>
     suspend fun getUserWithMutedStatus(userId: String): Result<User>
+    
+    // FCM Token Management
+    suspend fun updateFcmToken(token: String)
+    suspend fun getCurrentFcmToken(): String?
+    suspend fun syncFcmTokenToServer(token: String): Result<Unit>
 }

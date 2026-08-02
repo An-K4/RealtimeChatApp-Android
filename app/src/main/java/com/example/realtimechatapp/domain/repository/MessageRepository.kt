@@ -1,5 +1,6 @@
 package com.example.realtimechatapp.domain.repository
 
+import com.example.realtimechatapp.data.remote.dto.message.MessageDto
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.model.MessageContact
 import com.example.realtimechatapp.domain.model.MessageStatus
@@ -33,4 +34,7 @@ interface MessageRepository {
 
     // Replace temp ID with real ID from server
     suspend fun replaceMessageId(oldId: String, newId: String)
+    
+    // === NEW: FCM Integration - Persist incoming message (used by Socket + FCM) ===
+    suspend fun persistIncomingMessage(dto: MessageDto)
 }

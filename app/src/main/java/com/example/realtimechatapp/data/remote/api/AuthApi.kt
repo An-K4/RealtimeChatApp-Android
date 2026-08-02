@@ -9,6 +9,7 @@ import com.example.realtimechatapp.data.remote.dto.auth.RefreshTokenRequestDto
 import com.example.realtimechatapp.data.remote.dto.auth.RefreshTokenResponseDto
 import com.example.realtimechatapp.data.remote.dto.auth.SignupRequestDto
 import com.example.realtimechatapp.data.remote.dto.MessageResponseDto
+import com.example.realtimechatapp.data.remote.dto.auth.UpdateFcmTokenRequest
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -28,4 +29,7 @@ interface AuthApi {
 
     @GET("/auth/me")
     suspend fun getMe(): UserResponseDto
+    
+    @POST("/auth/fcm-token")
+    suspend fun updateFcmToken(@Body request: UpdateFcmTokenRequest): MessageResponseDto
 }

@@ -23,6 +23,12 @@ data class UserEntity(
     val email: String,
     val avatar: String?,
 
+    @ColumnInfo(name = "fcm_token")
+    val fcmToken: String? = null,
+
+    @ColumnInfo(name = "token_updated_at")
+    val tokenUpdatedAt: Long? = null,
+
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
 

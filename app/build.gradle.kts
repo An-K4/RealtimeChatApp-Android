@@ -6,6 +6,9 @@ plugins {
     // hilt and ksp
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    
+    // google services for FCM
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -98,6 +101,16 @@ dependencies {
 
     // coil (image)
     implementation("io.coil-kt:coil-compose:2.6.0")
+
+    // Firebase BOM
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    
+    // FCM
+    implementation("com.google.firebase:firebase-messaging-ktx")
+    implementation("com.google.firebase:firebase-analytics-ktx")
+    
+    // WorkManager for background processing
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     // debug
     implementation("com.jakewharton.timber:timber:5.0.1")

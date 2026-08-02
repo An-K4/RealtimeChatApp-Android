@@ -14,10 +14,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import android.content.Intent
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -46,8 +48,29 @@ import com.example.realtimechatapp.ui.screens.search.SearchScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppNavigation() {
+fun AppNavigation(deepLinkIntent: Intent? = null) {
     val navController = rememberNavController()
+
+    // Handle deep link navigation from FCM notifications
+    LaunchedEffect(deepLinkIntent) {
+        val destination = deepLinkIntent?.getStringExtra("destination") ?: return@LaunchedEffect
+
+        when (destination) {
+            "detail_message" -> {
+                val friendId = deepLinkIntent.getStringExtra("friendId") ?: return@LaunchedEffect
+                navController.navigate(Screen.DetailMessage.createRoute(friendId)) {
+                    launchSingleTop = true
+                }
+            }
+            "detail_group" -> {
+                val groupId = deepLinkIntent.getStringExtra("groupId") ?: return@LaunchedEffect
+                navController.navigate(Screen.DetailGroup.createRoute(groupId)) {
+                    launchSingleTop = true
+                }
+            }
+        }
+    }
+
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 

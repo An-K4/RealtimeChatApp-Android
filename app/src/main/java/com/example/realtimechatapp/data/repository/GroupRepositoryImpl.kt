@@ -75,26 +75,10 @@ class GroupRepositoryImpl @Inject constructor(
             }
         }
 
+        // Socket + FCM path: unified persistence logic
         applicationScope.launch {
             socketRepository.observeGroupMessages().collect { messageDto ->
-                val messageEntity = messageDto.toMessageEntity()
-                val currentUserId = currentUserManager.getCurrentUserId() ?: return@collect
-                val contactId = messageDto.getMessageContactId(currentUserId)
-                val isMine = messageDto.senderId.id == currentUserId
-
-                safeDbCall {
-                    localDatabase.withTransaction {
-                        groupContactDao.upsertGroupContact(
-                            contactId = contactId,
-                            lastMessage = messageDto.content,
-                            lastAttachments = messageDto.attachments,
-                            lastSenderName = messageDto.senderId.fullName,
-                            isMine = isMine,
-                            lastTimeStamp = messageDto.createdAt.isoToLong()
-                        )
-                        groupMessageDao.insertMessage(messageEntity)
-                    }
-                }
+                persistIncomingGroupMessage(messageDto)
             }
         }
 
@@ -644,6 +628,34 @@ class GroupRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             Timber.e(e, "Failed to recover stale group messages")
+        }
+    }
+
+    // FCM Integration: Persist incoming group message (used by Socket + FCM)
+    override suspend fun persistIncomingGroupMessage(dto: com.example.realtimechatapp.data.remote.dto.message.MessageDto) {
+        val currentUserId = currentUserManager.getCurrentUserId() ?: return
+        val messageEntity = if (dto.receiverId == null) {
+            dto.toMessageEntity().copy(receiverId = currentUserId)
+        } else {
+            dto.toMessageEntity()
+        }
+        val groupId = dto.groupId ?: return
+
+        safeDbCall {
+            localDatabase.withTransaction {
+                // Upsert UserEntity for sender (prevents RecordNotFoundException)
+                userDao.upsertUser(dto.senderId.toUserEntity())
+
+                groupMessageDao.insertMessage(messageEntity)
+                groupContactDao.upsertGroupContact(
+                    contactId = groupId,
+                    isMine = dto.senderId.id == currentUserId,
+                    lastMessage = dto.content,
+                    lastAttachments = dto.attachments,
+                    lastSenderName = dto.senderId.fullName,
+                    lastTimeStamp = dto.createdAt.isoToLong()
+                )
+            }
         }
     }
 }

@@ -158,4 +158,5 @@
     <string name="add_to_group_success">Add user to group successfully.\n</string>
     <string name="add_to_group_confirm">Are you sure you want to add this user to the group %s?</string>
     <string name="already_in_group">Already in group</string>
+    <string name="default_notification_channel_id">channel_message</string>
 </resources>

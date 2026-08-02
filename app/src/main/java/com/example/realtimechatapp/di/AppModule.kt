@@ -10,6 +10,7 @@ import com.example.realtimechatapp.data.repository.GroupRepositoryImpl
 import com.example.realtimechatapp.data.repository.MediaRepositoryImpl
 import com.example.realtimechatapp.data.repository.MessageRepositoryImpl
 import com.example.realtimechatapp.data.repository.NetworkCheckerImpl
+import com.example.realtimechatapp.data.repository.NotificationPreferenceRepositoryImpl
 import com.example.realtimechatapp.data.repository.SocketRepositoryImpl
 import com.example.realtimechatapp.data.repository.UserRepositoryImpl
 import com.example.realtimechatapp.domain.repository.AuthRepository
@@ -18,6 +19,7 @@ import com.example.realtimechatapp.domain.repository.GroupRepository
 import com.example.realtimechatapp.domain.repository.LanguageManager
 import com.example.realtimechatapp.domain.repository.MediaRepository
 import com.example.realtimechatapp.domain.repository.MessageRepository
+import com.example.realtimechatapp.domain.repository.NotificationPreferenceRepository
 import com.example.realtimechatapp.domain.repository.SocketRepository
 import com.example.realtimechatapp.domain.repository.ThemeManager
 import com.example.realtimechatapp.domain.repository.TokenManager
@@ -75,4 +77,10 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindThemeManager(themeManagerImpl: ThemeManagerImpl): ThemeManager
+
+    @Binds
+    @Singleton
+    abstract fun bindNotificationPreferenceRepository(
+        notificationPreferenceRepositoryImpl: NotificationPreferenceRepositoryImpl
+    ): NotificationPreferenceRepository
 }

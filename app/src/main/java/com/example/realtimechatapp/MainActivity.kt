@@ -2,6 +2,7 @@ package com.example.realtimechatapp
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,6 +12,8 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -27,11 +30,15 @@ import java.util.Locale
 @AndroidEntryPoint
 class MainActivity() : ComponentActivity() {
     private val mainViewModel: MainViewModel by viewModels()
+    private var pendingDeepLinkIntent by mutableStateOf<Intent?>(null)
 
     @SuppressLint("LocalContextResourcesRead")
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+
+        // Cold start: app can be opened directly from notification tap
+        pendingDeepLinkIntent = intent
 
         splashScreen.setKeepOnScreenCondition { mainViewModel.mainViewModelState.value.isLoading }
 
@@ -65,10 +72,17 @@ class MainActivity() : ComponentActivity() {
             if (!mainViewModelState.isLoading) {
                 CompositionLocalProvider(LocalConfiguration provides configuration) {
                     RealtimeChatAppTheme(isDarkTheme) {
-                        AppNavigation()
+                        AppNavigation(deepLinkIntent = pendingDeepLinkIntent)
                     }
                 }
             }
         }
+    }
+
+    // Warm start: app already running (background/foreground), receives new Intent here
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        pendingDeepLinkIntent = intent
     }
 }

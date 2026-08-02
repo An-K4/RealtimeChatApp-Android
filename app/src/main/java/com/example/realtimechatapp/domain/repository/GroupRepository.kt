@@ -1,5 +1,6 @@
 package com.example.realtimechatapp.domain.repository
 
+import com.example.realtimechatapp.data.remote.dto.message.MessageDto
 import com.example.realtimechatapp.domain.model.Group
 import com.example.realtimechatapp.domain.model.GroupMessageContact
 import com.example.realtimechatapp.domain.model.Member
@@ -45,4 +46,7 @@ interface GroupRepository {
     suspend fun deleteMember(groupId: String, memberId: String): Result<Unit>
     suspend fun transferOwner(groupId: String, newOwnerId: String): Result<List<Member>>
     suspend fun leaveGroup(groupId: String): Result<Unit>
+    
+    // FCM Integration: Persist incoming group message (used by Socket + FCM)
+    suspend fun persistIncomingGroupMessage(dto: MessageDto)
 }
