@@ -15,6 +15,7 @@ import com.example.realtimechatapp.data.remote.dto.message.MessageSeenDto
 import com.example.realtimechatapp.data.remote.safeApiCall
 import com.example.realtimechatapp.data.local.safeDbCall
 import com.example.realtimechatapp.di.ApplicationScope
+import com.example.realtimechatapp.domain.exception.AuthException
 import com.example.realtimechatapp.domain.exception.LocalStorageException
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.model.MessageContact
@@ -93,8 +94,11 @@ class MessageRepositoryImpl @Inject constructor(
 
     override suspend fun getMessage(friendId: String): Result<Unit> {
         return try {
+            val currentUserId = currentUserManager.getCurrentUserId() ?: return Result.failure(
+                AuthException.InvalidCurrentUserIdException
+            )
             val response = safeApiCall(networkChecker) { messageApi.getMessage(friendId) }
-            val responseMessages = response.messages.map { it.toMessageEntity() }
+            val responseMessages = response.messages.map { it.toMessageEntity(currentUserId) }
             safeDbCall { messageDao.insertAllMessage(responseMessages) }
             Timber.d(responseMessages.toString())
             Result.success(Unit)
@@ -152,7 +156,7 @@ class MessageRepositoryImpl @Inject constructor(
 
     override suspend fun markMessageAsSeen(senderId: String, receiverId: String) {
         val messages = safeDbCall { messageDao.getMessagesToMarkSeen(senderId, receiverId) }
-        
+
         for (msg in messages) {
             // Update status to SEEN instead of updating seenBy list
             if (msg.status != MessageStatus.SEEN) {
@@ -254,14 +258,14 @@ class MessageRepositoryImpl @Inject constructor(
             Timber.e(e, "Failed to recover stale messages")
         }
     }
-    
+
     // FCM Integration: Persist incoming message (used by Socket + FCM)
     override suspend fun persistIncomingMessage(dto: com.example.realtimechatapp.data.remote.dto.message.MessageDto) {
         val currentUserId = currentUserManager.getCurrentUserId() ?: return
         val messageEntity = if (dto.receiverId == null) {
-            dto.toMessageEntity().copy(receiverId = currentUserId)
+            dto.toMessageEntity(currentUserId).copy(receiverId = currentUserId)
         } else {
-            dto.toMessageEntity()
+            dto.toMessageEntity(currentUserId)
         }
         val contactId = dto.getMessageContactId(currentUserId)
         val isMine = dto.senderId.id == currentUserId

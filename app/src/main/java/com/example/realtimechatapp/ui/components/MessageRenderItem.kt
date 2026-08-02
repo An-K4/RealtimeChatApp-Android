@@ -153,7 +153,6 @@ fun MessageRenderItem(
                             Text(
                                 text = message,
                                 fontSize = 16.sp,
-                                textAlign = if (fromCurrentUser) TextAlign.End else TextAlign.Start,
                                 color = if (fromCurrentUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground
                             )
                         }

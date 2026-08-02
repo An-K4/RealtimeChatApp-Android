@@ -27,6 +27,7 @@ import com.example.realtimechatapp.data.remote.dto.group.TransferOwnerRequestDto
 import com.example.realtimechatapp.data.remote.dto.group.UpdateGroupRequestDto
 import com.example.realtimechatapp.data.remote.dto.user.UserDto
 import com.example.realtimechatapp.di.ApplicationScope
+import com.example.realtimechatapp.domain.exception.AuthException
 import com.example.realtimechatapp.domain.model.Group
 import com.example.realtimechatapp.domain.model.GroupMessageContact
 import com.example.realtimechatapp.domain.model.Member
@@ -214,6 +215,9 @@ class GroupRepositoryImpl @Inject constructor(
 
     override suspend fun getGroupMessage(groupId: String): Result<Unit> {
         return try {
+            val currentUserId = currentUserManager.getCurrentUserId() ?: return Result.failure(
+                AuthException.InvalidCurrentUserIdException
+            )
             val result = safeApiCall(networkChecker) { groupApi.getGroupMessage(groupId) }
             val responseGroupMessages = result.groupMessages
             val responseSender =
@@ -221,7 +225,11 @@ class GroupRepositoryImpl @Inject constructor(
 
             safeDbCall {
                 userDao.upsertUsers(responseSender)
-                groupMessageDao.insertAllMessages(responseGroupMessages.map { it.toMessageEntity() })
+                groupMessageDao.insertAllMessages(responseGroupMessages.map {
+                    it.toMessageEntity(
+                        currentUserId
+                    )
+                })
             }
             Result.success(Unit)
         } catch (e: Exception) {
@@ -561,8 +569,8 @@ class GroupRepositoryImpl @Inject constructor(
         return try {
             val tempId = UUID.randomUUID().toString()
             val currentUserId = currentUserManager.getCurrentUserId()
-                ?: return Result.failure(Exception("User not logged in"))
-            
+                ?: return Result.failure(AuthException.InvalidCurrentUserIdException)
+
             val messageEntity = MessageEntity(
                 id = tempId,
                 senderId = currentUserId,
@@ -575,9 +583,9 @@ class GroupRepositoryImpl @Inject constructor(
                 status = MessageStatus.SENDING,
                 createdAt = System.currentTimeMillis()
             )
-            
+
             safeDbCall { groupMessageDao.insertMessage(messageEntity) }
-            
+
             safeDbCall {
                 groupContactDao.upsertGroupContact(
                     contactId = groupId,
@@ -588,7 +596,7 @@ class GroupRepositoryImpl @Inject constructor(
                     lastTimeStamp = messageEntity.createdAt
                 )
             }
-            
+
             Result.success(tempId)
         } catch (e: Exception) {
             if (e is CancellationException) throw e
@@ -612,12 +620,12 @@ class GroupRepositoryImpl @Inject constructor(
     private suspend fun recoverStaleSendingMessages() {
         try {
             val fiveMinutesAgo = System.currentTimeMillis() - (5 * 60 * 1000)
-            val staleMessages = safeDbCall { 
-                groupMessageDao.getStaleSendingMessages(fiveMinutesAgo) 
+            val staleMessages = safeDbCall {
+                groupMessageDao.getStaleSendingMessages(fiveMinutesAgo)
             }
-            
+
             staleMessages.forEach { message ->
-                safeDbCall { 
+                safeDbCall {
                     groupMessageDao.updateMessageStatusWithTimestamp(
                         messageId = message.id,
                         status = MessageStatus.ERROR
@@ -635,9 +643,9 @@ class GroupRepositoryImpl @Inject constructor(
     override suspend fun persistIncomingGroupMessage(dto: com.example.realtimechatapp.data.remote.dto.message.MessageDto) {
         val currentUserId = currentUserManager.getCurrentUserId() ?: return
         val messageEntity = if (dto.receiverId == null) {
-            dto.toMessageEntity().copy(receiverId = currentUserId)
+            dto.toMessageEntity(currentUserId).copy(receiverId = currentUserId)
         } else {
-            dto.toMessageEntity()
+            dto.toMessageEntity(currentUserId)
         }
         val groupId = dto.groupId ?: return
 

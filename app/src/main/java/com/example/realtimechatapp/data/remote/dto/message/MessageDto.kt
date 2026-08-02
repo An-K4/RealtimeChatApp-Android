@@ -17,18 +17,24 @@ data class MessageDto(
     val seenBy: List<UserDto>?,
     val createdAt: String
 ) {
-    fun toMessageEntity() = MessageEntity(
-        id = this.id,
-        senderId = this.senderId.id,
-        receiverId = this.receiverId?.id,
-        groupId = this.groupId,
-        content = this.content,
-        replyToId = this.replyTo?.id,
-        attachments = this.attachments,
-        seenBy = this.seenBy?.map { it.id },
-        status = MessageStatus.SENT,  // Messages từ server luôn là SENT
-        createdAt = this.createdAt.isoToLong()
-    )
+    fun toMessageEntity(currentUserId: String): MessageEntity {
+        // Only mark as SEEN if I'm the sender AND seenBy has data
+        val isMyMessageAndSeen = this.senderId.id == currentUserId && 
+                                 !this.seenBy.isNullOrEmpty()
+        
+        return MessageEntity(
+            id = this.id,
+            senderId = this.senderId.id,
+            receiverId = this.receiverId?.id,
+            groupId = this.groupId,
+            content = this.content,
+            replyToId = this.replyTo?.id,
+            attachments = this.attachments,
+            seenBy = this.seenBy?.map { it.id },
+            status = if (isMyMessageAndSeen) MessageStatus.SEEN else MessageStatus.SENT,
+            createdAt = this.createdAt.isoToLong()
+        )
+    }
 
     fun getMessageContactId(currentUserId: String): String {
         return when {
