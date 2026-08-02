@@ -304,19 +304,23 @@ class GroupRepositoryImpl @Inject constructor(
     }
 
     override suspend fun markGroupMessageAsSeen(groupId: String, userId: String) {
+        // Simple approach: Update status to SEEN when ANY member views (like 1-1 messages)
+        // Note: We're not tracking individual seenBy users locally for now.
+        // Backend maintains full seenBy list, Android just updates status for UI display.
+        // Future enhancement: Track individual viewers if "seen by X, Y, Z" feature is needed.
+        
         val messages = safeDbCall { groupMessageDao.getMessagesToMarkSeen(groupId, userId) }
-        val markedMessages = mutableListOf<MessageEntity>()
 
         for (msg in messages) {
-            val currentSeenBy = msg.seenBy?.toMutableList()
-
-            if (currentSeenBy?.contains(userId) != true) {
-                currentSeenBy?.add(userId)
-                markedMessages.add(msg.copy(seenBy = currentSeenBy))
+            if (msg.status != MessageStatus.SEEN) {
+                safeDbCall {
+                    groupMessageDao.updateMessageStatusWithTimestamp(
+                        messageId = msg.id,
+                        status = MessageStatus.SEEN
+                    )
+                }
             }
         }
-
-        safeDbCall { groupMessageDao.updateGroupMessages(markedMessages) }
     }
 
     override suspend fun createGroup(

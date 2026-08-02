@@ -165,11 +165,19 @@ fun ChatItem(
             horizontalAlignment = Alignment.End,
             modifier = Modifier.padding(start = 5.dp)
         ) {
-            Text(
-                text = lastMessage?.createdAt ?: "",
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onBackground
-            )
+            if (lastMessage?.content?.isEmpty() == true && lastMessage.attachments == null) {
+                Text(
+                    text = "",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            } else {
+                Text(
+                    text = lastMessage?.createdAt ?: "",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
             if (unreadCount > 0) {
                 BadgedBox(
                     badge = {
