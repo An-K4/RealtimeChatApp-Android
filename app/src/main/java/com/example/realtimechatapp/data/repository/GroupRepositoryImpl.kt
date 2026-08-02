@@ -643,6 +643,10 @@ class GroupRepositoryImpl @Inject constructor(
 
         safeDbCall {
             localDatabase.withTransaction {
+                // Check if message already exists (dedupe for Socket.IO + FCM arriving simultaneously)
+                val alreadyExists = groupMessageDao.getMessageById(messageEntity.id) != null
+                if (alreadyExists) return@withTransaction
+
                 // Upsert UserEntity for sender (prevents RecordNotFoundException)
                 userDao.upsertUser(dto.senderId.toUserEntity())
 
