@@ -138,7 +138,7 @@ class NotificationHelper @Inject constructor(
         val avatarBitmap = avatarUrl?.let { loadBitmapFromUrl(it) }
         
         val notification = NotificationCompat.Builder(context, CHANNEL_MESSAGE)
-            .setSmallIcon(R.drawable.ic_notification)
+            .setSmallIcon(R.drawable.logo)
             .setContentTitle(senderName)
             .setContentText(if (isPreviewEnabled) content else "New message")
             .setLargeIcon(avatarBitmap)
@@ -182,7 +182,7 @@ class NotificationHelper @Inject constructor(
         val avatarBitmap = avatarUrl?.let { loadBitmapFromUrl(it) }
         
         val notification = NotificationCompat.Builder(context, CHANNEL_GROUP)
-            .setSmallIcon(R.drawable.ic_notification)
+            .setSmallIcon(R.drawable.logo)
             .setContentTitle(groupName)
             .setContentText(
                 if (isPreviewEnabled) "$senderName: $content" 
