@@ -81,7 +81,18 @@ class MessageRepositoryImpl @Inject constructor(
             Timber.d(users.toString())
             safeDbCall {
                 userDao.upsertUsers(users)
-                messageContactDao.insertAllContact(messageContacts)
+                messageContacts.forEach { contact ->
+                    messageContactDao.upsertMessageContact(
+                        contactId = contact.id,
+                        isMine = contact.isMine,
+                        lastMessage = contact.lastMessage,
+                        lastAttachments = contact.lastAttachments,
+                        lastSenderName = contact.lastSenderName ?: "",
+                        lastTimeStamp = contact.lastTimeStamp,
+                        contactName = contact.contactName,
+                        contactAvatar = contact.contactAvatar
+                    )
+                }
             }
             Result.success(Unit)
         } catch (e: Exception) {

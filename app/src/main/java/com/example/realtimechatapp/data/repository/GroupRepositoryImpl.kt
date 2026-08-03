@@ -202,7 +202,18 @@ class GroupRepositoryImpl @Inject constructor(
         return try {
             val response = safeApiCall(networkChecker) { groupApi.getGroups() }
             val responseGroups = response.groups.map { it.toContactEntity() }
-            safeDbCall { groupContactDao.insertAllContact(responseGroups) }
+            safeDbCall {
+                responseGroups.forEach { contact ->
+                    groupContactDao.upsertGroupContact(
+                        contactId = contact.id,
+                        lastMessage = contact.lastMessage,
+                        lastAttachments = contact.lastAttachments,
+                        lastSenderName = contact.lastSenderName ?: "",
+                        isMine = contact.isMine,
+                        lastTimeStamp = contact.lastTimeStamp
+                    )
+                }
+            }
             Timber.d(responseGroups.toString())
             Result.success(Unit)
         } catch (e: Exception) {
