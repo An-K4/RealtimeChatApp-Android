@@ -84,11 +84,6 @@ fun MessageActionScreen(
     val onMuteNotificationChange = remember {
         { isChecked: Boolean ->
             messageActionViewModel.onMuteNotificationChange(isChecked)
-            Toast.makeText(
-                context,
-                UiText.StringResource(R.string.in_development).asString(context),
-                Toast.LENGTH_SHORT
-            ).show()
         }
     }
 

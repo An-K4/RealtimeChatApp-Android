@@ -11,6 +11,7 @@ import com.example.realtimechatapp.data.remote.dto.auth.SignupRequestDto
 import com.example.realtimechatapp.data.remote.safeApiCall
 import com.example.realtimechatapp.data.local.safeDbCall
 import com.example.realtimechatapp.domain.model.User
+import com.example.realtimechatapp.domain.repository.ActiveConversationManager
 import com.example.realtimechatapp.domain.repository.AuthRepository
 import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.repository.NetworkChecker
@@ -26,6 +27,7 @@ class AuthRepositoryImpl @Inject constructor(
     private val currentUserManager: CurrentUserManager,
     private val networkChecker: NetworkChecker,
     private val localDatabase: LocalDatabase,
+    private val activeConversationManager: ActiveConversationManager,
 ) : AuthRepository {
     override suspend fun login(
         username: String,
@@ -107,6 +109,7 @@ class AuthRepositoryImpl @Inject constructor(
                 tokenManager.deleteToken()
                 tokenManager.deleteRefreshToken()
                 currentUserManager.switchUser("")
+                activeConversationManager.clearActiveConversation()
                 safeDbCall { localDatabase.clearAllTables() }
                 Timber.d("Đã xóa toàn bộ dữ liệu local")
             } catch (cleanupError: Exception) {

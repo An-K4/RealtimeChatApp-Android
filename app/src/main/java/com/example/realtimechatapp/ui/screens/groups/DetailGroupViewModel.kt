@@ -7,10 +7,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
+import com.example.realtimechatapp.domain.model.ConversationType
 import com.example.realtimechatapp.domain.model.Group
 import com.example.realtimechatapp.domain.model.GroupTypingUser
 import com.example.realtimechatapp.domain.model.Member
 import com.example.realtimechatapp.domain.model.Message
+import com.example.realtimechatapp.domain.repository.ActiveConversationManager
 import com.example.realtimechatapp.domain.usecase.group.GetGroupInfoUseCase
 import com.example.realtimechatapp.domain.usecase.group.GetGroupMessageUseCase
 import com.example.realtimechatapp.domain.usecase.notification.CancelGroupNotificationUseCase
@@ -57,7 +59,8 @@ class DetailGroupViewModel @Inject constructor(
     private val emitGroupTypingStartUseCase: EmitGroupTypingStartUseCase,
     private val emitGroupTypingStopUseCase: EmitGroupTypingStopUseCase,
     private val observeKickedFromGroupUseCase: ObserveKickedFromGroupUseCase,
-    private val cancelGroupNotificationUseCase: CancelGroupNotificationUseCase
+    private val cancelGroupNotificationUseCase: CancelGroupNotificationUseCase,
+    private val activeConversationManager: ActiveConversationManager
 ) : ViewModel() {
     sealed interface ImagePreviewDialogState {
         object Dismiss : ImagePreviewDialogState
@@ -244,9 +247,19 @@ class DetailGroupViewModel @Inject constructor(
     // init after state variables
     init {
         cancelGroupNotificationUseCase(groupId)
+        viewModelScope.launch {
+            activeConversationManager.setActiveConversation(groupId, ConversationType.GROUP)
+        }
         getGroupInfo()
         getGroupMessage()
         markGroupMessageAsSeen()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        viewModelScope.launch {
+            activeConversationManager.clearActiveConversation()
+        }
     }
 
     fun markGroupMessageAsSeen() {

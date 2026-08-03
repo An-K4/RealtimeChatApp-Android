@@ -70,11 +70,6 @@ fun GroupMessageActionScreen(
     val onMuteNotificationChange = remember {
         { isChecked: Boolean ->
             groupMessageActionViewModel.onMuteNotificationChange(isChecked)
-            Toast.makeText(
-                context,
-                UiText.StringResource(R.string.in_development).asString(context),
-                Toast.LENGTH_SHORT
-            ).show()
         }
     }
     

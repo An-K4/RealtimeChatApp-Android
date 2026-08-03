@@ -7,8 +7,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
+import com.example.realtimechatapp.domain.model.ConversationType
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.model.User
+import com.example.realtimechatapp.domain.repository.ActiveConversationManager
 import com.example.realtimechatapp.domain.usecase.message.GetHeaderInfoUseCase
 import com.example.realtimechatapp.domain.usecase.message.GetMessageUseCase
 import com.example.realtimechatapp.domain.usecase.notification.CancelMessageNotificationUseCase
@@ -50,7 +52,8 @@ class DetailMessageViewModel @Inject constructor(
     private val seenMessageUseCase: SeenMessageUseCase,
     private val emitTypingStartUseCase: EmitTypingStartUseCase,
     private val emitTypingStopUseCase: EmitTypingStopUseCase,
-    private val cancelMessageNotificationUseCase: CancelMessageNotificationUseCase
+    private val cancelMessageNotificationUseCase: CancelMessageNotificationUseCase,
+    private val activeConversationManager: ActiveConversationManager
 ) : ViewModel() {
     data class DetailMessageState(
         val currentUserId: String = "",
@@ -196,9 +199,19 @@ class DetailMessageViewModel @Inject constructor(
     // init after state variables
     init {
         cancelMessageNotificationUseCase(friendId)
+        viewModelScope.launch {
+            activeConversationManager.setActiveConversation(friendId, ConversationType.DIRECT)
+        }
         getHeaderInfo()
         getMessages()
         markMessageAsSeen()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        viewModelScope.launch {
+            activeConversationManager.clearActiveConversation()
+        }
     }
 
     private fun getHeaderInfo() {

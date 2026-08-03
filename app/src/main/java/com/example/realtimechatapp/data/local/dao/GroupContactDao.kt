@@ -27,6 +27,9 @@ interface GroupContactDao {
     @Query("UPDATE contacts SET unread_count = 0 WHERE id = :contactId")
     suspend fun resetUnreadCount(contactId: String)
 
+    @Query("UPDATE contacts SET is_muted = :isMuted WHERE id = :contactId")
+    suspend fun updateIsMuted(contactId: String, isMuted: Boolean)
+
     @Transaction
     suspend fun upsertGroupContact(
         contactId: String,

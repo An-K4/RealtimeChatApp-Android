@@ -7,6 +7,7 @@ import com.example.realtimechatapp.R
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.model.Role
+import com.example.realtimechatapp.domain.usecase.contact.UpdateGroupContactMuteStatusUseCase
 import com.example.realtimechatapp.domain.usecase.group.GetGroupInfoUseCase
 import com.example.realtimechatapp.domain.usecase.group.LeaveGroupUseCase
 import com.example.realtimechatapp.domain.usecase.socket.group.ObserveGroupInfoUseCase
@@ -14,6 +15,7 @@ import com.example.realtimechatapp.domain.usecase.socket.ObserveKickedFromGroupU
 import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import com.example.realtimechatapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,7 +33,8 @@ class GroupMessageActionViewModel @Inject constructor(
     private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase,
     private val observeGroupInfoUseCase: ObserveGroupInfoUseCase,
     private val leaveGroupUseCase: LeaveGroupUseCase,
-    private val observeKickedFromGroupUseCase: ObserveKickedFromGroupUseCase
+    private val observeKickedFromGroupUseCase: ObserveKickedFromGroupUseCase,
+    private val updateGroupContactMuteStatusUseCase: UpdateGroupContactMuteStatusUseCase
 ) : ViewModel() {
     data class GroupMessageActionState(
         val groupId: String = "",
@@ -65,6 +68,8 @@ class GroupMessageActionViewModel @Inject constructor(
     private val groupId: String =
         checkNotNull(savedStateHandle[Screen.GroupMessageAction.ARG_GROUP_ID])
     private lateinit var currentUserId: String
+
+    private var updateMuteJob: Job? = null
 
     private val _groupMessageActionState = MutableStateFlow(
         GroupMessageActionState(
@@ -151,6 +156,10 @@ class GroupMessageActionViewModel @Inject constructor(
 
     fun onMuteNotificationChange(newValue: Boolean) {
         _groupMessageActionState.update { it.copy(muteNotifications = newValue) }
+        updateMuteJob?.cancel()
+        updateMuteJob = viewModelScope.launch {
+            updateGroupContactMuteStatusUseCase(groupId, newValue)
+        }
     }
 
     fun showLeaveGroupConfirmDialog() {

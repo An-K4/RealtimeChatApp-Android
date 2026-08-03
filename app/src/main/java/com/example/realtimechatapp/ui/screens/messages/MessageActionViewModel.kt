@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.realtimechatapp.common.UiText
 import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.model.Group
+import com.example.realtimechatapp.domain.usecase.contact.UpdateMessageContactMuteStatusUseCase
 import com.example.realtimechatapp.domain.usecase.group.AddMembersUseCase
 import com.example.realtimechatapp.domain.usecase.socket.GetLocalGroupsUseCase
 import com.example.realtimechatapp.domain.usecase.user.GetUserWithMutedStatusUseCase
@@ -13,6 +14,7 @@ import com.example.realtimechatapp.domain.usecase.user.PerformSearchUseCase
 import com.example.realtimechatapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,7 +34,8 @@ class MessageActionViewModel @Inject constructor(
     private val getUserWithMutedStatusUseCase: GetUserWithMutedStatusUseCase,
     private val performSearchUseCase: PerformSearchUseCase,
     private val addMembersUseCase: AddMembersUseCase,
-    private val getLocalGroupsUseCase: GetLocalGroupsUseCase
+    private val getLocalGroupsUseCase: GetLocalGroupsUseCase,
+    private val updateMessageContactMuteStatusUseCase: UpdateMessageContactMuteStatusUseCase
 ) : ViewModel() {
 
     data class MessageActionState(
@@ -78,6 +81,8 @@ class MessageActionViewModel @Inject constructor(
 
     private val userId: String =
         checkNotNull(savedStateHandle[Screen.MessageAction.ARG_FRIEND_ID])
+
+    private var updateMuteJob: Job? = null
 
     private val _messageActionState = MutableStateFlow(
         MessageActionState(
@@ -135,6 +140,10 @@ class MessageActionViewModel @Inject constructor(
 
     fun onMuteNotificationChange(newValue: Boolean) {
         _messageActionState.update { it.copy(muteNotifications = newValue) }
+        updateMuteJob?.cancel()
+        updateMuteJob = viewModelScope.launch {
+            updateMessageContactMuteStatusUseCase(userId, newValue)
+        }
     }
 
     private fun List<Group>.toGroupItemUi(): List<GroupItemUi> =
