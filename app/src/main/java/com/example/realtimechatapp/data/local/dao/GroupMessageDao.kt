@@ -67,4 +67,21 @@ interface GroupMessageDao {
     // Quét các group message bị kẹt ở SENDING quá lâu (app bị kill giữa chừng, mất mạng...)
     @Query("SELECT * FROM messages WHERE group_id IS NOT NULL AND status = 'SENDING' AND created_at < :staleBeforeTimestamp")
     suspend fun getStaleSendingMessages(staleBeforeTimestamp: Long): List<MessageEntity>
+
+    // === NEW: Get group messages with attachments for media grid view ===
+
+    // Lấy tất cả tin nhắn có attachments trong group (cho màn hình media grid)
+    @Transaction
+    @Query("""
+        SELECT * FROM messages
+        WHERE attachments IS NOT NULL
+        AND group_id = :groupId
+        ORDER BY created_at DESC
+        LIMIT :limit OFFSET :offset
+    """)
+    suspend fun getGroupMessagesWithAttachments(
+        groupId: String,
+        limit: Int,
+        offset: Int
+    ): List<MessageWithDetails>
 }

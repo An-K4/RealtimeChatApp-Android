@@ -70,4 +70,23 @@ interface MessageDao {
     // Quét các message bị kẹt ở SENDING quá lâu (app bị kill giữa chừng, mất mạng...)
     @Query("SELECT * FROM messages WHERE status = 'SENDING' AND created_at < :staleBeforeTimestamp")
     suspend fun getStaleSendingMessages(staleBeforeTimestamp: Long): List<MessageEntity>
+
+    // === NEW: Get messages with attachments for media grid view ===
+
+    // Lấy tất cả tin nhắn có attachments giữa 2 người (cho màn hình media grid)
+    @Transaction
+    @Query("""
+        SELECT * FROM messages
+        WHERE attachments IS NOT NULL
+        AND ((receiver_id = :myId AND sender_id = :friendId)
+        OR (receiver_id = :friendId AND sender_id = :myId))
+        ORDER BY created_at DESC
+        LIMIT :limit OFFSET :offset
+    """)
+    suspend fun getMessagesWithAttachments(
+        myId: String,
+        friendId: String,
+        limit: Int,
+        offset: Int
+    ): List<MessageWithDetails>
 }

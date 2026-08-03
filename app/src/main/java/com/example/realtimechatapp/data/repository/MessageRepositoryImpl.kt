@@ -304,4 +304,27 @@ class MessageRepositoryImpl @Inject constructor(
             }
         }
     }
+
+    // === NEW: Get messages with attachments for media grid view ===
+    override suspend fun getMessagesWithAttachments(
+        friendId: String,
+        limit: Int,
+        offset: Int
+    ): Result<List<Message>> {
+        return try {
+            val currentUserId = currentUserManager.getCurrentUserId()
+                ?: return Result.failure(AuthException.InvalidCurrentUserIdException)
+
+            val messagesWithDetails = safeDbCall {
+                messageDao.getMessagesWithAttachments(currentUserId, friendId, limit, offset)
+            }
+
+            val messages = messagesWithDetails.map { it.toMessage() }
+            Result.success(messages)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Failed to get messages with attachments for friendId: $friendId")
+            Result.failure(e)
+        }
+    }
 }

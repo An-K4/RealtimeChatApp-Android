@@ -50,4 +50,14 @@ sealed class Screen(
     }
 
     object CreateGroup: Screen("create_group", UiText.StringResource(R.string.create_group))
+
+    object MediaGrid: Screen("media_grid/{friendId}", UiText.StringResource(R.string.media_files)){
+        const val ARG_FRIEND_ID = "friendId"
+        fun createRoute(friendId: String) = "media_grid/$friendId"
+    }
+
+    object GroupMediaGrid: Screen("group_media_grid/{groupId}", UiText.StringResource(R.string.media_files)){
+        const val ARG_GROUP_ID = "groupId"
+        fun createRoute(groupId: String) = "group_media_grid/$groupId"
+    }
 }

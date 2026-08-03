@@ -75,11 +75,7 @@ fun GroupMessageActionScreen(
     
     val onMediaFilesClick = remember {
         {
-            Toast.makeText(
-                context,
-                UiText.StringResource(R.string.in_development).asString(context),
-                Toast.LENGTH_SHORT
-            ).show()
+            navController.navigate(Screen.GroupMediaGrid.createRoute(groupMessageActionState.groupId))
         }
     }
     

@@ -49,4 +49,11 @@ interface GroupRepository {
     
     // FCM Integration: Persist incoming group message (used by Socket + FCM)
     suspend fun persistIncomingGroupMessage(dto: MessageDto)
+
+    // === NEW: Get group messages with attachments for media grid view ===
+    suspend fun getGroupMessagesWithAttachments(
+        groupId: String,
+        limit: Int = 30,
+        offset: Int = 0
+    ): Result<List<Message>>
 }

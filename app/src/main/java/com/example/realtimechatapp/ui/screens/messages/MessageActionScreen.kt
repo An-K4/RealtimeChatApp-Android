@@ -64,6 +64,7 @@ import com.example.realtimechatapp.ui.components.ConfirmationDialog
 import com.example.realtimechatapp.ui.components.ContactListItem
 import com.example.realtimechatapp.ui.components.NotificationDialog
 import com.example.realtimechatapp.ui.components.ToggleSettingItem
+import com.example.realtimechatapp.ui.navigation.Screen
 import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 import kotlinx.coroutines.launch
 
@@ -89,11 +90,7 @@ fun MessageActionScreen(
 
     val onMediaFilesClick = remember {
         {
-            Toast.makeText(
-                context,
-                UiText.StringResource(R.string.in_development).asString(context),
-                Toast.LENGTH_SHORT
-            ).show()
+            navController.navigate(Screen.MediaGrid.createRoute(messageActionState.userId))
         }
     }
 

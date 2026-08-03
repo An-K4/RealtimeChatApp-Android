@@ -105,6 +105,7 @@
     <string name="member_size_too_small">Member size too small</string>
     <string name="actions">Actions</string>
     <string name="media_files">Media Files</string>
+    <string name="no_media_files">No media files</string>
     <string name="mute_notification">Mute Notifications</string>
     <string name="add_to_group">Add To Group</string>
     <string name="block">Block</string>

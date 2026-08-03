@@ -37,4 +37,11 @@ interface MessageRepository {
     
     // === NEW: FCM Integration - Persist incoming message (used by Socket + FCM) ===
     suspend fun persistIncomingMessage(dto: MessageDto)
+
+    // === NEW: Get messages with attachments for media grid view ===
+    suspend fun getMessagesWithAttachments(
+        friendId: String,
+        limit: Int = 30,
+        offset: Int = 0
+    ): Result<List<Message>>
 }

@@ -37,9 +37,11 @@ import com.example.realtimechatapp.ui.screens.groups.crud.CreateGroupScreen
 import com.example.realtimechatapp.ui.screens.groups.DetailGroupScreen
 import com.example.realtimechatapp.ui.screens.groups.GroupScreen
 import com.example.realtimechatapp.ui.screens.groups.crud.EditGroupScreen
+import com.example.realtimechatapp.ui.screens.groups.crud.GroupMediaGridScreen
 import com.example.realtimechatapp.ui.screens.groups.crud.GroupMessageActionScreen
 import com.example.realtimechatapp.ui.screens.groups.crud.MemberManagementScreen
 import com.example.realtimechatapp.ui.screens.messages.DetailMessageScreen
+import com.example.realtimechatapp.ui.screens.messages.MediaGridScreen
 import com.example.realtimechatapp.ui.screens.messages.MessageActionScreen
 import com.example.realtimechatapp.ui.screens.messages.MessageScreen
 import com.example.realtimechatapp.ui.screens.more.MoreScreen
@@ -74,7 +76,9 @@ fun AppNavigation(deepLinkIntent: Intent? = null) {
         Screen.GroupMessageAction.route,
         Screen.MemberManagement.route,
         Screen.CreateGroup.route,
-        Screen.EditGroup.route
+        Screen.EditGroup.route,
+        Screen.MediaGrid.route,
+        Screen.GroupMediaGrid.route
     )
 
     Scaffold(
@@ -152,6 +156,12 @@ fun AppNavigation(deepLinkIntent: Intent? = null) {
 
                         Screen.EditGroup.route -> Screen.EditGroup.title?.asString()
                             ?: UiText.StringResource(R.string.edit_group).asString()
+
+                        Screen.MediaGrid.route -> Screen.MediaGrid.title?.asString()
+                            ?: UiText.StringResource(R.string.media_files).asString()
+
+                        Screen.GroupMediaGrid.route -> Screen.GroupMediaGrid.title?.asString()
+                            ?: UiText.StringResource(R.string.media_files).asString()
 
                         else -> ""
                     }
@@ -287,6 +297,28 @@ fun AppNavigation(deepLinkIntent: Intent? = null) {
 
             composable(Screen.Search.route) {
                 SearchScreen(navController)
+            }
+
+            composable(
+                Screen.MediaGrid.route,
+                arguments = listOf(
+                    navArgument(Screen.MediaGrid.ARG_FRIEND_ID) {
+                        type = NavType.StringType
+                    }
+                )
+            ) {
+                MediaGridScreen(navController)
+            }
+
+            composable(
+                Screen.GroupMediaGrid.route,
+                arguments = listOf(
+                    navArgument(Screen.GroupMediaGrid.ARG_GROUP_ID) {
+                        type = NavType.StringType
+                    }
+                )
+            ) {
+                GroupMediaGridScreen(navController)
             }
         }
     }

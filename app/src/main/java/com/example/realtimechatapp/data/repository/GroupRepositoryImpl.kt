@@ -685,4 +685,24 @@ class GroupRepositoryImpl @Inject constructor(
             }
         }
     }
+
+    // === NEW: Get group messages with attachments for media grid view ===
+    override suspend fun getGroupMessagesWithAttachments(
+        groupId: String,
+        limit: Int,
+        offset: Int
+    ): Result<List<Message>> {
+        return try {
+            val messagesWithDetails = safeDbCall {
+                groupMessageDao.getGroupMessagesWithAttachments(groupId, limit, offset)
+            }
+
+            val messages = messagesWithDetails.map { it.toMessage() }
+            Result.success(messages)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Failed to get group messages with attachments for groupId: $groupId")
+            Result.failure(e)
+        }
+    }
 }
