@@ -15,6 +15,7 @@ import com.example.realtimechatapp.domain.repository.ActiveConversationManager
 import com.example.realtimechatapp.domain.repository.AuthRepository
 import com.example.realtimechatapp.domain.repository.CurrentUserManager
 import com.example.realtimechatapp.domain.repository.NetworkChecker
+import com.example.realtimechatapp.domain.repository.SocketRepository
 import kotlinx.coroutines.flow.first
 import timber.log.Timber
 import javax.inject.Inject
@@ -28,6 +29,7 @@ class AuthRepositoryImpl @Inject constructor(
     private val networkChecker: NetworkChecker,
     private val localDatabase: LocalDatabase,
     private val activeConversationManager: ActiveConversationManager,
+    private val socketRepository: SocketRepository
 ) : AuthRepository {
     override suspend fun login(
         username: String,
@@ -110,6 +112,7 @@ class AuthRepositoryImpl @Inject constructor(
                 tokenManager.deleteRefreshToken()
                 currentUserManager.switchUser("")
                 activeConversationManager.clearActiveConversation()
+                socketRepository.disconnect()
                 safeDbCall { localDatabase.clearAllTables() }
                 Timber.d("Đã xóa toàn bộ dữ liệu local")
             } catch (cleanupError: Exception) {
