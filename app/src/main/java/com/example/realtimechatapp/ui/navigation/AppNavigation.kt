@@ -51,25 +51,8 @@ import com.example.realtimechatapp.ui.screens.search.SearchScreen
 fun AppNavigation(deepLinkIntent: Intent? = null) {
     val navController = rememberNavController()
 
-    // Handle deep link navigation from FCM notifications
-    LaunchedEffect(deepLinkIntent) {
-        val destination = deepLinkIntent?.getStringExtra("destination") ?: return@LaunchedEffect
-
-        when (destination) {
-            "detail_message" -> {
-                val friendId = deepLinkIntent.getStringExtra("friendId") ?: return@LaunchedEffect
-                navController.navigate(Screen.DetailMessage.createRoute(friendId)) {
-                    launchSingleTop = true
-                }
-            }
-            "detail_group" -> {
-                val groupId = deepLinkIntent.getStringExtra("groupId") ?: return@LaunchedEffect
-                navController.navigate(Screen.DetailGroup.createRoute(groupId)) {
-                    launchSingleTop = true
-                }
-            }
-        }
-    }
+    // Deep link handling moved to LoginScreen's AuthSuccess flow to avoid race condition
+    // with loginWithToken() -> AuthSuccess navigation
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -216,7 +199,7 @@ fun AppNavigation(deepLinkIntent: Intent? = null) {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.Login.route) {
-                LoginScreen(navController)
+                LoginScreen(navController, deepLinkIntent = deepLinkIntent)
             }
 
             composable(Screen.Signup.route) {

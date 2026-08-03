@@ -1,5 +1,6 @@
 package com.example.realtimechatapp.ui.screens.auth
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -62,6 +63,7 @@ import com.example.realtimechatapp.ui.theme.RealtimeChatAppTheme
 @Composable
 fun LoginScreen(
     navController: NavController,
+    deepLinkIntent: Intent? = null,
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val loadingState by authViewModel.isLoading.collectAsStateWithLifecycle()
@@ -106,8 +108,41 @@ fun LoginScreen(
             authViewModel.authEvent.collect { event ->
                 when (event) {
                     is AuthViewModel.AuthEvent.AuthSuccess -> {
-                        navController.navigate(Screen.Messages.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
+                        // Merge deep link handling into AuthSuccess flow to avoid race condition
+                        val destination = deepLinkIntent?.getStringExtra("destination")
+                        when (destination) {
+                            "detail_message" -> {
+                                val friendId = deepLinkIntent.getStringExtra("friendId")
+                                if (friendId != null) {
+                                    navController.navigate(Screen.DetailMessage.createRoute(friendId)) {
+                                        popUpTo(Screen.Login.route) { inclusive = true }
+                                    }
+                                } else {
+                                    // Fallback to Messages if data incomplete
+                                    navController.navigate(Screen.Messages.route) {
+                                        popUpTo(Screen.Login.route) { inclusive = true }
+                                    }
+                                }
+                            }
+                            "detail_group" -> {
+                                val groupId = deepLinkIntent.getStringExtra("groupId")
+                                if (groupId != null) {
+                                    navController.navigate(Screen.DetailGroup.createRoute(groupId)) {
+                                        popUpTo(Screen.Login.route) { inclusive = true }
+                                    }
+                                } else {
+                                    // Fallback to Messages if data incomplete
+                                    navController.navigate(Screen.Messages.route) {
+                                        popUpTo(Screen.Login.route) { inclusive = true }
+                                    }
+                                }
+                            }
+                            else -> {
+                                // No deep link or unknown destination, go to Messages
+                                navController.navigate(Screen.Messages.route) {
+                                    popUpTo(Screen.Login.route) { inclusive = true }
+                                }
+                            }
                         }
                     }
 
