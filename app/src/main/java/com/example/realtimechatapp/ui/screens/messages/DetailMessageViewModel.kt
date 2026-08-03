@@ -10,7 +10,8 @@ import com.example.realtimechatapp.common.getErrorMessage
 import com.example.realtimechatapp.domain.model.ConversationType
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.model.User
-import com.example.realtimechatapp.domain.repository.ActiveConversationManager
+import com.example.realtimechatapp.domain.usecase.conversation.ClearActiveConversationUseCase
+import com.example.realtimechatapp.domain.usecase.conversation.SetActiveConversationUseCase
 import com.example.realtimechatapp.domain.usecase.message.GetHeaderInfoUseCase
 import com.example.realtimechatapp.domain.usecase.message.GetMessageUseCase
 import com.example.realtimechatapp.domain.usecase.notification.CancelMessageNotificationUseCase
@@ -53,7 +54,8 @@ class DetailMessageViewModel @Inject constructor(
     private val emitTypingStartUseCase: EmitTypingStartUseCase,
     private val emitTypingStopUseCase: EmitTypingStopUseCase,
     private val cancelMessageNotificationUseCase: CancelMessageNotificationUseCase,
-    private val activeConversationManager: ActiveConversationManager
+    private val setActiveConversationUseCase: SetActiveConversationUseCase,
+    private val clearActiveConversationUseCase: ClearActiveConversationUseCase
 ) : ViewModel() {
     data class DetailMessageState(
         val currentUserId: String = "",
@@ -199,18 +201,20 @@ class DetailMessageViewModel @Inject constructor(
     // init after state variables
     init {
         cancelMessageNotificationUseCase(friendId)
-        viewModelScope.launch {
-            activeConversationManager.setActiveConversation(friendId, ConversationType.DIRECT)
-        }
         getHeaderInfo()
         getMessages()
         markMessageAsSeen()
     }
 
-    override fun onCleared() {
-        super.onCleared()
+    fun onScreenEnter() {
         viewModelScope.launch {
-            activeConversationManager.clearActiveConversation()
+            setActiveConversationUseCase(friendId, ConversationType.DIRECT)
+        }
+    }
+
+    fun onScreenExit() {
+        viewModelScope.launch {
+            clearActiveConversationUseCase()
         }
     }
 
