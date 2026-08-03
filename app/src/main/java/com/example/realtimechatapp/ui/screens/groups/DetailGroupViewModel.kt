@@ -13,6 +13,7 @@ import com.example.realtimechatapp.domain.model.Member
 import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.usecase.group.GetGroupInfoUseCase
 import com.example.realtimechatapp.domain.usecase.group.GetGroupMessageUseCase
+import com.example.realtimechatapp.domain.usecase.notification.CancelGroupNotificationUseCase
 import com.example.realtimechatapp.domain.usecase.socket.KickedFromGroupInfo
 import com.example.realtimechatapp.domain.usecase.socket.group.ObserveGroupInfoUseCase
 import com.example.realtimechatapp.domain.usecase.socket.group.EmitGroupTypingStartUseCase
@@ -55,7 +56,8 @@ class DetailGroupViewModel @Inject constructor(
     private val seenGroupMessageUseCase: SeenGroupMessageUseCase,
     private val emitGroupTypingStartUseCase: EmitGroupTypingStartUseCase,
     private val emitGroupTypingStopUseCase: EmitGroupTypingStopUseCase,
-    private val observeKickedFromGroupUseCase: ObserveKickedFromGroupUseCase
+    private val observeKickedFromGroupUseCase: ObserveKickedFromGroupUseCase,
+    private val cancelGroupNotificationUseCase: CancelGroupNotificationUseCase
 ) : ViewModel() {
     sealed interface ImagePreviewDialogState {
         object Dismiss : ImagePreviewDialogState
@@ -241,6 +243,7 @@ class DetailGroupViewModel @Inject constructor(
 
     // init after state variables
     init {
+        cancelGroupNotificationUseCase(groupId)
         getGroupInfo()
         getGroupMessage()
         markGroupMessageAsSeen()

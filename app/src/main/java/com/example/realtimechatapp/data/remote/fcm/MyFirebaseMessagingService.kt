@@ -81,6 +81,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val senderId = data["senderId"] ?: return
         val senderName = data["senderName"] ?: "Someone"
         val content = data["content"] ?: ""
+        val attachments = data["attachments"] ?: ""
         val avatar = data["senderAvatar"]
 
         try {
@@ -120,6 +121,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             senderId = senderId,
             senderName = senderName,
             content = content,
+            attachments = attachments,
             avatarUrl = avatar,
             isPreviewEnabled = prefs.enableMessagePreview
         )
@@ -132,6 +134,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val senderName = data["senderName"] ?: "Someone"
         val groupName = data["groupName"] ?: "Group"
         val content = data["content"] ?: ""
+        val attachments = data["attachments"] ?: ""
         val avatar = data["senderAvatar"]
 
         try {
@@ -168,6 +171,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             senderId = senderId,
             senderName = senderName,
             content = content,
+            attachments = attachments,
             avatarUrl = avatar,
             isPreviewEnabled = prefs.enableMessagePreview
         )

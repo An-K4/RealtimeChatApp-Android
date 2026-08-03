@@ -11,6 +11,7 @@ import com.example.realtimechatapp.domain.model.Message
 import com.example.realtimechatapp.domain.model.User
 import com.example.realtimechatapp.domain.usecase.message.GetHeaderInfoUseCase
 import com.example.realtimechatapp.domain.usecase.message.GetMessageUseCase
+import com.example.realtimechatapp.domain.usecase.notification.CancelMessageNotificationUseCase
 import com.example.realtimechatapp.domain.usecase.socket.message.EmitTypingStartUseCase
 import com.example.realtimechatapp.domain.usecase.socket.message.EmitTypingStopUseCase
 import com.example.realtimechatapp.domain.usecase.socket.message.ObserveMessageUseCase
@@ -48,7 +49,8 @@ class DetailMessageViewModel @Inject constructor(
     private val sendMessageUseCase: SendMessageUseCase,
     private val seenMessageUseCase: SeenMessageUseCase,
     private val emitTypingStartUseCase: EmitTypingStartUseCase,
-    private val emitTypingStopUseCase: EmitTypingStopUseCase
+    private val emitTypingStopUseCase: EmitTypingStopUseCase,
+    private val cancelMessageNotificationUseCase: CancelMessageNotificationUseCase
 ) : ViewModel() {
     data class DetailMessageState(
         val currentUserId: String = "",
@@ -193,6 +195,7 @@ class DetailMessageViewModel @Inject constructor(
 
     // init after state variables
     init {
+        cancelMessageNotificationUseCase(friendId)
         getHeaderInfo()
         getMessages()
         markMessageAsSeen()

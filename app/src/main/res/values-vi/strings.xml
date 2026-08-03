@@ -157,4 +157,7 @@
     <string name="add_to_group_success">Đã thêm người dùng vào nhóm.\n</string>
     <string name="add_to_group_confirm">Bạn có chắc muốn thêm người dùng này vào nhóm %s?</string>
     <string name="already_in_group">Đã là thành viên</string>
+    <string name="new_message">Tin nhắn mới</string>
+    <string name="default_notification_channel_id">channel_message</string>
+    <string name="you">Bạn</string>
 </resources>

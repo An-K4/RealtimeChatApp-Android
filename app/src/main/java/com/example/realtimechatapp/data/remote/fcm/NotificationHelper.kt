@@ -10,6 +10,8 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.app.Person
+import androidx.core.graphics.drawable.IconCompat
 import com.example.realtimechatapp.MainActivity
 import com.example.realtimechatapp.R
 import com.example.realtimechatapp.data.local.dao.NotificationPreferenceDao
@@ -111,11 +113,37 @@ class NotificationHelper @Inject constructor(
         }
     }
     
+    private fun buildDisplayContent(
+        content: String,
+        attachments: String,
+        isPreviewEnabled: Boolean,
+        senderName: String? = null
+    ): String {
+        if (!isPreviewEnabled) {
+            return context.getString(R.string.new_message)
+        }
+        
+        if (content.isNotEmpty()) {
+            return content
+        }
+        
+        if (attachments.isNotEmpty()) {
+            return if (senderName != null) {
+                context.getString(R.string.sb_sent_an_image, senderName)
+            } else {
+                context.getString(R.string.sent_an_image)
+            }
+        }
+        
+        return context.getString(R.string.new_message)
+    }
+    
     fun showMessageNotification(
         messageId: String,
         senderId: String,
         senderName: String,
         content: String,
+        attachments: String,
         avatarUrl: String?,
         isPreviewEnabled: Boolean = true
     ) {
@@ -137,22 +165,43 @@ class NotificationHelper @Inject constructor(
         
         val avatarBitmap = avatarUrl?.let { loadBitmapFromUrl(it) }
         
+        // Retrieve existing notification to append messages
+        val existingNotification = notificationManager.activeNotifications
+            .find { it.id == notificationId }?.notification
+        
+        val messagingStyle = existingNotification?.let {
+            NotificationCompat.MessagingStyle.extractMessagingStyleFromNotification(it)
+        } ?: NotificationCompat.MessagingStyle(
+            Person.Builder()
+                .setName(context.getString(R.string.you))
+                .build()
+        ).setConversationTitle(senderName)
+        
+        val sender = Person.Builder()
+            .setName(senderName)
+            .setIcon(avatarBitmap?.let { IconCompat.createWithBitmap(it) })
+            .build()
+        
+        val displayContent = buildDisplayContent(content, attachments, isPreviewEnabled)
+        
+        messagingStyle.addMessage(
+            displayContent,
+            System.currentTimeMillis(),
+            sender
+        )
+        
         val notification = NotificationCompat.Builder(context, CHANNEL_MESSAGE)
             .setSmallIcon(R.drawable.logo)
-            .setContentTitle(senderName)
-            .setContentText(if (isPreviewEnabled) content else "New message")
             .setLargeIcon(avatarBitmap)
+            .setStyle(messagingStyle)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
-            .setGroup(senderId)
-            .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
             .setWhen(System.currentTimeMillis())
             .build()
         
         notificationManager.notify(notificationId, notification)
-        showMessageSummaryNotification(senderId, senderName)
     }
     
     fun showGroupMessageNotification(
@@ -162,6 +211,7 @@ class NotificationHelper @Inject constructor(
         senderId: String,
         senderName: String,
         content: String,
+        attachments: String,
         avatarUrl: String?,
         isPreviewEnabled: Boolean = true
     ) {
@@ -183,25 +233,43 @@ class NotificationHelper @Inject constructor(
         
         val avatarBitmap = avatarUrl?.let { loadBitmapFromUrl(it) }
         
+        // Retrieve existing notification to append messages
+        val existingNotification = notificationManager.activeNotifications
+            .find { it.id == notificationId }?.notification
+        
+        val messagingStyle = existingNotification?.let {
+            NotificationCompat.MessagingStyle.extractMessagingStyleFromNotification(it)
+        } ?: NotificationCompat.MessagingStyle(
+            Person.Builder()
+                .setName(context.getString(R.string.you))
+                .build()
+        ).setConversationTitle(groupName)
+        
+        val sender = Person.Builder()
+            .setName(senderName)
+            .setIcon(avatarBitmap?.let { IconCompat.createWithBitmap(it) })
+            .build()
+        
+        val displayContent = buildDisplayContent(content, attachments, isPreviewEnabled, senderName)
+        
+        messagingStyle.addMessage(
+            displayContent,
+            System.currentTimeMillis(),
+            sender
+        )
+        
         val notification = NotificationCompat.Builder(context, CHANNEL_GROUP)
             .setSmallIcon(R.drawable.logo)
-            .setContentTitle(groupName)
-            .setContentText(
-                if (isPreviewEnabled) "$senderName: $content" 
-                else "$senderName sent a message"
-            )
             .setLargeIcon(avatarBitmap)
+            .setStyle(messagingStyle)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
-            .setGroup(groupId)
-            .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
             .setWhen(System.currentTimeMillis())
             .build()
         
         notificationManager.notify(notificationId, notification)
-        showGroupSummaryNotification(groupId, groupName)
     }
     
     fun showSystemNotification(
@@ -235,80 +303,14 @@ class NotificationHelper @Inject constructor(
         notificationManager.notify(notificationId, notification)
     }
     
-    /**
-     * Show summary notification for message grouping.
-     * Called alongside individual message notifications to enable Android notification grouping.
-     * Future enhancement: Use InboxStyle to show message previews if needed.
-     */
-    private fun showMessageSummaryNotification(senderId: String, senderName: String) {
-        // Use unique ID for summary (offset from base to avoid collision)
-        val summaryId = NOTIFICATION_ID_MESSAGE_BASE - 1 + (senderId.hashCode().absoluteValue % 100)
-        
-        val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("destination", "detail_message")
-            putExtra("friendId", senderId)
-        }
-        
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            REQUEST_CODE_MESSAGE + summaryId,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        
-        val notification = NotificationCompat.Builder(context, CHANNEL_MESSAGE)
-            .setSmallIcon(R.drawable.logo)
-            .setContentTitle(senderName)
-            .setContentText("New messages")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-            .setAutoCancel(true)
-            .setContentIntent(pendingIntent)
-            .setGroup(senderId)
-            .setGroupSummary(true)
-            .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
-            .build()
-        
-        notificationManager.notify(summaryId, notification)
+    fun cancelMessageNotification(senderId: String) {
+        val notificationId = generateNotificationId(senderId, NOTIFICATION_ID_MESSAGE_BASE)
+        notificationManager.cancel(notificationId)
     }
     
-    /**
-     * Show summary notification for group message grouping.
-     * Called alongside individual group message notifications to enable Android notification grouping.
-     * Future enhancement: Use InboxStyle to show message previews if needed.
-     */
-    private fun showGroupSummaryNotification(groupId: String, groupName: String) {
-        // Use unique ID for summary (offset from base to avoid collision)
-        val summaryId = NOTIFICATION_ID_GROUP_BASE - 1 + (groupId.hashCode().absoluteValue % 100)
-        
-        val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("destination", "detail_group")
-            putExtra("groupId", groupId)
-        }
-        
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            REQUEST_CODE_GROUP + summaryId,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        
-        val notification = NotificationCompat.Builder(context, CHANNEL_GROUP)
-            .setSmallIcon(R.drawable.logo)
-            .setContentTitle(groupName)
-            .setContentText("New messages")
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-            .setAutoCancel(true)
-            .setContentIntent(pendingIntent)
-            .setGroup(groupId)
-            .setGroupSummary(true)
-            .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
-            .build()
-        
-        notificationManager.notify(summaryId, notification)
+    fun cancelGroupNotification(groupId: String) {
+        val notificationId = generateNotificationId(groupId, NOTIFICATION_ID_GROUP_BASE)
+        notificationManager.cancel(notificationId)
     }
     
     private fun generateNotificationId(key: String, base: Int): Int {
