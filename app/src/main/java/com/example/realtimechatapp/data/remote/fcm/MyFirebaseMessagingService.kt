@@ -63,7 +63,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             "new_message", "group_message" -> {
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
-                        if (type == "new_message") handleNewMessage(data) else handleGroupMessage(data)
+                        if (type == "new_message") handleNewMessage(data) else handleGroupMessage(
+                            data
+                        )
                     } catch (e: Exception) {
                         Timber.e(e, "Error handling FCM message (type=$type)")
                     }
@@ -91,21 +93,17 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }
 
         val isMuted = messageContactDao.getMessageContactById(senderId)?.isMuted ?: false
-
         if (isMuted) {
-            Timber.d("Contact $senderId is muted, skipping notification")
-            return
+            Timber.d("SKIP(mute): $senderId"); return
         }
 
         val activeConv = activeConversationManager.getActiveConversation().firstOrNull()
-
         if (activeConv?.conversationId == senderId && activeConv.type == ConversationType.DIRECT) {
-            Timber.d("User is in conversation with $senderId, skipping notification")
+            Timber.d("SKIP(activeConv match): conv=${activeConv.conversationId} == sender=$senderId")
             return
         }
 
         val prefs = notificationHelper.getNotificationPreferences()
-
         if (!prefs.enableNotifications) {
             Timber.d("Notifications disabled globally")
             return
