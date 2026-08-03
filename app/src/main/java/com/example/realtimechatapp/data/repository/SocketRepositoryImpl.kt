@@ -32,6 +32,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.json.JSONArray
 import org.json.JSONObject
 import timber.log.Timber
@@ -44,6 +46,7 @@ class SocketRepositoryImpl @Inject constructor(
 ) : SocketRepository {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var socket: Socket? = null
+    private val connectMutex = Mutex()
 
     private val _messagesFlow = MutableSharedFlow<MessageDto>()
     override fun observeMessages(): SharedFlow<MessageDto> = _messagesFlow.asSharedFlow()
@@ -83,33 +86,39 @@ class SocketRepositoryImpl @Inject constructor(
         _socketConnectionState.asStateFlow()
 
     override suspend fun connect() {
-        if (socket?.connected() == true) {
-            Timber.d("Socket đã kết nối trước đó")
-            return
+        connectMutex.withLock {
+            if (socket?.connected() == true) {
+                Timber.d("Socket đã kết nối trước đó")
+                return@withLock
+            }
+
+            // Dọn sạch instance cũ (nếu có, kể cả đang connecting dở/chưa kịp connected)
+            // trước khi tạo mới, tránh mồ côi connection
+            socket?.let {
+                it.disconnect()
+                it.off()
+                it.close()
+            }
+
+            val refreshToken = tokenManager.refreshToken.first()
+            if (refreshToken?.isEmpty() == true) return@withLock
+
+            val options = IO.Options.builder()
+                .setAuth(mapOf("token" to refreshToken))
+                .setForceNew(true)
+                .setReconnection(true)
+                .build()
+
+            socket = IO.socket(baseUrl, options)
+            setupSocketConnectionListener()
+            setupMessageListener()
+            setupGroupCrudListener()
+            setupGroupMessageListener()
+            setupOnlineUserIdsListener()
+            setupTypingUserIdsListener()
+            setupGroupTypingUsersListener()
+            socket?.connect()
         }
-
-        // hilt can't get token asynchronously in @Provides
-        // Sử dụng refresh token cho socket (long-lived 7 days)
-        val refreshToken = tokenManager.refreshToken.first()
-        if (refreshToken?.isEmpty() == true) return
-
-        val options = IO.Options.builder()
-            .setAuth(mapOf("token" to refreshToken))
-            .setForceNew(true)
-            .setReconnection(true)
-            .build()
-
-        socket = IO.socket(baseUrl, options)
-
-        setupSocketConnectionListener()
-        setupMessageListener()
-        setupGroupCrudListener()
-        setupGroupMessageListener()
-        setupOnlineUserIdsListener()
-        setupTypingUserIdsListener()
-        setupGroupTypingUsersListener()
-
-        socket?.connect()
     }
 
     override suspend fun disconnect() {
@@ -118,11 +127,13 @@ class SocketRepositoryImpl @Inject constructor(
         _typingUserIdsFlow.value = emptySet()
 
         socket?.let { socket ->
+            Timber.i("Đang ngắt")
             socket.disconnect()
             socket.off()
             socket.close()
         }
         socket = null
+        Timber.i("Ngắt thành công")
     }
 
     override suspend fun isConnected(): Boolean = socket?.connected() ?: false
