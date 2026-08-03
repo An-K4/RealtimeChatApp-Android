@@ -9,6 +9,7 @@ import com.example.realtimechatapp.domain.usecase.RequestNotificationPermissionU
 import com.example.realtimechatapp.domain.usecase.auth.SyncFcmTokenUseCase
 import com.example.realtimechatapp.domain.usecase.config.GetCurrentLanguageUseCase
 import com.example.realtimechatapp.domain.usecase.config.GetCurrentThemeUseCase
+import com.example.realtimechatapp.domain.usecase.socket.ConnectSocketUseCase
 import com.example.realtimechatapp.domain.usecase.user.GetCurrentUserIdUseCase
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +27,8 @@ class MainViewModel @Inject constructor(
     private val getCurrentThemeUseCase: GetCurrentThemeUseCase,
     private val syncFcmTokenUseCase: SyncFcmTokenUseCase,
     private val requestNotificationPermissionUseCase: RequestNotificationPermissionUseCase,
-    private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase
+    private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase,
+    private val connectSocketUseCase: ConnectSocketUseCase
 ): ViewModel() {
 
     init {
@@ -69,7 +71,12 @@ class MainViewModel @Inject constructor(
                     return@launch
                 }
                 
-                // User is authenticated, proceed with FCM sync
+                // User is authenticated, proceed with socket connection and FCM sync
+                // Connect socket at app-level (not dependent on MessageScreen)
+                viewModelScope.launch {
+                    connectSocketUseCase()
+                }
+                
                 FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
                     Timber.d("FCM Token: $token")
 
