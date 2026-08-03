@@ -298,7 +298,6 @@ class ProfileViewModel @Inject constructor(
 
     fun logout(showLogoutSuccessDialog: Boolean) {
         viewModelScope.launch {
-            disconnectSocketUseCase()
             logoutUseCase().onSuccess {
                 if (showLogoutSuccessDialog) {
                     _profileState.update { it.copy(dialogState = ProfileDialogState.LogoutSuccess) }
