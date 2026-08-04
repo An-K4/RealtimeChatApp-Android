@@ -112,6 +112,10 @@ app/
 - Đổi mật khẩu với xác nhận
 - Dialog xác nhận trước khi thực hiện thao tác nhạy cảm
 
+#### Thông Báo Đẩy (Push Notification)
+- Tích hợp Firebase Cloud Messaging (FCM) để nhận thông báo khi ứng dụng đóng
+- Badge số thông báo trên icon ứng dụng
+
 ### 🌐 Đa Ngôn Ngữ
 - Hỗ trợ Tiếng Việt và English
 - Chuyển đổi ngôn ngữ trong runtime (không cần khởi động lại)
@@ -139,22 +143,12 @@ app/
 
 ## 🚀 Hướng Phát Triển Trong Tương Lai
 
-### 📌 Ưu Tiên Cao
-
-#### Thông Báo Đẩy (Push Notification)
-- Tích hợp Firebase Cloud Messaging (FCM) để nhận thông báo khi ứng dụng đóng
-- Badge số thông báo trên icon ứng dụng
-
----
-
-### 📌 Tính Năng Mới Đề Xuất
-
 #### Trả Lời Tin Nhắn (Reply)
 - Cơ sở dữ liệu đã có trường `replyToId` và `replyToContent`
 - Cần hoàn thiện UI hiển thị và tích hợp gửi reply qua socket
 
 #### Gọi Thoại / Video
-- Placeholder UI đã có trong `ContactHeader` (đang bị comment)
+- Placeholder UI đã có trong `ContactHeader`
 - Có thể tích hợp WebRTC hoặc Agora SDK trong tương lai
 
 #### Bảo Mật
